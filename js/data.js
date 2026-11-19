@@ -1,0 +1,224 @@
+// ゲームデータ定義（キャラ・敵・ステージ）
+// ここを書き換えるだけでキャラやステージを追加できる。
+window.TD = window.TD || {};
+
+TD.ELEMENTS = {
+  fire:  { name: '火', color: '#ff6b4a', dark: '#a8321c' },
+  water: { name: '水', color: '#4aa8ff', dark: '#1d5aa8' },
+  wind:  { name: '風', color: '#5fd68a', dark: '#23804a' },
+  earth: { name: '土', color: '#d4a94a', dark: '#7a5a1a' },
+  light: { name: '光', color: '#ffe066', dark: '#b08a10' },
+  dark:  { name: '闇', color: '#a77bff', dark: '#4b2a99' },
+};
+
+// 火→風→土→水→火 の循環で有利。光と闇は互いに有利。
+TD.elemMult = function (atk, def) {
+  const strong = { fire: 'wind', wind: 'earth', earth: 'water', water: 'fire' };
+  if (strong[atk] === def) return 1.5;
+  if (strong[def] === atk) return 0.75;
+  if ((atk === 'light' && def === 'dark') || (atk === 'dark' && def === 'light')) return 1.5;
+  return 1;
+};
+
+TD.ROLES = {
+  sword:  { name: '剣士',   glyph: '剣', melee: true,  desc: '道に配置。敵を足止めして斬る' },
+  shield: { name: '盾騎士', glyph: '盾', melee: true,  desc: '道に配置。多くの敵を食い止める' },
+  archer: { name: '弓兵',   glyph: '弓', melee: false, desc: '草地に配置。長射程の単体攻撃' },
+  mage:   { name: '魔導士', glyph: '魔', melee: false, desc: '草地に配置。範囲魔法攻撃' },
+  priest: { name: '僧侶',   glyph: '癒', melee: false, desc: '草地に配置。味方を回復' },
+};
+
+// range はタイル単位。interval は攻撃間隔（秒）。
+TD.CHARS = {
+  lydia: {
+    name: 'リディア', title: '聖剣の騎士姫', rarity: 5, element: 'light', role: 'sword',
+    cost: 14, hp: 1600, atk: 130, def: 60, interval: 1.0, range: 1.3, block: 2, redeploy: 30,
+    skill: { name: '天穹断', type: 'allStrike', sp: 30, mult: 4,
+             desc: 'フィールド上の全ての敵に攻撃力400%の光属性ダメージ' },
+    lines: { deploy: '聖剣の名にかけて！', skill: '天よ、裂けよ――天穹断！' },
+  },
+  celes: {
+    name: 'セレス', title: '氷華の魔女', rarity: 5, element: 'water', role: 'mage',
+    cost: 16, hp: 700, atk: 115, def: 10, interval: 1.8, range: 2.6, splash: 0.9, redeploy: 35,
+    skill: { name: '氷華結界', type: 'freeze', sp: 35, mult: 2, radius: 2.6, dur: 4,
+             desc: '周囲の敵を4秒間凍結し、攻撃力200%のダメージ' },
+    lines: { deploy: '……凍える覚悟はある？', skill: '咲き誇れ、氷の華――氷華結界' },
+  },
+  fin: {
+    name: 'フィン', title: '森の狩人', rarity: 4, element: 'wind', role: 'archer',
+    cost: 10, hp: 600, atk: 72, def: 10, interval: 0.9, range: 3.6, redeploy: 25,
+    skill: { name: '疾風連射', type: 'rapid', sp: 25, rate: 3, dur: 8,
+             desc: '8秒間、攻撃速度が3倍になる' },
+    lines: { deploy: '狙いは外さないよ', skill: '風よ、俺の矢に乗れ！疾風連射！' },
+  },
+  gald: {
+    name: 'ガルド', title: '鉄壁の守護者', rarity: 4, element: 'earth', role: 'shield',
+    cost: 15, hp: 2600, atk: 50, def: 140, interval: 1.4, range: 1.3, block: 3, redeploy: 30,
+    skill: { name: '不動の誓い', type: 'guard', sp: 30, dur: 10,
+             desc: '10秒間、防御2倍・ブロック数+2。HPを50%回復' },
+    lines: { deploy: 'ここは一歩も通さん', skill: '我が盾は砕けぬ！不動の誓い！' },
+  },
+  nox: {
+    name: 'ノクス', title: '影の剣士', rarity: 4, element: 'dark', role: 'sword',
+    cost: 11, hp: 1100, atk: 145, def: 40, interval: 0.8, range: 1.3, block: 1, redeploy: 25,
+    skill: { name: '影縫い', type: 'power', sp: 20, atk: 2.5, dur: 8,
+             desc: '8秒間、攻撃力が250%になる' },
+    lines: { deploy: '……斬るだけだ', skill: '影に沈め。影縫い' },
+  },
+  mia: {
+    name: 'ミア', title: '見習い僧侶', rarity: 3, element: 'light', role: 'priest',
+    cost: 9, hp: 550, atk: 85, def: 5, interval: 1.6, range: 2.6, redeploy: 20,
+    skill: { name: '祝福の祈り', type: 'healAll', sp: 30, ratio: 0.4,
+             desc: '全ての味方のHPを最大HPの40%回復' },
+    lines: { deploy: 'が、がんばりますっ！', skill: '女神さま、みんなを守って！' },
+  },
+  kai: {
+    name: 'カイ', title: '紅蓮の魔導士', rarity: 3, element: 'fire', role: 'mage',
+    cost: 12, hp: 600, atk: 85, def: 10, interval: 2.0, range: 2.4, splash: 0.8, redeploy: 25,
+    skill: { name: '爆炎陣', type: 'explosion', sp: 25, mult: 5, radius: 1.6,
+             desc: '射程内の敵を中心に大爆発。攻撃力500%の範囲ダメージ' },
+    lines: { deploy: '燃やし尽くしてやるぜ！', skill: 'まとめて吹き飛べ！爆炎陣！' },
+  },
+};
+
+// speed はタイル/秒
+TD.ENEMIES = {
+  slime:      { name: 'スライム', element: 'water', hp: 260,  atk: 45,  def: 0,   speed: 0.55, interval: 1.5, size: 11, shape: 'slime' },
+  goblin:     { name: 'ゴブリン', element: 'earth', hp: 420,  atk: 75,  def: 20,  speed: 0.6,  interval: 1.3, size: 12, shape: 'goblin' },
+  wolf:       { name: '魔狼',     element: 'wind',  hp: 300,  atk: 55,  def: 5,   speed: 1.15, interval: 1.0, size: 11, shape: 'wolf' },
+  salamander: { name: '火蜥蜴',   element: 'fire',  hp: 520,  atk: 95,  def: 15,  speed: 0.5,  interval: 1.6, size: 13, shape: 'lizard' },
+  skeleton:   { name: '骸骨騎士', element: 'dark',  hp: 1200, atk: 140, def: 90,  speed: 0.4,  interval: 1.8, size: 14, shape: 'skeleton' },
+  boss:       { name: '災厄の先触れ ヴァルグ', element: 'dark', hp: 9000, atk: 320, def: 110, speed: 0.28, interval: 2.0, size: 22, shape: 'boss', life: 5, boss: true },
+};
+
+// マップ記号: . 草地(遠距離職) / # 道(近接職) / S 出現地点 / G 結界(防衛地点) / x 岩・木(配置不可)
+TD.STAGES = [
+  {
+    id: '1-1', chapter: '第1章 結界のほころび', name: '始まりの街道',
+    brief: '王都へ続く街道に魔物が現れました！まずは剣士を道に、弓兵や魔導士を草地に配置してみましょう。',
+    lives: 10, mana: 12, hpScale: 1, reward: 50,
+    map: [
+      'x...S....',
+      '....#..x.',
+      '....#....',
+      '.####....',
+      '.#.......',
+      '.#....x..',
+      '.#####...',
+      '.....#...',
+      'x....#...',
+      '..####...',
+      '..#....x.',
+      '..#......',
+      '..G......',
+    ],
+    waves: [
+      { t: 3, e: 'slime', n: 4, gap: 2.5 },
+      { t: 16, e: 'goblin', n: 3, gap: 3 },
+      { t: 28, e: 'slime', n: 6, gap: 1.4 },
+      { t: 40, e: 'goblin', n: 4, gap: 2 },
+      { t: 44, e: 'slime', n: 4, gap: 2 },
+    ],
+  },
+  {
+    id: '1-2', chapter: '第1章 結界のほころび', name: '魔狼の森',
+    brief: '森を素早い魔狼が駆け抜けてきます。風属性の魔狼には火属性が有利ですよ！',
+    lives: 10, mana: 12, hpScale: 1.35, reward: 50,
+    map: [
+      'S........',
+      '#..x.....',
+      '#..xx....',
+      '######...',
+      '.....#..x',
+      '.x...#...',
+      '..####...',
+      '..#....x.',
+      '..#####..',
+      'x.....#..',
+      '.x....#..',
+      '......#..',
+      '......G..',
+    ],
+    waves: [
+      { t: 3, e: 'wolf', n: 4, gap: 2 },
+      { t: 15, e: 'goblin', n: 3, gap: 2.5 },
+      { t: 24, e: 'wolf', n: 6, gap: 1.2 },
+      { t: 36, e: 'salamander', n: 2, gap: 4 },
+      { t: 42, e: 'wolf', n: 8, gap: 1 },
+      { t: 55, e: 'goblin', n: 4, gap: 1.5 },
+    ],
+  },
+  {
+    id: '1-3', chapter: '第1章 結界のほころび', name: '二つの門',
+    brief: '敵が左右の門から同時に攻めてきます。合流地点を固めるのが勝利の鍵です！',
+    lives: 10, mana: 14, hpScale: 1.7, reward: 50,
+    map: [
+      'S.......S',
+      '#...x...#',
+      '###...###',
+      '..#...#..',
+      '..#####..',
+      '....#....',
+      '.x..#....',
+      '....#..x.',
+      '..###....',
+      '..#......',
+      '..####...',
+      'x....#...',
+      '.....G...',
+    ],
+    waves: [
+      { t: 3, e: 'slime', n: 4, gap: 2, s: 0 },
+      { t: 4, e: 'goblin', n: 3, gap: 2.5, s: 1 },
+      { t: 18, e: 'salamander', n: 3, gap: 3, s: 0 },
+      { t: 20, e: 'wolf', n: 5, gap: 1.2, s: 1 },
+      { t: 35, e: 'skeleton', n: 2, gap: 5, s: 0 },
+      { t: 38, e: 'goblin', n: 5, gap: 1.5, s: 1 },
+      { t: 52, e: 'wolf', n: 6, gap: 1, s: 0 },
+      { t: 54, e: 'salamander', n: 3, gap: 2, s: 1 },
+    ],
+  },
+  {
+    id: '1-4', chapter: '第1章 結界のほころび', name: '王都城門・決戦',
+    brief: '七つの災厄の先触れ、ヴァルグが現れました！光属性の攻撃が有効です。必殺技を温存して迎え撃って！',
+    lives: 10, mana: 16, hpScale: 2.1, reward: 80,
+    map: [
+      '..S...S..',
+      '..#...#..',
+      'x.#...#..',
+      '..#####..',
+      '....#...x',
+      '.####....',
+      '.#.......',
+      '.#..####.',
+      '.####..#.',
+      '.x.....#.',
+      '..######.',
+      '..#....x.',
+      '..G......',
+    ],
+    waves: [
+      { t: 3, e: 'goblin', n: 4, gap: 2, s: 0 },
+      { t: 5, e: 'slime', n: 4, gap: 2, s: 1 },
+      { t: 20, e: 'skeleton', n: 2, gap: 4, s: 1 },
+      { t: 22, e: 'wolf', n: 6, gap: 1, s: 0 },
+      { t: 38, e: 'salamander', n: 4, gap: 2, s: 0 },
+      { t: 40, e: 'skeleton', n: 2, gap: 4, s: 1 },
+      { t: 58, e: 'boss', n: 1, gap: 0, s: 0 },
+      { t: 62, e: 'goblin', n: 6, gap: 2, s: 1 },
+      { t: 70, e: 'wolf', n: 6, gap: 1.5, s: 0 },
+    ],
+  },
+];
+
+// ホーム画面の精霊ルミナのセリフ
+TD.NAVI_LINES = [
+  'おかえりなさい、召喚士さま！',
+  '大結界がまた少し弱まっています……。',
+  '剣士や盾騎士は「道」に、弓兵や魔導士は「草地」に配置できますよ。',
+  '属性の相性は 火→風→土→水→火。光と闇はお互いが弱点です！',
+  '必殺技ゲージが溜まったら、キャラのカードをタップ！',
+  'ひゃっ！？つ、つつかないでください～！',
+  'いつか、七つの災厄をすべて退けられる日が来るはずです。',
+  '撤退させるとマナが半分戻ってきます。うまく使ってくださいね。',
+];

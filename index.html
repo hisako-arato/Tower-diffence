@@ -2,276 +2,130 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tower Defense</title>
-<style>
-  :root { --bg:#14161c; --panel:#1f232c; --text:#e8e8ee; --accent:#4fc3f7; }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,sans-serif;
-         display:flex; flex-direction:column; align-items:center; padding:12px; }
-  h1 { font-size:20px; margin:4px 0 8px; }
-  #hud { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin-bottom:8px; font-size:15px; }
-  #wrap { width:100%; max-width:800px; }
-  canvas { width:100%; height:auto; background:#2b3a2b; border-radius:6px; display:block; cursor:crosshair; touch-action:none; }
-  #controls { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:8px; }
-  button { background:var(--panel); color:var(--text); border:2px solid #333a48; border-radius:6px;
-           padding:8px 12px; font-size:14px; cursor:pointer; }
-  button.sel { border-color:var(--accent); }
-  button:disabled { opacity:.4; cursor:default; }
-  #msg { min-height:20px; margin-top:6px; font-size:14px; color:#ffd54f; text-align:center; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#120e24">
+<title>結界の守り手</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<h1>Tower Defense</h1>
-<div id="hud">
-  <span>💰 <b id="gold">0</b></span>
-  <span>❤️ <b id="lives">0</b></span>
-  <span>🌊 Wave <b id="wave">0</b></span>
-  <span>⭐ <b id="score">0</b></span>
+<div id="app">
+
+  <!-- タイトル -->
+  <div id="title-screen">
+    <div class="ts-glow"></div>
+    <div class="ts-logo"><small>— Guardians of the Barrier —</small>結界の守り手</div>
+    <div class="ts-tap">TAP TO START</div>
+  </div>
+
+  <!-- ホーム -->
+  <section id="screen-home" class="screen">
+    <div class="home-bg">
+      <div class="sky-stars"></div>
+      <svg class="castle" viewBox="0 0 400 160" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+        <path d="M0 160 V110 H30 V80 H45 V95 H60 V70 H70 V50 l8 -14 l8 14 V70 H96 V100 H130 V60 H140 V40 l10 -18 l10 18 V60 H170 V90 H190 V30 l10 -22 l10 22 V90 H230 V60 H240 V40 l10 -18 l10 18 V60 H270 V100 H304 V70 H314 V50 l8 -14 l8 14 V70 H340 V95 H355 V80 H370 V110 H400 V160 Z" fill="#1a1433"/>
+        <g fill="#ffd77a" opacity=".8"><rect x="196" y="50" width="8" height="12" rx="4"/><rect x="146" y="72" width="7" height="10" rx="3"/><rect x="246" y="72" width="7" height="10" rx="3"/><rect x="76" y="80" width="6" height="9" rx="3"/><rect x="318" y="80" width="6" height="9" rx="3"/></g>
+      </svg>
+      <div class="barrier"></div>
+    </div>
+
+    <header class="topbar">
+      <div class="tb-left"><div class="player-name">召喚士</div><div id="home-progress" class="progress"></div></div>
+      <div class="currency"><i class="gem"></i><span class="stones-val">0</span></div>
+    </header>
+
+    <div class="navi-area">
+      <div id="navi-bubble" class="bubble">おかえりなさい、召喚士さま！</div>
+      <button id="navi" aria-label="精霊ルミナ">
+        <svg viewBox="0 0 200 250" aria-hidden="true">
+          <defs>
+            <radialGradient id="aura" cx="50%" cy="45%" r="50%"><stop offset="0" stop-color="#bff3ff" stop-opacity=".9"/><stop offset=".6" stop-color="#6fc8ff" stop-opacity=".25"/><stop offset="1" stop-color="#6fc8ff" stop-opacity="0"/></radialGradient>
+            <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8f7ff"/><stop offset="1" stop-color="#8fd0ff"/></linearGradient>
+            <linearGradient id="dress" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#9fdcff"/></linearGradient>
+          </defs>
+          <circle cx="100" cy="120" r="100" fill="url(#aura)"/>
+          <g class="wings" fill="#dff6ff" opacity=".75">
+            <ellipse cx="55" cy="125" rx="40" ry="20" transform="rotate(-30 55 125)"/>
+            <ellipse cx="145" cy="125" rx="40" ry="20" transform="rotate(30 145 125)"/>
+            <ellipse cx="65" cy="155" rx="26" ry="12" transform="rotate(20 65 155)"/>
+            <ellipse cx="135" cy="155" rx="26" ry="12" transform="rotate(-20 135 155)"/>
+          </g>
+          <path d="M100 128 L70 215 Q100 228 130 215 Z" fill="url(#dress)"/>
+          <path d="M88 128 Q100 138 112 128 L108 145 H92 Z" fill="#c9ecff"/>
+          <circle cx="100" cy="98" r="32" fill="#ffe9de"/>
+          <path d="M66 100 Q62 58 100 56 Q138 58 134 100 Q130 78 118 74 Q104 86 80 80 Q70 86 66 100 Z" fill="url(#hair)"/>
+          <path d="M66 98 Q60 140 72 150 Q70 120 72 104 Z M134 98 Q140 140 128 150 Q130 120 128 104 Z" fill="url(#hair)"/>
+          <g class="eyes"><ellipse cx="88" cy="102" rx="5" ry="7" fill="#2a6fb0"/><ellipse cx="112" cy="102" rx="5" ry="7" fill="#2a6fb0"/>
+            <circle cx="89.5" cy="99" r="2" fill="#fff"/><circle cx="113.5" cy="99" r="2" fill="#fff"/></g>
+          <ellipse cx="80" cy="112" rx="5" ry="3" fill="#ffb3b3" opacity=".6"/><ellipse cx="120" cy="112" rx="5" ry="3" fill="#ffb3b3" opacity=".6"/>
+          <path d="M95 116 Q100 120 105 116" stroke="#b05a5a" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <path d="M92 58 l8 -14 l8 14 l-8 -4 z" fill="#ffe27a"/>
+        </svg>
+      </button>
+      <div class="navi-name">結界の精霊 ルミナ</div>
+    </div>
+
+    <nav class="home-menu">
+      <button class="menu-main" data-go="screen-stages"><span>出撃</span><small>QUEST</small></button>
+      <button class="menu-sub" data-go="screen-party"><span>編成</span><small>PARTY</small></button>
+      <button class="menu-sub" id="btn-summon"><span>召喚</span><small>SUMMON</small><em>準備中</em></button>
+      <button class="menu-sub" id="btn-settings"><span>設定</span><small>OPTION</small></button>
+    </nav>
+  </section>
+
+  <!-- ステージ選択 -->
+  <section id="screen-stages" class="screen">
+    <header class="topbar sub">
+      <button class="back" data-go="screen-home">‹ ホーム</button>
+      <div class="sub-title">クエスト</div>
+      <div class="currency"><i class="gem"></i><span class="stones-val">0</span></div>
+    </header>
+    <div id="stage-list" class="scroll"></div>
+  </section>
+
+  <!-- 編成 -->
+  <section id="screen-party" class="screen">
+    <header class="topbar sub">
+      <button class="back" data-go="screen-home">‹ ホーム</button>
+      <div class="sub-title">編成</div>
+      <button class="back" data-go="screen-stages">出撃 ›</button>
+    </header>
+    <div class="scroll">
+      <div class="sec-label">出撃メンバー（最大6人）</div>
+      <div id="party-slots"></div>
+      <div id="char-detail"></div>
+      <div class="sec-label">所持キャラ</div>
+      <div id="roster"></div>
+    </div>
+  </section>
+
+  <!-- バトル -->
+  <section id="screen-battle" class="screen">
+    <header class="battle-hud">
+      <button id="btn-pause" class="hud-btn" aria-label="一時停止">Ⅱ</button>
+      <div class="hud-stage" id="hud-stage"></div>
+      <div class="hud-stat"><span class="hs-ico life">♥</span><span id="hud-lives"></span></div>
+      <div class="hud-stat"><span class="hs-ico">⚔</span><span id="hud-enemies"></span></div>
+      <button id="btn-speed" class="hud-btn wide">▶ x1</button>
+    </header>
+    <div id="battle-field">
+      <canvas id="battle-canvas"></canvas>
+      <div id="unit-menu"></div>
+      <div id="cutin" class="cutin"></div>
+      <div id="battle-banner"></div>
+      <div id="battle-toast"></div>
+    </div>
+    <footer class="deploy">
+      <div class="mana"><span class="mana-label">MANA</span><span id="mana-text" class="mana-val">0</span><div class="mana-bar"><i id="mana-fill"></i></div></div>
+      <div id="deploy-cards"></div>
+    </footer>
+  </section>
+
+  <div id="modal"><div class="modal-body"></div></div>
 </div>
-<div id="wrap"><canvas id="c" width="800" height="480"></canvas></div>
-<div id="controls">
-  <button data-tower="basic" class="sel">砲台 (50)</button>
-  <button data-tower="rapid">連射 (80)</button>
-  <button data-tower="sniper">狙撃 (120)</button>
-  <button data-tower="frost">冷気 (90)</button>
-  <button id="sell">売却モード</button>
-  <button id="next">次のウェーブ ▶</button>
-  <button id="speed">速度 x1</button>
-</div>
-<div id="msg">タワーを選んで草地をクリックで設置。「次のウェーブ」で開始。</div>
 
-<script>
-(() => {
-const cv = document.getElementById('c'), ctx = cv.getContext('2d');
-const W = cv.width, H = cv.height, T = 40;            // 20 x 12 grid
-const COLS = W / T, ROWS = H / T;
-
-// Path waypoints in grid coords
-const WP = [[-1,2],[5,2],[5,8],[10,8],[10,3],[15,3],[15,9],[20,9]];
-const pathPts = WP.map(([x,y]) => ({x:x*T+T/2, y:y*T+T/2}));
-const pathCells = new Set();
-for (let i=0;i<WP.length-1;i++){
-  let [x0,y0]=WP[i],[x1,y1]=WP[i+1];
-  const dx=Math.sign(x1-x0), dy=Math.sign(y1-y0);
-  for(let x=x0,y=y0;;x+=dx,y+=dy){ pathCells.add(x+','+y); if(x===x1&&y===y1)break; }
-}
-
-const TOWERS = {
-  basic:  {cost:50,  range:110, rate:0.8,  dmg:12, color:'#90a4ae', bullet:'#fff'},
-  rapid:  {cost:80,  range:90,  rate:0.18, dmg:4,  color:'#ffb74d', bullet:'#ffe0b2'},
-  sniper: {cost:120, range:230, rate:2.0,  dmg:55, color:'#ba68c8', bullet:'#f3e5f5'},
-  frost:  {cost:90,  range:95,  rate:1.0,  dmg:3,  color:'#4fc3f7', bullet:'#b3e5fc', slow:0.5},
-};
-
-let state;
-function reset(){
-  state = {gold:150, lives:20, wave:0, score:0, towers:[], enemies:[], bullets:[],
-           spawnQueue:[], spawnTimer:0, running:false, over:false, sel:'basic', sell:false, speed:1};
-  updateHud();
-}
-
-function updateHud(){
-  gold.textContent=state.gold; lives.textContent=state.lives;
-  wave.textContent=state.wave; score.textContent=state.score;
-  document.querySelectorAll('[data-tower]').forEach(b=>{
-    b.classList.toggle('sel', !state.sell && b.dataset.tower===state.sel);
-    b.disabled = state.gold < TOWERS[b.dataset.tower].cost;
-  });
-  sellBtn.classList.toggle('sel', state.sell);
-  nextBtn.disabled = state.running || state.over;
-}
-const gold=document.getElementById('gold'), lives=document.getElementById('lives'),
-      wave=document.getElementById('wave'), score=document.getElementById('score'),
-      msg=document.getElementById('msg'), sellBtn=document.getElementById('sell'),
-      nextBtn=document.getElementById('next'), speedBtn=document.getElementById('speed');
-
-function startWave(){
-  if (state.running || state.over) return;
-  state.wave++;
-  const n = 6 + state.wave*2;
-  const hp = 20 * Math.pow(1.22, state.wave-1);
-  for (let i=0;i<n;i++){
-    let type = 'normal';
-    if (state.wave>=3 && i%4===3) type='fast';
-    if (state.wave>=5 && i%6===5) type='tank';
-    state.spawnQueue.push(type);
-  }
-  if (state.wave%5===0) state.spawnQueue.push('boss');
-  state.waveHp = hp;
-  state.running = true;
-  msg.textContent = `Wave ${state.wave} 開始！`;
-  updateHud();
-}
-
-const ETYPES = {
-  normal:{hpMul:1,   speed:55, r:10, color:'#e57373', reward:6},
-  fast:  {hpMul:0.6, speed:100,r:8,  color:'#fff176', reward:5},
-  tank:  {hpMul:3,   speed:35, r:14, color:'#8d6e63', reward:14},
-  boss:  {hpMul:15,  speed:30, r:20, color:'#d32f2f', reward:80},
-};
-function spawn(type){
-  const t=ETYPES[type], hp=state.waveHp*t.hpMul;
-  state.enemies.push({x:pathPts[0].x,y:pathPts[0].y,seg:0,hp,max:hp,speed:t.speed,r:t.r,
-                      color:t.color,reward:t.reward,slowT:0,dist:0});
-}
-
-function update(dt){
-  if (state.over) return;
-  // spawning
-  if (state.spawnQueue.length){
-    state.spawnTimer -= dt;
-    if (state.spawnTimer<=0){ spawn(state.spawnQueue.shift()); state.spawnTimer = 0.7; }
-  }
-  // enemies
-  for (const e of state.enemies){
-    const sp = e.speed * (e.slowT>0 ? 0.5 : 1);
-    e.slowT = Math.max(0, e.slowT-dt);
-    let move = sp*dt;
-    while (move>0 && e.seg < pathPts.length-1){
-      const tgt = pathPts[e.seg+1], dx=tgt.x-e.x, dy=tgt.y-e.y, d=Math.hypot(dx,dy);
-      if (d<=move){ e.x=tgt.x; e.y=tgt.y; e.seg++; move-=d; e.dist+=d; }
-      else { e.x+=dx/d*move; e.y+=dy/d*move; e.dist+=move; move=0; }
-    }
-    if (e.seg >= pathPts.length-1){ e.dead=true; e.leaked=true; }
-  }
-  for (const e of state.enemies) if (e.leaked){ state.lives--; }
-  // towers
-  for (const t of state.towers){
-    const d = TOWERS[t.type];
-    t.cd -= dt;
-    if (t.cd>0) continue;
-    let best=null;
-    for (const e of state.enemies){
-      if (e.dead) continue;
-      if (Math.hypot(e.x-t.x,e.y-t.y) <= d.range && (!best || e.dist>best.dist)) best=e;
-    }
-    if (best){
-      t.cd = d.rate; t.angle = Math.atan2(best.y-t.y, best.x-t.x);
-      state.bullets.push({x:t.x,y:t.y,target:best,dmg:d.dmg,slow:d.slow,color:d.bullet,speed:420});
-    }
-  }
-  // bullets
-  for (const b of state.bullets){
-    const e=b.target;
-    if (e.dead){ b.dead=true; continue; }
-    const dx=e.x-b.x, dy=e.y-b.y, dd=Math.hypot(dx,dy), m=b.speed*dt;
-    if (dd<=m+e.r){
-      e.hp -= b.dmg; if (b.slow) e.slowT = 1.5;
-      b.dead=true;
-      if (e.hp<=0 && !e.dead){ e.dead=true; state.gold+=e.reward; state.score+=e.reward*10; }
-    } else { b.x+=dx/dd*m; b.y+=dy/dd*m; }
-  }
-  state.enemies = state.enemies.filter(e=>!e.dead);
-  state.bullets = state.bullets.filter(b=>!b.dead);
-
-  if (state.lives<=0){
-    state.lives=0; state.over=true; state.running=false;
-    msg.textContent = `ゲームオーバー！ Wave ${state.wave} / スコア ${state.score}（クリックでリスタート）`;
-  } else if (state.running && !state.spawnQueue.length && !state.enemies.length){
-    state.running=false;
-    const bonus = 20 + state.wave*5;
-    state.gold += bonus;
-    msg.textContent = `Wave ${state.wave} クリア！ ボーナス +${bonus}`;
-  }
-  updateHud();
-}
-
-function draw(){
-  ctx.fillStyle='#2e4a2e'; ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle='rgba(0,0,0,.12)';
-  for(let x=0;x<=W;x+=T){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-  for(let y=0;y<=H;y+=T){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-  ctx.fillStyle='#a1887f';
-  for (const k of pathCells){ const [x,y]=k.split(',').map(Number); ctx.fillRect(x*T,y*T,T,T); }
-
-  // hover preview
-  if (hover && !state.over){
-    const {cx,cy}=hover, ok=canPlace(cx,cy);
-    if (state.sell){
-      ctx.strokeStyle='#ff5252'; ctx.lineWidth=2; ctx.strokeRect(cx*T+2,cy*T+2,T-4,T-4);
-    } else {
-      ctx.fillStyle = ok ? 'rgba(255,255,255,.15)' : 'rgba(255,0,0,.25)';
-      ctx.fillRect(cx*T,cy*T,T,T);
-      if (ok){ ctx.strokeStyle='rgba(255,255,255,.35)'; ctx.lineWidth=1; ctx.beginPath();
-        ctx.arc(cx*T+T/2,cy*T+T/2,TOWERS[state.sel].range,0,Math.PI*2); ctx.stroke(); }
-    }
-  }
-  for (const t of state.towers){
-    const d=TOWERS[t.type];
-    ctx.fillStyle='#37474f'; ctx.fillRect(t.x-15,t.y-15,30,30);
-    ctx.fillStyle=d.color; ctx.beginPath(); ctx.arc(t.x,t.y,11,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle=d.color; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(t.x,t.y);
-    ctx.lineTo(t.x+Math.cos(t.angle)*18, t.y+Math.sin(t.angle)*18); ctx.stroke();
-  }
-  for (const e of state.enemies){
-    ctx.fillStyle=e.slowT>0?'#81d4fa':e.color; ctx.beginPath(); ctx.arc(e.x,e.y,e.r,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#000'; ctx.fillRect(e.x-e.r,e.y-e.r-7,e.r*2,4);
-    ctx.fillStyle='#66bb6a'; ctx.fillRect(e.x-e.r,e.y-e.r-7,e.r*2*Math.max(0,e.hp/e.max),4);
-  }
-  for (const b of state.bullets){
-    ctx.fillStyle=b.color; ctx.beginPath(); ctx.arc(b.x,b.y,3,0,Math.PI*2); ctx.fill();
-  }
-  if (state.over){
-    ctx.fillStyle='rgba(0,0,0,.6)'; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#fff'; ctx.font='bold 40px system-ui'; ctx.textAlign='center';
-    ctx.fillText('GAME OVER', W/2, H/2-10);
-    ctx.font='20px system-ui'; ctx.fillText('クリックでリスタート', W/2, H/2+28);
-  }
-}
-
-function canPlace(cx,cy){
-  if (cx<0||cy<0||cx>=COLS||cy>=ROWS) return false;
-  if (pathCells.has(cx+','+cy)) return false;
-  return !state.towers.some(t=>t.cx===cx&&t.cy===cy) && state.gold>=TOWERS[state.sel].cost;
-}
-
-let hover=null;
-function cellFromEvent(ev){
-  const r=cv.getBoundingClientRect();
-  return {cx:Math.floor((ev.clientX-r.left)/r.width*W/T), cy:Math.floor((ev.clientY-r.top)/r.height*H/T)};
-}
-cv.addEventListener('pointermove', ev=>{ hover=cellFromEvent(ev); });
-cv.addEventListener('pointerleave', ()=>{ hover=null; });
-cv.addEventListener('pointerdown', ev=>{
-  if (state.over){ reset(); msg.textContent='リスタート！'; return; }
-  const {cx,cy}=cellFromEvent(ev);
-  if (state.sell){
-    const i=state.towers.findIndex(t=>t.cx===cx&&t.cy===cy);
-    if (i>=0){ const refund=Math.floor(TOWERS[state.towers[i].type].cost*0.6);
-      state.gold+=refund; state.towers.splice(i,1); msg.textContent=`売却 +${refund}`; updateHud(); }
-    return;
-  }
-  if (canPlace(cx,cy)){
-    state.gold -= TOWERS[state.sel].cost;
-    state.towers.push({type:state.sel,cx,cy,x:cx*T+T/2,y:cy*T+T/2,cd:0,angle:-Math.PI/2});
-    updateHud();
-  } else if (state.gold < TOWERS[state.sel].cost) msg.textContent='お金が足りません';
-});
-document.querySelectorAll('[data-tower]').forEach(b=>b.addEventListener('click',()=>{
-  state.sel=b.dataset.tower; state.sell=false; updateHud();
-}));
-sellBtn.addEventListener('click',()=>{ state.sell=!state.sell; updateHud(); });
-nextBtn.addEventListener('click', startWave);
-speedBtn.addEventListener('click',()=>{ state.speed = state.speed===1?2:state.speed===2?3:1;
-  speedBtn.textContent=`速度 x${state.speed}`; });
-window.addEventListener('keydown', e=>{
-  const keys={'1':'basic','2':'rapid','3':'sniper','4':'frost'};
-  if (keys[e.key]){ state.sel=keys[e.key]; state.sell=false; updateHud(); }
-  if (e.key===' '){ e.preventDefault(); startWave(); }
-  if (e.key==='s') { state.sell=!state.sell; updateHud(); }
-});
-
-reset();
-let last=performance.now();
-function loop(now){
-  const dt=Math.min(0.05,(now-last)/1000); last=now;
-  for(let i=0;i<state.speed;i++) update(dt);
-  draw(); requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
-window.__td = { get state(){return state;}, startWave };
-})();
-</script>
+<script src="js/data.js"></script>
+<script src="js/save.js"></script>
+<script src="js/battle.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
