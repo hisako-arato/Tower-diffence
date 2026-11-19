@@ -10,6 +10,7 @@ TD.SPEAKERS = {
   kai:     { char: 'kai' },
   mia:     { char: 'mia' },
   gald:    { char: 'gald' },
+  rune:    { char: 'rune' },
   varg:    { name: 'ヴァルグ', enemy: true },
   unknown: { name: '？？？', enemy: true },
   soldier: { name: '王都の兵士', stand: false },
@@ -128,8 +129,22 @@ TD.STORY = {
     ],
   },
 };
-TD.STORY_ORDER = ['prologue', '1-1-post', '1-2-pre', '1-2-post', '1-3-pre', '1-3-post', '1-4-pre', '1-4-post'];
-TD.CHAPTERS = { 1: '第1章 結界のほころび' };
+TD.STORY['event-starfest'] = {
+  title: 'イベント　星降る夜の魔導祭', chapter: 'ev',
+  lines: [
+    [null, '年に一度、空から星が降り注ぐ夜――王都では「魔導祭」が開かれる。', { bg: 'dark' }],
+    ['kai', 'よっしゃ、魔導祭だ！ 屋台に花火に、魔法比べ！ 燃えてきたぜ！'],
+    ['lumina', 'カイさん、はしゃぎすぎです……。でも、きれいな星空ですね、{name}さま。'],
+    ['rune', '……のんきなものね。今年の星は、少し様子がおかしいわ。'],
+    ['lumina', 'あなたは……魔導学院の？'],
+    ['rune', 'ルーンよ。黒書の頁が告げているの。「星を喰らうもの、丘より来たる」と。', { fx: 'shake' }],
+    ['kai', '星を喰らう……？ なんだそりゃ、物騒だな。'],
+    ['rune', '降ってきた星の欠片を集めて。魔獣に喰われる前に、ね。……集めてくれたら、わたしも力を貸してあげる。'],
+    ['lumina', '{name}さま、星降る丘へ向かいましょう！'],
+  ],
+};
+TD.STORY_ORDER = ['prologue', '1-1-post', '1-2-pre', '1-2-post', '1-3-pre', '1-3-post', '1-4-pre', '1-4-post', 'event-starfest'];
+TD.CHAPTERS = { 1: '第1章 結界のほころび', ev: 'イベントストーリー' };
 
 // ---------- ADVプレイヤー ----------
 (function () {

@@ -302,3 +302,150 @@ TD.NAVI_LINES = [
   'いつか、七つの災厄をすべて退けられる日が来るはずです。',
   '撤退させるとマナが半分戻ってきます。うまく使ってくださいね。',
 ];
+
+// ========== フェーズ4：ログインボーナス・ミッション・デイリー・イベント ==========
+
+// 7日周期のログインボーナス
+TD.LOGIN_BONUS = [
+  { stones: 50 },
+  { crystals: 500 },
+  { stones: 50 },
+  { crystals: 800 },
+  { stones: 100 },
+  { crystals: 1000 },
+  { stones: 300 },
+];
+
+// デイリーミッション（毎日0時にリセット）。key は daily カウンタ名
+TD.DAILY_MISSIONS = [
+  { id: 'd-login',  name: 'ログインする',                 key: 'login',    goal: 1,  reward: { stones: 10 } },
+  { id: 'd-win',    name: 'バトルに3回勝利する',           key: 'wins',     goal: 3,  reward: { stones: 30 } },
+  { id: 'd-kill',   name: '敵を50体倒す',                  key: 'kills',    goal: 50, reward: { stones: 20 } },
+  { id: 'd-skill',  name: '必殺技を5回使う',               key: 'skills',   goal: 5,  reward: { crystals: 300 } },
+  { id: 'd-lvup',   name: 'キャラをレベルアップする',       key: 'levelups', goal: 1,  reward: { crystals: 200 } },
+  { id: 'd-cave',   name: '「結晶の洞窟」をクリアする',     key: 'caves',    goal: 1,  reward: { crystals: 300 } },
+  { id: 'd-all',    name: 'デイリーミッションをすべて達成', key: '_all',     goal: 6,  reward: { stones: 50 } },
+];
+
+// 通常ミッション（一度だけ達成）。progress(save) → 現在値
+TD.ACHIEVEMENTS = [
+  { id: 'a-1-1',   name: '1-1「始まりの街道」をクリア',   goal: 1,  progress: s => s.cleared['1-1'] ? 1 : 0, reward: { stones: 30 } },
+  { id: 'a-1-4',   name: '1-4「王都城門・決戦」をクリア', goal: 1,  progress: s => s.cleared['1-4'] ? 1 : 0, reward: { stones: 100 } },
+  { id: 'a-star',  name: '第1章で★を12個集める',          goal: 12, progress: s => TD.STAGES.reduce((a, st) => a + (s.cleared[st.id] || 0), 0), reward: { stones: 150 } },
+  { id: 'a-own8',  name: '英雄を8人仲間にする',           goal: 8,  progress: s => s.owned.length, reward: { stones: 100 } },
+  { id: 'a-own13', name: '英雄を13人仲間にする',          goal: 13, progress: s => s.owned.length, reward: { stones: 300 } },
+  { id: 'a-lv20',  name: 'いずれかのキャラをLv20にする',   goal: 20, progress: s => Math.max(...Object.values(s.chars).map(c => c.lv)), reward: { stones: 50 } },
+  { id: 'a-lb',    name: 'キャラを限界突破する',           goal: 1,  progress: s => Math.max(...Object.values(s.chars).map(c => c.lb)), reward: { stones: 50 } },
+  { id: 'a-win30', name: 'バトルに通算30回勝利する',        goal: 30, progress: s => s.stats.wins, reward: { stones: 100 } },
+  { id: 'a-kill500', name: '敵を通算500体倒す',            goal: 500, progress: s => s.stats.kills, reward: { stones: 100 } },
+  { id: 'a-login7', name: '通算7日ログインする',           goal: 7,  progress: s => s.login.total, reward: { stones: 100 } },
+];
+
+// デイリークエスト（1日の挑戦回数に制限あり）
+TD.DAILY_STAGES = [
+  {
+    id: 'D-1', type: 'daily', name: '結晶の洞窟', chapter: 'デイリークエスト', unlockAfter: '1-1', dailyLimit: 3,
+    brief: '経験の結晶がたくさん眠る洞窟です。1日3回まで挑戦できますよ！',
+    lives: 10, mana: 14, hpScale: 1.4, reward: 0, exp: 1500,
+    map: [
+      'xxxxSxxxx',
+      'x...#...x',
+      'x.###...x',
+      'x.#.....x',
+      'x.#####.x',
+      'x.....#.x',
+      'x.x...#.x',
+      'x.#####.x',
+      'x.#.....x',
+      'x.###x..x',
+      'x...#...x',
+      'x...#...x',
+      'xxxxGxxxx',
+    ],
+    waves: [
+      { t: 3, e: 'slime', n: 6, gap: 1.5 },
+      { t: 15, e: 'goblin', n: 5, gap: 1.8 },
+      { t: 28, e: 'salamander', n: 3, gap: 3 },
+      { t: 38, e: 'slime', n: 8, gap: 1 },
+      { t: 48, e: 'skeleton', n: 2, gap: 4 },
+    ],
+  },
+];
+
+// 期間限定イベント
+TD.ENEMIES.starbeast = { name: '星喰らいの魔獣', element: 'fire', hp: 7000, atk: 260, def: 90, speed: 0.3, interval: 1.8, size: 20, shape: 'boss', life: 3, boss: true };
+
+TD.EVENT = {
+  id: 'starfest',
+  name: '星降る夜の魔導祭',
+  start: '2026-11-15', end: '2026-12-14',   // この期間だけ遊べる（端末の日付で判定）
+  currency: '星の欠片',
+  element: 'dark',
+  desc: '年に一度、星が降る夜に開かれる魔導祭。ところが今年は、星を喰らう魔獣が現れて……！',
+  story: 'event-starfest',
+  stages: [
+    {
+      id: 'E-1', type: 'event', name: '星降る丘', chapter: '星降る夜の魔導祭', unlockAfter: null,
+      brief: '星の欠片を集めて、交換所で報酬と交換しましょう！何度でも挑戦できます。',
+      lives: 10, mana: 14, hpScale: 1.5, reward: 50, exp: 500, eventPoints: 30,
+      map: [
+        '....S....',
+        '....#..x.',
+        '.x..#....',
+        '..###....',
+        '..#......',
+        '..####...',
+        '.....#...',
+        '..x..#.x.',
+        '.#####...',
+        '.#.......',
+        '.#####...',
+        '.....#...',
+        '.....G...',
+      ],
+      waves: [
+        { t: 3, e: 'wolf', n: 5, gap: 1.5 },
+        { t: 14, e: 'salamander', n: 3, gap: 3 },
+        { t: 26, e: 'goblin', n: 6, gap: 1.5 },
+        { t: 38, e: 'wolf', n: 8, gap: 1 },
+        { t: 50, e: 'skeleton', n: 2, gap: 4 },
+      ],
+    },
+    {
+      id: 'E-2', type: 'event', name: '魔導祭の夜【上級】', chapter: '星降る夜の魔導祭', unlockAfter: 'E-1',
+      brief: '星喰らいの魔獣が現れました！火属性の魔獣には水属性が有効です。報酬の星の欠片は2倍以上！',
+      lives: 10, mana: 16, hpScale: 2.2, reward: 80, exp: 900, eventPoints: 70,
+      map: [
+        'S.......S',
+        '#.......#',
+        '#..x....#',
+        '####.####',
+        '...#.#...',
+        '...###...',
+        '....#....',
+        '.x..#..x.',
+        '.####....',
+        '.#.......',
+        '.######..',
+        '......#..',
+        '......G..',
+      ],
+      waves: [
+        { t: 3, e: 'salamander', n: 3, gap: 2.5, s: 0 },
+        { t: 4, e: 'wolf', n: 5, gap: 1.2, s: 1 },
+        { t: 20, e: 'skeleton', n: 2, gap: 4, s: 0 },
+        { t: 22, e: 'goblin', n: 5, gap: 1.5, s: 1 },
+        { t: 40, e: 'starbeast', n: 1, gap: 0, s: 0 },
+        { t: 44, e: 'salamander', n: 4, gap: 2, s: 1 },
+        { t: 55, e: 'wolf', n: 6, gap: 1, s: 0 },
+      ],
+    },
+  ],
+  // 交換所（limit = 期間中の交換上限）
+  shop: [
+    { id: 'rune',  name: '★4 ルーン（加入 or 限界突破）', char: 'rune', cost: 300, limit: 2 },
+    { id: 'st100', name: '魔晶石 ×100', reward: { stones: 100 }, cost: 120, limit: 5 },
+    { id: 'cr1k',  name: '経験の結晶 ×1000', reward: { crystals: 1000 }, cost: 40, limit: 10 },
+    { id: 'st30',  name: '魔晶石 ×30', reward: { stones: 30 }, cost: 40, limit: 99 },
+  ],
+};

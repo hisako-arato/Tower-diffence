@@ -292,6 +292,7 @@ window.TD = window.TD || {};
       const d = u.def, s = d.skill;
       if (u.removed || u.sp < s.sp || this.over) return;
       u.sp = 0;
+      this.skillCount = (this.skillCount || 0) + 1;
       const alive = this.enemies.filter(e => !e.dead);
       const col = TD.ELEMENTS[d.element].color;
       switch (s.type) {
@@ -548,7 +549,7 @@ window.TD = window.TD || {};
       this.selected = null;
       this.hideMenu();
       const stars = !win ? 0 : this.lives === this.maxLives ? 3 : this.lives >= this.maxLives / 2 ? 2 : 1;
-      setTimeout(() => this.onEnd({ win, stars, lives: this.lives, maxLives: this.maxLives, killed: this.killed, total: this.totalEnemies }), 900);
+      setTimeout(() => this.onEnd({ win, stars, lives: this.lives, maxLives: this.maxLives, killed: this.killed, total: this.totalEnemies, skills: this.skillCount || 0 }), 900);
     }
 
     // ---------- UI更新 ----------

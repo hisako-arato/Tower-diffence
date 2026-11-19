@@ -20,6 +20,11 @@ TD.Save = {
       giftReceived: false,
       playerName: '',     // ストーリーで入力するプレイヤー名
       story: {},          // 既読エピソード { prologue: true }
+      daily: null,        // その日のミッション進捗（TD.Live.ensureDaily で生成）
+      stats: { wins: 0, kills: 0, skills: 0, pulls: 0 },  // 通算記録
+      achieved: {},       // 受け取り済みの通常ミッション
+      login: { last: '', day: 0, total: 0 },              // ログインボーナス
+      events: {},         // イベントごとの状態 { starfest: { pts, shop } }
     };
   },
 
@@ -29,6 +34,11 @@ TD.Save = {
     out.owned = (out.owned || []).filter(id => TD.CHARS[id]);
     out.party = (out.party || []).filter(id => out.owned.includes(id)).slice(0, 6);
     if (!out.party.length) out.party = d.party.filter(id => out.owned.includes(id));
+    out.stats = Object.assign({ wins: 0, kills: 0, skills: 0, pulls: 0 }, s.stats);
+    out.login = Object.assign({ last: '', day: 0, total: 0 }, s.login);
+    out.achieved = out.achieved || {};
+    out.events = out.events || {};
+    if (out.daily && !out.daily.claimed) out.daily = null;
     out.chars = out.chars || {};
     for (const id of out.owned) {
       const c = out.chars[id] || {};
