@@ -7,7 +7,7 @@ window.TD = window.TD || {};
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
   class Battle {
-    constructor(stage, partyIds, els, onEnd) {
+    constructor(stage, party, els, onEnd) {
       this.stage = stage;
       this.els = els;
       this.onEnd = onEnd;
@@ -38,7 +38,8 @@ window.TD = window.TD || {};
       this.shots = [];
       this.fx = [];
       this.pops = [];
-      this.cards = partyIds.map(id => ({ id, def: TD.CHARS[id], state: 'ready', cd: 0, unit: null }));
+      // party: [{ id, def }]（def は育成状態を反映済みのステータス）
+      this.cards = party.map(p => ({ id: p.id, def: p.def, state: 'ready', cd: 0, unit: null }));
       this.selected = null;
       this.menuUnit = null;
       this.speed = 1;
@@ -318,6 +319,10 @@ window.TD = window.TD || {};
             this.fx.push({ type: 'ring', x: a.x, y: a.y, r0: 4, r1: 22, t: 0, dur: 0.5, color: '#7dffa0' });
           }
           break;
+        case 'storm':
+          for (const e of alive) if (dist(e, u) <= d.range * T) { e.slowT = s.dur; this.hit(u, e, this.atkOf(u) * s.mult); }
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 10, r1: d.range * T, t: 0, dur: 0.7, color: '#b8ffd0', width: 8 });
+          break;
         case 'explosion': {
           const inRange = alive.filter(e => dist(e, u) <= d.range * T);
           const c = inRange.sort((a, b) => b.hp - a.hp)[0] || u;
@@ -428,7 +433,7 @@ window.TD = window.TD || {};
       const hp = Math.round(def.hp * this.stage.hpScale);
       const e = {
         def, route, idx: 1, x: route[0].x, y: route[0].y, hp, maxHp: hp, atk: def.atk * this.stage.hpScale,
-        size: def.size, cd: def.interval, blockedBy: null, passed: new Set(), frozen: 0, flash: 0, walk: Math.random() * 6,
+        size: def.size, cd: def.interval, blockedBy: null, passed: new Set(), frozen: 0, slowT: 0, flash: 0, walk: Math.random() * 6,
       };
       this.enemies.push(e);
       if (def.boss) {
@@ -449,7 +454,8 @@ window.TD = window.TD || {};
           continue;
         }
         e.walk += dt * 8;
-        let move = e.def.speed * T * dt;
+        if (e.slowT > 0) e.slowT -= dt;
+        let move = e.def.speed * T * dt * (e.slowT > 0 ? 0.5 : 1);
         while (move > 0 && e.idx < e.route.length) {
           const tgt = e.route[e.idx], dx = tgt.x - e.x, dy = tgt.y - e.y, d = Math.hypot(dx, dy);
           if (d <= move) { e.x = tgt.x; e.y = tgt.y; e.idx++; move -= d; }
@@ -647,7 +653,7 @@ window.TD = window.TD || {};
       const x = e.x, y = e.y + (e.blockedBy || e.frozen > 0 ? 0 : bob);
       g.fillStyle = 'rgba(0,0,0,.3)';
       g.beginPath(); g.ellipse(e.x, e.y + s * 0.8, s, s * 0.3, 0, 0, Math.PI * 2); g.fill();
-      const body = e.flash > 0 ? '#ffffff' : e.frozen > 0 ? '#bfe8ff' : el.color;
+      const body = e.flash > 0 ? '#ffffff' : e.frozen > 0 ? '#bfe8ff' : e.slowT > 0 ? '#c8f5d8' : el.color;
       g.fillStyle = body;
       g.strokeStyle = 'rgba(0,0,0,.55)'; g.lineWidth = 1.5;
       switch (e.def.shape) {

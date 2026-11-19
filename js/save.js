@@ -7,11 +7,17 @@ TD.Save = {
   defaults() {
     return {
       v: 1,
-      stones: 0,          // 魔晶石（フェーズ2の召喚で使用予定）
+      stones: 0,          // 魔晶石（召喚に使う）
+      crystals: 0,        // 経験の結晶（レベルアップに使う）
       cleared: {},        // { '1-1': 3 } ステージID → 最高★
       party: ['lydia', 'fin', 'gald', 'mia', 'kai'],
-      owned: Object.keys(TD.CHARS),
-      seenNames: false,
+      owned: ['lydia', 'fin', 'gald', 'mia', 'kai'],
+      chars: {            // キャラごとの育成状態 { lv, lb(限界突破) }
+        lydia: { lv: 1, lb: 0 }, fin: { lv: 1, lb: 0 }, gald: { lv: 1, lb: 0 }, mia: { lv: 1, lb: 0 }, kai: { lv: 1, lb: 0 },
+      },
+      pity: 0,            // 前回の★5から数えた召喚回数
+      totalPulls: 0,
+      giftReceived: false,
     };
   },
 
@@ -21,6 +27,12 @@ TD.Save = {
     out.owned = (out.owned || []).filter(id => TD.CHARS[id]);
     out.party = (out.party || []).filter(id => out.owned.includes(id)).slice(0, 6);
     if (!out.party.length) out.party = d.party.filter(id => out.owned.includes(id));
+    out.chars = out.chars || {};
+    for (const id of out.owned) {
+      const c = out.chars[id] || {};
+      const lb = Math.max(0, Math.min(TD.GROWTH.maxLB, c.lb | 0));
+      out.chars[id] = { lv: Math.max(1, Math.min(TD.maxLv(lb), c.lv | 0 || 1)), lb };
+    }
     return out;
   },
 

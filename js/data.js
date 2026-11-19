@@ -79,7 +79,87 @@ TD.CHARS = {
              desc: '射程内の敵を中心に大爆発。攻撃力500%の範囲ダメージ' },
     lines: { deploy: '燃やし尽くしてやるぜ！', skill: 'まとめて吹き飛べ！爆炎陣！' },
   },
+  zephyr: {
+    name: 'ゼファー', title: '嵐を纏う射手', rarity: 5, element: 'wind', role: 'archer',
+    cost: 13, hp: 750, atk: 95, def: 15, interval: 0.85, range: 3.8, redeploy: 30,
+    skill: { name: '天嵐の矢雨', type: 'storm', sp: 28, mult: 3, dur: 4,
+             desc: '射程内の全ての敵に攻撃力300%のダメージを与え、4秒間移動速度を半減' },
+    lines: { deploy: '風が騒いでる……来るぞ', skill: '吹き荒れろ、天嵐の矢雨！' },
+  },
+  blaire: {
+    name: 'ブレア', title: '紅蓮の拳闘士', rarity: 4, element: 'fire', role: 'sword',
+    cost: 11, hp: 1200, atk: 125, def: 45, interval: 0.75, range: 1.3, block: 1, redeploy: 25,
+    skill: { name: '烈火連撃', type: 'power', sp: 22, atk: 2.2, dur: 8,
+             desc: '8秒間、攻撃力が220%になる' },
+    lines: { deploy: 'さぁ、かかってきな！', skill: '燃え上がれ！烈火連撃！' },
+  },
+  rune: {
+    name: 'ルーン', title: '黒書の魔導士', rarity: 4, element: 'dark', role: 'mage',
+    cost: 14, hp: 650, atk: 105, def: 10, interval: 1.9, range: 2.6, splash: 0.9, redeploy: 30,
+    skill: { name: '深淵の頁', type: 'explosion', sp: 28, mult: 4.5, radius: 1.8,
+             desc: '射程内の敵を中心に闇の爆発。攻撃力450%の範囲ダメージ' },
+    lines: { deploy: '……この頁を読むのは、何年ぶりかしら', skill: '開け、深淵の頁' },
+  },
+  thomas: {
+    name: 'トマス', title: '見習い騎士', rarity: 3, element: 'earth', role: 'shield',
+    cost: 12, hp: 1900, atk: 40, def: 110, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
+    skill: { name: '騎士の意地', type: 'guard', sp: 30, dur: 10,
+             desc: '10秒間、防御2倍・ブロック数+2。HPを50%回復' },
+    lines: { deploy: 'ぼ、僕だって騎士です！', skill: 'ここで退いたら騎士じゃない！' },
+  },
+  lily: {
+    name: 'リリィ', title: '泉の巫女', rarity: 3, element: 'water', role: 'priest',
+    cost: 9, hp: 520, atk: 80, def: 5, interval: 1.5, range: 2.6, redeploy: 20,
+    skill: { name: '癒しの泉', type: 'healAll', sp: 28, ratio: 0.35,
+             desc: '全ての味方のHPを最大HPの35%回復' },
+    lines: { deploy: '泉の加護を、あなたに', skill: '湧き出でよ、癒しの泉' },
+  },
+  popo: {
+    name: 'ポポ', title: 'ドワーフの石弓兵', rarity: 3, element: 'earth', role: 'archer',
+    cost: 9, hp: 620, atk: 66, def: 20, interval: 1.0, range: 3.2, redeploy: 20,
+    skill: { name: '連装石弓', type: 'rapid', sp: 25, rate: 2.5, dur: 8,
+             desc: '8秒間、攻撃速度が2.5倍になる' },
+    lines: { deploy: 'ドワーフの石弓をなめるなよ！', skill: '全弾装填、撃てーっ！' },
+  },
 };
+
+// ---------- 育成 ----------
+TD.GROWTH = {
+  baseMaxLv: 20,      // 初期レベル上限
+  lvPerLB: 10,        // 限界突破1回ごとのレベル上限アップ
+  maxLB: 4,           // 限界突破の最大回数
+  statPerLv: 0.02,    // 1レベルごとのHP/攻撃/防御の上昇率
+  statPerLB: 0.05,    // 限界突破1回ごとの上昇率
+  expCost: lv => 40 + lv * 15,                  // Lv → Lv+1 に必要な経験の結晶
+  dupStones: { 3: 5, 4: 20, 5: 60 },            // 限界突破上限を超えた重複の変換量
+};
+TD.maxLv = lb => TD.GROWTH.baseMaxLv + TD.GROWTH.lvPerLB * lb;
+// 育成状態を反映したキャラ定義を返す
+TD.charStats = function (id, prog) {
+  const d = TD.CHARS[id], p = prog || { lv: 1, lb: 0 }, G = TD.GROWTH;
+  const m = 1 + (p.lv - 1) * G.statPerLv + p.lb * G.statPerLB;
+  return Object.assign({}, d, { hp: Math.round(d.hp * m), atk: Math.round(d.atk * m), def: Math.round(d.def * m), lv: p.lv, lb: p.lb });
+};
+
+// ---------- 召喚 ----------
+TD.GACHA = {
+  single: 30,          // 魔晶石
+  ten: 300,
+  pity: 100,           // この回数以内に★5が出なければ確定
+  rates: { 5: 0.03, 4: 0.17, 3: 0.80 },
+  starterGift: 900,    // はじめての召喚士への贈り物
+  banners: [
+    {
+      id: 'pickup-celes', name: '氷華の魔女 ピックアップ召喚', pickup: ['celes'], pickupShare: 0.5,
+      desc: '★5「氷華の魔女 セレス」の出現率アップ中！', element: 'water',
+    },
+    {
+      id: 'standard', name: '英雄召喚', pickup: [], desc: '大陸の英雄たちが召喚に応じる、常設の召喚。', element: 'light',
+    },
+  ],
+};
+// ステージ報酬の経験の結晶（勝利時）
+TD.stageExp = st => st.exp || Math.round(300 * st.hpScale);
 
 // speed はタイル/秒
 TD.ENEMIES = {

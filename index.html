@@ -30,7 +30,10 @@
 
     <header class="topbar">
       <div class="tb-left"><div class="player-name">召喚士</div><div id="home-progress" class="progress"></div></div>
-      <div class="currency"><i class="gem"></i><span class="stones-val">0</span></div>
+      <div class="currencies">
+        <div class="currency"><i class="gem"></i><span class="stones-val">0</span></div>
+        <div class="currency"><i class="crystal"></i><span class="crystals-val">0</span></div>
+      </div>
     </header>
 
     <div class="navi-area">
@@ -66,8 +69,8 @@
 
     <nav class="home-menu">
       <button class="menu-main" data-go="screen-stages"><span>出撃</span><small>QUEST</small></button>
-      <button class="menu-sub" data-go="screen-party"><span>編成</span><small>PARTY</small></button>
-      <button class="menu-sub" id="btn-summon"><span>召喚</span><small>SUMMON</small><em>準備中</em></button>
+      <button class="menu-sub" data-go="screen-party"><span>編成・育成</span><small>PARTY</small></button>
+      <button class="menu-sub summon" data-go="screen-summon"><span>召喚</span><small>SUMMON</small><em>PICK UP</em></button>
       <button class="menu-sub" id="btn-settings"><span>設定</span><small>OPTION</small></button>
     </nav>
   </section>
@@ -86,9 +89,10 @@
   <section id="screen-party" class="screen">
     <header class="topbar sub">
       <button class="back" data-go="screen-home">‹ ホーム</button>
-      <div class="sub-title">編成</div>
+      <div class="sub-title">編成・育成</div>
       <button class="back" data-go="screen-stages">出撃 ›</button>
     </header>
+    <div class="sub-currency"><div class="currency"><i class="crystal"></i><span class="crystals-val">0</span></div></div>
     <div class="scroll">
       <div class="sec-label">出撃メンバー（最大6人）</div>
       <div id="party-slots"></div>
@@ -96,6 +100,24 @@
       <div class="sec-label">所持キャラ</div>
       <div id="roster"></div>
     </div>
+  </section>
+
+  <!-- 召喚 -->
+  <section id="screen-summon" class="screen">
+    <header class="topbar sub">
+      <button class="back" data-go="screen-home">‹ ホーム</button>
+      <div class="sub-title">召喚</div>
+      <div class="currency"><i class="gem"></i><span class="stones-val">0</span></div>
+    </header>
+    <div id="banner-tabs"></div>
+    <div id="banner"></div>
+    <div id="summon-info"></div>
+    <div class="summon-btns">
+      <button id="btn-pull1" class="btn ghost"></button>
+      <button id="btn-pull10" class="btn primary"></button>
+    </div>
+    <button id="btn-rates" class="link-btn">提供割合・召喚の説明</button>
+    <div id="summon-fx" class="summon-fx"></div>
   </section>
 
   <!-- バトル -->
@@ -125,6 +147,7 @@
 
 <script src="js/data.js"></script>
 <script src="js/save.js"></script>
+<script src="js/gacha.js"></script>
 <script src="js/battle.js"></script>
 <script src="js/app.js"></script>
 </body>
