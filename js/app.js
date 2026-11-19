@@ -24,6 +24,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     if (id === 'screen-stages') renderStages();
     if (id === 'screen-party') renderParty();
     if (id === 'screen-summon') renderSummon();
+    if (id === 'screen-story') renderStoryList();
   }
   document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => show(b.dataset.go)));
 
@@ -52,11 +53,13 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   function renderHome() {
     updateCurrency();
     const cleared = Object.keys(save.cleared).length;
+    $('#home-name').textContent = save.playerName || '召喚士';
+    $('#btn-install').hidden = !installPrompt;
     $('#home-progress').textContent = `第1章 進行度 ${cleared}/${TD.STAGES.length}・英雄 ${save.owned.length}/${Object.keys(TD.CHARS).length}`;
   }
   function naviSay(text) {
     const b = $('#navi-bubble');
-    b.textContent = text;
+    b.textContent = text.replace(/\{name\}/g, save.playerName || '召喚士');
     b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
   }
   $('#navi').addEventListener('click', () => {
@@ -74,12 +77,46 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     persist();
     updateCurrency();
     const body = modal(
-      `<div class="gift"><div class="gift-title">召喚士さまへの贈り物</div>` +
+      `<div class="gift"><div class="gift-title">${esc(save.playerName || '召喚士')}さまへの贈り物</div>` +
       `<div class="gift-item"><i class="gem big"></i>魔晶石 ×${TD.GACHA.starterGift}</div>` +
       `<p>結界の精霊ルミナより。<br>「召喚」で新たな英雄を呼び出しましょう！</p></div>` +
       `<div class="btn-col"><button class="btn primary" data-act="summon">召喚へ</button><button class="btn ghost" data-act="close">あとで</button></div>`, 'locked');
     body.querySelector('[data-act=summon]').onclick = () => { closeModal(); show('screen-summon'); };
     body.querySelector('[data-act=close]').onclick = closeModal;
+  }
+
+  // ---------- ストーリー ----------
+  const adv = new TD.Adv($('#adv'));
+  function playStory(id, cb) {
+    if (!TD.STORY[id]) { cb && cb(); return; }
+    adv.play(id, save.playerName || '召喚士', () => {
+      save.story[id] = true;
+      persist();
+      renderHome();
+      cb && cb();
+    }, name => { save.playerName = name; persist(); });
+  }
+  const storyFor = (st, kind) => { const id = `${st.id}-${kind}`; return TD.STORY[id] ? id : null; };
+
+  function storyUnlockHint(id) {
+    const [a, b, kind] = id.split('-');
+    return kind === 'pre' ? `ステージ${a}-${b}に挑戦すると解放` : `ステージ${a}-${b}クリアで解放`;
+  }
+  function renderStoryList() {
+    const list = $('#story-list');
+    let html = '', ch = null;
+    for (const id of TD.STORY_ORDER) {
+      const ep = TD.STORY[id], read = !!save.story[id];
+      if (ep.chapter !== ch) { ch = ep.chapter; html += `<div class="chapter-title">${TD.CHAPTERS[ch]}</div>`; }
+      html += `<button class="story-item${read ? '' : ' locked'}" data-ep="${id}"><span class="si-title">${esc(ep.title)}</span>` +
+        `<span class="si-sub">${read ? '▶ 再生' : '🔒 ' + storyUnlockHint(id)}</span></button>`;
+    }
+    html += `<div class="story-next">第2章は近日公開予定です</div>`;
+    list.innerHTML = html;
+    list.querySelectorAll('[data-ep]').forEach(b => b.onclick = () => {
+      const id = b.dataset.ep;
+      if (save.story[id] || id === 'prologue') playStory(id, () => renderStoryList());
+    });
   }
 
   // ---------- ステージ選択 ----------
@@ -94,6 +131,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       el.className = 'stage-item' + (open ? '' : ' locked') + (st.waves.some(w => TD.ENEMIES[w.e].boss) ? ' boss' : '');
       el.innerHTML = `<span class="st-id">${st.id}</span><span class="st-name">${st.name}<small>経験の結晶 ×${TD.stageExp(st)}</small></span>` +
         `<span class="st-stars">${open ? TD.starsHTML(best, 3) : '🔒'}</span>`;
+      const unreadStory = open && [storyFor(st, 'pre'), storyFor(st, 'post')].some(id => id && !save.story[id]);
+      if (unreadStory) el.insertAdjacentHTML('beforeend', '<span class="st-story">STORY</span>');
       if (open) el.addEventListener('click', () => openBrief(st));
       list.appendChild(el);
     });
@@ -115,7 +154,12 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="brief-sub">ライフ ${st.lives}・初期マナ ${st.mana}<br>報酬：経験の結晶 ×${TD.stageExp(st)}・魔晶石 ×${first ? st.reward + '（初回）' : 5}</div>` +
       `<div class="btn-row"><button class="btn ghost" data-act="party">編成する</button><button class="btn primary" data-act="go">出撃！</button></div>`);
     body.querySelector('[data-act=party]').onclick = () => { closeModal(); show('screen-party'); };
-    body.querySelector('[data-act=go]').onclick = () => { closeModal(); startBattle(st); };
+    body.querySelector('[data-act=go]').onclick = () => {
+      closeModal();
+      const pre = storyFor(st, 'pre');
+      if (pre && !save.story[pre]) playStory(pre, () => startBattle(st));
+      else startBattle(st);
+    };
   }
 
   // ---------- バトル ----------
@@ -186,8 +230,14 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       (!r.win ? `<button class="btn primary" data-act="party">育成する</button>` : '') +
       `<button class="btn ${r.win && next ? 'ghost' : r.win ? 'primary' : 'ghost'}" data-act="retry">もう一度</button>` +
       `<button class="btn ghost" data-act="stages">ステージ選択へ</button></div>`, 'locked');
+    const post = r.win ? storyFor(st, 'post') : null;
+    const pendingPost = post && !save.story[post];
+    if (pendingPost) body.insertAdjacentHTML('afterbegin', '<div class="res-story">クリア後のストーリーが始まります</div>');
     const leave = () => { closeModal(); if (battle) { battle.destroy(); battle = null; } };
-    const on = (act, fn) => { const b = body.querySelector(`[data-act=${act}]`); if (b) b.onclick = fn; };
+    const on = (act, fn) => {
+      const b = body.querySelector(`[data-act=${act}]`);
+      if (b) b.onclick = () => (pendingPost ? () => { leave(); show('screen-stages'); playStory(post, fn); } : fn)();
+    };
     on('next', () => { leave(); show('screen-stages'); openBrief(next); });
     on('party', () => { leave(); show('screen-party'); });
     on('retry', () => { leave(); startBattle(st); });
@@ -373,6 +423,11 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   function openSettings() {
     const body = modal(
       `<div class="pause-title">設定</div>` +
+      `<div class="brief-sec">プレイヤー名</div>` +
+      `<div class="name-row"><input id="set-name" type="text" maxlength="10" value="${esc(save.playerName)}" placeholder="召喚士"><button class="btn ghost" data-act="name">変更</button></div>` +
+      `<div class="brief-sec">アプリとしてインストール</div>` +
+      `<p class="small">${installHelpText()}</p>` +
+      (installPrompt ? `<button class="btn primary" data-act="install" style="width:100%">ホーム画面に追加する</button>` : '') +
       `<div class="brief-sec">データのバックアップ</div>` +
       `<p class="small">セーブデータはこのブラウザに保存されています。別の端末へ移すときは引き継ぎコードを使ってください。</p>` +
       `<textarea id="backup-code" rows="3" placeholder="ここに引き継ぎコードが表示されます／貼り付けてください"></textarea>` +
@@ -393,14 +448,45 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       save = TD.Save.defaults(); persist(); closeModal(); renderHome(); checkGift();
     };
     body.querySelector('[data-act=close]').onclick = closeModal;
+    body.querySelector('[data-act=name]').onclick = () => {
+      const v = body.querySelector('#set-name').value.trim().replace(/[<>{}]/g, '').slice(0, 10);
+      save.playerName = v; persist(); renderHome(); alertBox(`プレイヤー名を「${v || '召喚士'}」にしました`);
+    };
+    const ib = body.querySelector('[data-act=install]');
+    if (ib) ib.onclick = () => { closeModal(); promptInstall(); };
+  }
+
+  // ---------- PWA（アプリとしてインストール） ----------
+  let installPrompt = null;
+  const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  function installHelpText() {
+    if (isStandalone()) return 'アプリとしてインストール済みです。';
+    if (installPrompt) return 'ボタンを押すと、ホーム画面にアプリとして追加できます。オフラインでも遊べます。';
+    if (isIOS()) return 'Safari 下部の共有ボタン（□↑）→「ホーム画面に追加」でアプリとして追加できます。';
+    return 'ブラウザのメニューから「アプリをインストール」または「ホーム画面に追加」を選んでください。';
+  }
+  async function promptInstall() {
+    if (!installPrompt) { alertBox(installHelpText()); return; }
+    installPrompt.prompt();
+    try { await installPrompt.userChoice; } catch (e) { /* 無視 */ }
+    installPrompt = null;
+    renderHome();
+  }
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; renderHome(); });
+  window.addEventListener('appinstalled', () => { installPrompt = null; renderHome(); });
+  $('#btn-install').addEventListener('click', promptInstall);
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* オフライン対応なしで続行 */ }));
   }
 
   // ---------- 起動 ----------
   $('#title-screen').addEventListener('click', () => {
     $('#title-screen').classList.add('hide');
     naviSay(TD.NAVI_LINES[0]);
-    setTimeout(checkGift, 400);
+    if (!save.story.prologue) setTimeout(() => playStory('prologue', checkGift), 500);
+    else setTimeout(checkGift, 400);
   });
   show('screen-home');
-  TD.app = { show, startBattle, get save() { return save; } };
+  TD.app = { show, startBattle, playStory, get save() { return save; } };
 })();

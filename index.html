@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="theme-color" content="#120e24">
 <title>結界の守り手</title>
+<meta name="description" content="剣と魔法の世界で英雄を召喚し、王都の大結界を守るタワーディフェンス">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="結界の守り手">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -29,12 +37,14 @@
     </div>
 
     <header class="topbar">
-      <div class="tb-left"><div class="player-name">召喚士</div><div id="home-progress" class="progress"></div></div>
+      <div class="tb-left"><div class="player-name" id="home-name">召喚士</div><div id="home-progress" class="progress"></div></div>
       <div class="currencies">
         <div class="currency"><i class="gem"></i><span class="stones-val">0</span></div>
         <div class="currency"><i class="crystal"></i><span class="crystals-val">0</span></div>
       </div>
     </header>
+
+    <button id="btn-install" class="install-chip" hidden>アプリ版をインストール</button>
 
     <div class="navi-area">
       <div id="navi-bubble" class="bubble">おかえりなさい、召喚士さま！</div>
@@ -71,6 +81,7 @@
       <button class="menu-main" data-go="screen-stages"><span>出撃</span><small>QUEST</small></button>
       <button class="menu-sub" data-go="screen-party"><span>編成・育成</span><small>PARTY</small></button>
       <button class="menu-sub summon" data-go="screen-summon"><span>召喚</span><small>SUMMON</small><em>PICK UP</em></button>
+      <button class="menu-sub" data-go="screen-story"><span>ストーリー</span><small>STORY</small></button>
       <button class="menu-sub" id="btn-settings"><span>設定</span><small>OPTION</small></button>
     </nav>
   </section>
@@ -100,6 +111,16 @@
       <div class="sec-label">所持キャラ</div>
       <div id="roster"></div>
     </div>
+  </section>
+
+  <!-- ストーリー一覧 -->
+  <section id="screen-story" class="screen">
+    <header class="topbar sub">
+      <button class="back" data-go="screen-home">‹ ホーム</button>
+      <div class="sub-title">ストーリー</div>
+      <span class="spacer"></span>
+    </header>
+    <div id="story-list" class="scroll"></div>
   </section>
 
   <!-- 召喚 -->
@@ -142,6 +163,7 @@
     </footer>
   </section>
 
+  <div id="adv" class="adv"></div>
   <div id="modal"><div class="modal-body"></div></div>
 </div>
 
@@ -149,6 +171,7 @@
 <script src="js/save.js"></script>
 <script src="js/gacha.js"></script>
 <script src="js/battle.js"></script>
+<script src="js/story.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

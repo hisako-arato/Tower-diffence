@@ -1,0 +1,19 @@
+{
+  "name": "結界の守り手",
+  "short_name": "結界の守り手",
+  "description": "剣と魔法の世界で英雄を召喚し、王都の大結界を守るタワーディフェンス",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#120e24",
+  "theme_color": "#120e24",
+  "categories": ["games"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

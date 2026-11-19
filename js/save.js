@@ -18,6 +18,8 @@ TD.Save = {
       pity: 0,            // 前回の★5から数えた召喚回数
       totalPulls: 0,
       giftReceived: false,
+      playerName: '',     // ストーリーで入力するプレイヤー名
+      story: {},          // 既読エピソード { prologue: true }
     };
   },
 
