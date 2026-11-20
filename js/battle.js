@@ -313,6 +313,38 @@ window.TD = window.TD || {};
           for (const e of alive) if (dist(e, u) <= s.radius * T) { e.frozen = s.dur; this.hit(u, e, this.atkOf(u) * s.mult); }
           this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 10, r1: s.radius * T, t: 0, dur: 0.6, color: '#bfe8ff', width: 6 });
           break;
+        case 'reflect':
+        case 'taunt':
+          if (s.type === 'taunt') this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 8, r1: s.radius * T, t: 0, dur: 0.7, color: '#ff4a6a', width: 6 });
+          if (s.type === 'reflect') this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 6, r1: 30, t: 0, dur: 0.6, color: '#9fe4ff', width: 5 });
+          u.buff = s; u.buffT = s.dur;
+          break;
+        case 'vortex': {
+          const c = this.frontEnemy(u, d.range * T) || u, cx = c.x, cy = c.y, R = s.radius * T;
+          for (const e of alive) {
+            if (dist(e, { x: cx, y: cy }) > R) continue;
+            if (!e.blockedBy && !e.def.boss && e !== c) { e.x += (cx - e.x) * 0.7; e.y += (cy - e.y) * 0.7; e.passed.clear(); }
+          }
+          for (const e of alive) if (dist(e, { x: cx, y: cy }) <= R * 0.8) this.hit(u, e, this.atkOf(u) * s.mult);
+          this.fx.push({ type: 'ring', x: cx, y: cy, r0: R, r1: 6, t: 0, dur: 0.6, color: '#8affc0', width: 8 });
+          this.fx.push({ type: 'burst', x: cx, y: cy, t: 0, dur: 0.6, color: '#c8ffe0', big: true });
+          break;
+        }
+        case 'rally':
+          for (const a of this.units) {
+            a.atkUpT = s.dur; a.atkUpMult = s.atkMult;
+            const h = a.maxHp * s.ratio; a.hp = Math.min(a.maxHp, a.hp + h);
+            this.pop(a.x, a.y - 22, '攻撃UP', '#ff9a4a', { size: 11 });
+            this.fx.push({ type: 'ring', x: a.x, y: a.y, r0: 4, r1: 22, t: 0, dur: 0.5, color: '#ff9a4a' });
+          }
+          break;
+        case 'barrier':
+          for (const e of alive) if (dist(e, u) <= d.range * T) this.shots.push({ x: u.x, y: u.y, target: e, power: this.atkOf(u) * s.mult, src: u, speed: 520, color: '#7ad8ff', kind: 'archer' });
+          for (const a of this.units) {
+            a.shieldT = s.dur; a.shieldRed = s.reduce;
+            this.fx.push({ type: 'ring', x: a.x, y: a.y, r0: 18, r1: 22, t: 0, dur: 0.6, color: '#7ad8ff', width: 4 });
+          }
+          break;
         case 'rapid':
         case 'power':
           u.buff = s; u.buffT = s.dur;
@@ -432,8 +464,16 @@ window.TD = window.TD || {};
     }
 
     // ---------- ステータス ----------
-    atkOf(u) { return u.def.atk * (u.buff && u.buff.atk ? u.buff.atk : 1); }
-    defOf(u) { return u.def.def * (u.buff && u.buff.type === 'guard' ? 2 : 1); }
+    atkOf(u) { return u.def.atk * (u.buff && u.buff.atk ? u.buff.atk : 1) * (u.atkUpT > 0 ? u.atkUpMult : 1); }
+    defOf(u) {
+      const b = u.buff;
+      return u.def.def * (!b ? 1 : b.defMult ? b.defMult : b.type === 'guard' ? 2 : 1);
+    }
+    // 挑発中で、この敵を引きつけている味方
+    tauntUnit(e) {
+      for (const u of this.units) if (u.buff && u.buff.type === 'taunt' && dist(e, u) <= u.buff.radius * T) return u;
+      return null;
+    }
     blockOf(u) { return (u.def.block || 0) + (u.buff && u.buff.type === 'guard' && !u.buff.noBlock ? 2 : 0); }
     rateOf(u) { return u.buff && u.buff.rate ? u.buff.rate : 1; }
 
@@ -458,10 +498,17 @@ window.TD = window.TD || {};
       if (u.removed) return;
       const m = TD.elemMult(e.def.element, u.def.element);
       const raw = (power != null ? power : e.atk) * m;
-      const d = Math.round(Math.max(raw - this.defOf(u), raw * 0.15));
+      let d = Math.max(raw - this.defOf(u), raw * 0.15);
+      if (u.shieldT > 0) d *= 1 - u.shieldRed;
+      d = Math.round(d);
       u.hp -= d;
       u.flash = 0.12;
       this.pop(u.x, u.y - 20, String(d), '#ff7a7a', { size: 11 });
+      // 水鏡の構え：受けたダメージを攻撃してきた敵に返す
+      if (u.buff && u.buff.type === 'reflect' && e && !e.dead && e.hp != null) {
+        this.hit(u, e, d);
+        this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 10, r1: 20, t: 0, dur: 0.3, color: '#9fe4ff', width: 3 });
+      }
       if (u.hp <= 0) this.removeUnit(u, false);
     }
 
@@ -544,8 +591,8 @@ window.TD = window.TD || {};
         if (e.def.ranged) {
           e.rcd = (e.rcd == null ? 1 : e.rcd) - dt;
           if (e.rcd <= 0) {
-            let tgt = null, bd = Infinity;
-            for (const u of this.units) { const dd = dist(e, u); if (dd <= e.def.ranged * T && dd < bd) { bd = dd; tgt = u; } }
+            let tgt = this.tauntUnit(e), bd = Infinity;
+            if (!tgt) for (const u of this.units) { const dd = dist(e, u); if (dd <= e.def.ranged * T && dd < bd) { bd = dd; tgt = u; } }
             if (tgt) {
               e.rcd = e.def.interval;
               this.shots.push({ x: e.x, y: e.y, target: tgt, src: e, enemyShot: true, speed: 260, color: TD.ELEMENTS[e.def.element].color });
@@ -581,6 +628,8 @@ window.TD = window.TD || {};
         if (u.removed) continue;
         u.flash = Math.max(0, u.flash - dt);
         u.blocking = u.blocking.filter(e => !e.dead && e.blockedBy === u);
+        if (u.atkUpT > 0) u.atkUpT -= dt;
+        if (u.shieldT > 0) u.shieldT -= dt;
         if (u.buff) { u.buffT -= dt; if (u.buffT <= 0) { u.buff = null; } }
         else u.sp = Math.min(u.def.skill.sp, u.sp + dt);
 
@@ -624,8 +673,8 @@ window.TD = window.TD || {};
     castAoe(e) {
       const a = e.def.aoe, r = a.radius * T;
       // 一番多くのキャラを巻き込める位置を狙う
-      let best = null, bn = -1;
-      for (const u of this.units) {
+      let best = this.units.find(u => u.buff && u.buff.type === 'taunt') || null, bn = -1;
+      if (!best) for (const u of this.units) {
         const n = this.units.filter(o => dist(o, u) <= r).length;
         if (n > bn) { bn = n; best = u; }
       }
@@ -748,10 +797,19 @@ window.TD = window.TD || {};
       g.fillStyle = 'rgba(0,0,0,.3)';
       g.beginPath(); g.ellipse(u.x, u.y + 13, 13, 4, 0, 0, Math.PI * 2); g.fill();
       if (u.buff) {
-        g.strokeStyle = el.color; g.lineWidth = 2;
+        g.strokeStyle = u.buff.type === 'taunt' ? '#ff4a6a' : el.color; g.lineWidth = 2;
         g.globalAlpha = 0.5 + Math.sin(t * 8) * 0.3;
         g.beginPath(); g.arc(u.x, u.y, 19, 0, Math.PI * 2); g.stroke();
+        if (u.buff.type === 'taunt') { g.setLineDash([4, 6]); g.beginPath(); g.arc(u.x, u.y, u.buff.radius * T, 0, Math.PI * 2); g.stroke(); g.setLineDash([]); }
         g.globalAlpha = 1;
+      }
+      if (u.shieldT > 0) { // 被ダメージ軽減の泡
+        g.fillStyle = 'rgba(122,216,255,.18)'; g.strokeStyle = 'rgba(160,230,255,.7)'; g.lineWidth = 1.5;
+        g.beginPath(); g.arc(u.x, u.y, 21, 0, Math.PI * 2); g.fill(); g.stroke();
+      }
+      if (u.atkUpT > 0) { // 攻撃力アップの印
+        g.fillStyle = '#ff8a3a';
+        g.beginPath(); g.moveTo(u.x - 13, u.y - 9); g.lineTo(u.x - 9, u.y - 15); g.lineTo(u.x - 5, u.y - 9); g.closePath(); g.fill();
       }
       if (u.sp >= u.def.skill.sp) {
         g.strokeStyle = '#ffd23f'; g.lineWidth = 2.5;

@@ -164,6 +164,47 @@ TD.CHARS = {
              desc: '配置中の味方全員の必殺技ゲージを10増やす' },
     lines: { deploy: '……もぐもぐ。狙いは、つけた', skill: 'みんなの分もあるよ。……一個ずつね' },
   },
+  sylphina: {
+    name: 'シルフィナ', title: '天翔ける風詠み', rarity: 5, element: 'wind', role: 'mage',
+    cost: 15, hp: 720, atk: 112, def: 15, interval: 1.8, range: 2.8, splash: 0.9, redeploy: 30,
+    profile: '空の神殿で風の声を聴く巫女。彼女が歌えば、嵐さえ道を譲る。',
+    skill: { name: '大竜巻', type: 'vortex', sp: 30, mult: 3, radius: 2.4,
+             desc: '射程内の敵を一か所に吸い寄せ、攻撃力300%の範囲ダメージ（足止め中の敵とボスは吸い寄せない）' },
+    lines: { deploy: '風が、あなたを選んだのね', skill: '集え、天の風――大竜巻' },
+  },
+  seira: {
+    name: 'セイラ', title: '蒼波の剣聖', rarity: 5, element: 'water', role: 'sword',
+    cost: 15, hp: 1700, atk: 125, def: 70, interval: 0.95, range: 1.3, block: 2, redeploy: 30,
+    profile: '水の都の剣術道場を継ぐ剣聖。受けた刃をそのまま返す「水鏡」の使い手。',
+    skill: { name: '水鏡の構え', type: 'reflect', sp: 28, dur: 8, defMult: 1.5,
+             desc: '8秒間、防御1.5倍。受けたダメージを攻撃してきた敵にそのまま返す' },
+    lines: { deploy: '参ります。……お覚悟を', skill: '水鏡に映るは、あなた自身の刃' },
+  },
+  xeno: {
+    name: 'ゼノ', title: '黒鉄の守護騎士', rarity: 4, element: 'dark', role: 'shield',
+    cost: 10, hp: 2200, atk: 55, def: 130, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
+    profile: '素顔を誰にも見せない黒鉄の騎士。仲間の盾になることだけを誓っている。',
+    skill: { name: '黒鉄の咆哮', type: 'taunt', sp: 22, dur: 8, radius: 3, defMult: 1.5,
+             desc: '8秒間、周囲3マスの敵の遠距離攻撃とボスの範囲攻撃を自分に引きつける。防御1.5倍' },
+    lines: { deploy: '……背中は、俺が守る', skill: 'こっちだ、化け物ども！' },
+  },
+  karin: {
+    name: 'カリン', title: '火守りの薬師', rarity: 4, element: 'fire', role: 'priest',
+    cost: 8, hp: 560, atk: 75, def: 8, interval: 1.6, range: 2.6, redeploy: 20,
+    traits: ['fastRedeploy'],
+    profile: '火山のふもとで薬屋を営む薬師。調合した秘薬は、飲めば力が湧いてくる。',
+    skill: { name: '炎の秘薬', type: 'rally', sp: 24, dur: 10, atkMult: 1.3, ratio: 0.2,
+             desc: '10秒間、配置中の味方全員の攻撃力30%アップ。さらにHPを20%回復' },
+    lines: { deploy: 'お薬の時間ですよ～？', skill: '特製の秘薬、みんなでどうぞ♪' },
+  },
+  shigure: {
+    name: 'シグレ', title: '番傘の狙撃手', rarity: 4, element: 'water', role: 'archer',
+    cost: 9, hp: 620, atk: 70, def: 15, interval: 1.1, range: 3.4, redeploy: 25,
+    profile: '仕込み銃の番傘を携えた流しの用心棒。雨の日にだけ、ふらりと現れる。',
+    skill: { name: '時雨の番傘', type: 'barrier', sp: 26, dur: 8, mult: 2, reduce: 0.3,
+             desc: '射程内の敵全員に攻撃力200%の連射。8秒間、配置中の味方全員の受けるダメージを30%軽減' },
+    lines: { deploy: '……雨の匂いがするねぇ', skill: '傘の内は、安全さ' },
+  },
 };
 
 // ---------- 育成 ----------

@@ -13,6 +13,11 @@ TD.CUSTOM_ART = {
   nereia:  { src: 'assets/chars/nereia.webp',  ratio: 0.629, face: [0.59, 0.27, 0.34] },
   akane:   { src: 'assets/chars/akane.webp',   ratio: 1.686, face: [0.30, 0.15, 0.56] },
   shizuku: { src: 'assets/chars/shizuku.webp', ratio: 1.818, face: [0.56, 0.21, 0.50] },
+  sylphina: { src: 'assets/chars/sylphina.webp', ratio: 0.876, face: [0.62, 0.13, 0.24] },
+  seira:    { src: 'assets/chars/seira.webp',    ratio: 0.860, face: [0.46, 0.20, 0.26] },
+  xeno:     { src: 'assets/chars/xeno.webp',     ratio: 0.942, face: [0.47, 0.15, 0.28] },
+  karin:    { src: 'assets/chars/karin.webp',    ratio: 0.953, face: [0.36, 0.26, 0.32] },
+  shigure:  { src: 'assets/chars/shigure.webp',  ratio: 1.094, face: [0.40, 0.14, 0.32] },
 };
 // 文字列だけで登録した場合にも対応
 TD.customArt = function (id) {

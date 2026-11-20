@@ -3,6 +3,8 @@
 このフォルダの画像は、SVGのオリジナルアートの代わりに表示されます。
 
 ## 手順
+※ GitHub から画像をアップロードするときは `assets/chars/` フォルダに入れると整理しやすくなります（リポジトリ直下でも取り込めます）。
+
 1. 画像を用意する（背景は透明が望ましい。黒背景の場合は背景除去してから置く）
 2. このフォルダに置く（例：`lydia.webp`。WebP/PNG推奨、長辺720px程度）
 3. `js/art.js` の `TD.CUSTOM_ART` に1行追加する
@@ -23,3 +25,8 @@
 | nereia.webp | ネレイア（★5 闇・魔） | AI生成（背景除去：BiRefNet） |
 | akane.webp | アカネ（★4 風・剣） | AI生成（背景除去：isnet-anime） |
 | shizuku.webp | シズク（★4 闇・弓） | AI生成（背景除去：isnet-anime） |
+| sylphina.webp | シルフィナ（★5 風・魔） | AI生成（背景除去：isnet-anime） |
+| seira.webp | セイラ（★5 水・剣） | AI生成（背景除去：BiRefNet） |
+| xeno.webp | ゼノ（★4 闇・盾） | AI生成（背景除去：BiRefNet） |
+| karin.webp | カリン（★4 火・癒） | AI生成（背景除去：BiRefNet） |
+| shigure.webp | シグレ（★4 水・弓） | AI生成・オリジナル（背景除去：isnet-anime） |
