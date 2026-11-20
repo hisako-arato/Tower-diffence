@@ -144,6 +144,7 @@ window.TD = window.TD || {};
         el.className = `card el-${d.element}`;
         el.innerHTML =
           `<span class="c-cost">${d.cost}</span>` +
+          ((d.traits || []).includes('fastRedeploy') ? `<span class="c-trait" title="高速再配置">⚡</span>` : '') +
           `<span class="c-face">${TD.portraitHTML(card.id)}</span>` +
           `<span class="c-name">${d.name}</span>` +
           `<span class="c-sp"><i></i></span>` +
@@ -241,17 +242,24 @@ window.TD = window.TD || {};
       const card = u.card;
       card.unit = null;
       card.state = 'cool';
-      card.cd = card.def.redeploy;
       if (retreat) {
-        const refund = Math.floor(card.def.cost / 2);
+        // 撤退：HPが多く残っているほど早く再配置できる
+        card.cd = TD.retreatCooldown(card.def, u.hp / u.maxHp);
+        const refund = this.refundOf(card.def);
         this.mana = Math.min(99, this.mana + refund);
         this.pop(u.x, u.y - 20, `撤退 +${refund}`, '#9be7ff', { size: 12 });
       } else {
+        card.cd = TD.redeployTime(card.def);
         this.fx.push({ type: 'burst', x: u.x, y: u.y, t: 0, dur: 0.5, color: '#ff8a8a' });
         this.pop(u.x, u.y - 20, '戦闘不能', '#ff8a8a', { size: 12 });
       }
       if (this.menuUnit === u) this.hideMenu();
       this.refreshCards(true);
+    }
+
+    refundOf(def) { return Math.floor(def.cost * TD.RETREAT.refundRate); }
+    retreatLabel(u) {
+      return `撤退（マナ+${this.refundOf(u.def)}・再配置まで${Math.ceil(TD.retreatCooldown(u.def, u.hp / u.maxHp))}秒）`;
     }
 
     showMenu(u) {
@@ -262,7 +270,7 @@ window.TD = window.TD || {};
         `<div class="um-name">${d.name}<small>${TD.ELEMENTS[d.element].name}・${TD.ROLES[d.role].name}</small></div>` +
         `<div class="um-hp">HP ${Math.ceil(u.hp)} / ${u.maxHp}</div>` +
         `<button class="um-skill" ${ready ? '' : 'disabled'}>必殺技「${d.skill.name}」${ready ? '' : ` (${Math.floor(u.sp)}/${d.skill.sp})`}</button>` +
-        `<button class="um-retreat">撤退（マナ+${Math.floor(d.cost / 2)}）</button>`;
+        `<button class="um-retreat">${this.retreatLabel(u)}</button>`;
       m.querySelector('.um-skill').onclick = () => { this.activateSkill(u); this.hideMenu(); };
       m.querySelector('.um-retreat').onclick = () => { this.removeUnit(u, true); this.hideMenu(); };
       const cv = this.els.canvas, r = cv.getBoundingClientRect(), pr = cv.parentElement.getBoundingClientRect();
@@ -577,6 +585,8 @@ window.TD = window.TD || {};
       if (this.menuUnit && !this.menuUnit.removed) {
         const hpEl = e.menu.querySelector('.um-hp');
         if (hpEl) hpEl.textContent = `HP ${Math.ceil(this.menuUnit.hp)} / ${this.menuUnit.maxHp}`;
+        const rt = e.menu.querySelector('.um-retreat');
+        if (rt) rt.textContent = this.retreatLabel(this.menuUnit);
         const sk = e.menu.querySelector('.um-skill'), d = this.menuUnit.def;
         if (sk) {
           const ready = this.menuUnit.sp >= d.skill.sp;

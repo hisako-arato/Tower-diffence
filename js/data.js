@@ -449,3 +449,28 @@ TD.EVENT = {
     { id: 'st30',  name: '魔晶石 ×30', reward: { stones: 30 }, cost: 40, limit: 99 },
   ],
 };
+
+// ========== キャラの個性（特性） ==========
+// キャラ定義に traits: ['fastRedeploy'] のように書くと、その特性を持つ。
+TD.TRAITS = {
+  fastRedeploy: { name: '高速再配置', icon: '⚡', desc: '再配置までの待ち時間が半分になる', redeployMult: 0.5 },
+};
+
+// 撤退・再配置のルール
+TD.RETREAT = {
+  minCooldown: 5,   // 撤退時の待ち時間の下限（秒）
+  refundRate: 0.5,  // 撤退時に戻るマナの割合
+};
+
+// 特性を反映した基本の再配置時間（やられた時はこの時間）
+TD.redeployTime = function (def) {
+  let t = def.redeploy;
+  for (const k of def.traits || []) if (TD.TRAITS[k] && TD.TRAITS[k].redeployMult) t *= TD.TRAITS[k].redeployMult;
+  return t;
+};
+// 撤退時の待ち時間：HPが多く残っているほど短い（下限あり）
+//   待ち時間 = max(下限, 基本時間 × (1 − 残りHPの割合))
+TD.retreatCooldown = function (def, hpRatio) {
+  const r = Math.max(0, Math.min(1, hpRatio));
+  return Math.max(TD.RETREAT.minCooldown, TD.redeployTime(def) * (1 - r));
+};

@@ -743,3 +743,12 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .cur-help p { font-size: 13px; line-height: 1.7; color: var(--muted); margin: 10px 0; }
 .ch-own { font-size: 13px; }
 .ch-own b { font-size: 18px; color: var(--gold); margin-left: 4px; }
+
+/* ========== 特性・撤退 ========== */
+.cd-traits { display: flex; flex-direction: column; gap: 6px; margin: -2px 0 10px; }
+.trait { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 8px; background: rgba(255, 224, 102, .1); border: 1px solid rgba(255, 224, 102, .4); font-size: 11px; }
+.trait b { color: #ffe066; font-size: 12px; white-space: nowrap; }
+.trait span { color: var(--muted); }
+.cd-stats span.wide { grid-column: 1 / -1; }
+.cd-stats small { font-weight: 500; color: var(--muted); margin-left: 4px; font-size: 10px; }
+.c-trait { position: absolute; top: -6px; right: -4px; z-index: 2; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; background: #3a2a08; border: 1.5px solid #ffe066; }
