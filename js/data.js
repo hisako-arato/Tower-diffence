@@ -6,14 +6,13 @@ TD.ELEMENTS = {
   fire:  { name: '火', color: '#ff6b4a', dark: '#a8321c' },
   water: { name: '水', color: '#4aa8ff', dark: '#1d5aa8' },
   wind:  { name: '風', color: '#5fd68a', dark: '#23804a' },
-  earth: { name: '土', color: '#d4a94a', dark: '#7a5a1a' },
   light: { name: '光', color: '#ffe066', dark: '#b08a10' },
   dark:  { name: '闇', color: '#a77bff', dark: '#4b2a99' },
 };
 
-// 火→風→土→水→火 の循環で有利。光と闇は互いに有利。
+// 火→風→水→火 の循環で有利（矢印の先に1.5倍）。光と闇は互いに有利。
 TD.elemMult = function (atk, def) {
-  const strong = { fire: 'wind', wind: 'earth', earth: 'water', water: 'fire' };
+  const strong = { fire: 'wind', wind: 'water', water: 'fire' };
   if (strong[atk] === def) return 1.5;
   if (strong[def] === atk) return 0.75;
   if ((atk === 'light' && def === 'dark') || (atk === 'dark' && def === 'light')) return 1.5;
@@ -52,7 +51,7 @@ TD.CHARS = {
     lines: { deploy: '狙いは外さないよ', skill: '風よ、俺の矢に乗れ！疾風連射！' },
   },
   gald: {
-    name: 'ガルド', title: '鉄壁の守護者', rarity: 4, element: 'earth', role: 'shield',
+    name: 'ガルド', title: '鉄壁の守護者', rarity: 4, element: 'light', role: 'shield',
     cost: 15, hp: 2600, atk: 50, def: 140, interval: 1.4, range: 1.3, block: 3, redeploy: 30,
     skill: { name: '不動の誓い', type: 'guard', sp: 30, dur: 10,
              desc: '10秒間、防御2倍・ブロック数+2。HPを50%回復' },
@@ -101,7 +100,7 @@ TD.CHARS = {
     lines: { deploy: '……この頁を読むのは、何年ぶりかしら', skill: '開け、深淵の頁' },
   },
   thomas: {
-    name: 'トマス', title: '見習い騎士', rarity: 3, element: 'earth', role: 'shield',
+    name: 'トマス', title: '見習い騎士', rarity: 3, element: 'water', role: 'shield',
     cost: 12, hp: 1900, atk: 40, def: 110, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
     skill: { name: '騎士の意地', type: 'guard', sp: 30, dur: 10,
              desc: '10秒間、防御2倍・ブロック数+2。HPを50%回復' },
@@ -115,7 +114,7 @@ TD.CHARS = {
     lines: { deploy: '泉の加護を、あなたに', skill: '湧き出でよ、癒しの泉' },
   },
   popo: {
-    name: 'ポポ', title: 'ドワーフの石弓兵', rarity: 3, element: 'earth', role: 'archer',
+    name: 'ポポ', title: 'ドワーフの石弓兵', rarity: 3, element: 'fire', role: 'archer',
     cost: 9, hp: 620, atk: 66, def: 20, interval: 1.0, range: 3.2, redeploy: 20,
     skill: { name: '連装石弓', type: 'rapid', sp: 25, rate: 2.5, dur: 8,
              desc: '8秒間、攻撃速度が2.5倍になる' },
@@ -164,7 +163,7 @@ TD.stageExp = st => st.exp || Math.round(300 * st.hpScale);
 // speed はタイル/秒
 TD.ENEMIES = {
   slime:      { name: 'スライム', element: 'water', hp: 260,  atk: 45,  def: 0,   speed: 0.55, interval: 1.5, size: 11, shape: 'slime' },
-  goblin:     { name: 'ゴブリン', element: 'earth', hp: 420,  atk: 75,  def: 20,  speed: 0.6,  interval: 1.3, size: 12, shape: 'goblin' },
+  goblin:     { name: 'ゴブリン', element: 'dark',  hp: 420,  atk: 75,  def: 20,  speed: 0.6,  interval: 1.3, size: 12, shape: 'goblin' },
   wolf:       { name: '魔狼',     element: 'wind',  hp: 300,  atk: 55,  def: 5,   speed: 1.15, interval: 1.0, size: 11, shape: 'wolf' },
   salamander: { name: '火蜥蜴',   element: 'fire',  hp: 520,  atk: 95,  def: 15,  speed: 0.5,  interval: 1.6, size: 13, shape: 'lizard' },
   skeleton:   { name: '骸骨騎士', element: 'dark',  hp: 1200, atk: 140, def: 90,  speed: 0.4,  interval: 1.8, size: 14, shape: 'skeleton' },
@@ -296,7 +295,7 @@ TD.NAVI_LINES = [
   'おかえりなさい、{name}さま！',
   '大結界がまた少し弱まっています……。',
   '剣士や盾騎士は「道」に、弓兵や魔導士は「草地」に配置できますよ。',
-  '属性の相性は 火→風→土→水→火。光と闇はお互いが弱点です！',
+  '属性の相性は 火→風→水→火。光と闇はお互いが弱点です！',
   '必殺技ゲージが溜まったら、キャラのカードをタップ！',
   'ひゃっ！？つ、つつかないでください～！',
   'いつか、七つの災厄をすべて退けられる日が来るはずです。',

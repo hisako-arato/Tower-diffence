@@ -63,7 +63,7 @@ TD.ART = {
   },
   thomas: {
     skin: '#f8dcc8', hair: ['#c89a5a', '#8a6230'], hairStyle: 'short', bangs: 'round', eyes: '#5a7aa0', eyeShape: 'soft', mouth: 'open', freckles: true,
-    outfit: { type: 'armor', main: '#aab4c4', sub: '#5a6a8a', trim: '#8a96aa' },
+    outfit: { type: 'armor', main: '#aab4c4', sub: '#2f5a9a', trim: '#7ab0e0' },
     head: 'none', weapon: 'roundshield',
   },
   lily: {
@@ -73,7 +73,7 @@ TD.ART = {
   },
   popo: {
     skin: '#f0c0a0', hair: ['#e08a3a', '#a0521a'], hairStyle: 'short', bangs: 'short', eyes: '#3a2a1a', eyeShape: 'dot', mouth: 'grin', beard: '#e08a3a',
-    outfit: { type: 'leather', main: '#8a6a3a', sub: '#4a3a2a', trim: '#b0b0b0' },
+    outfit: { type: 'leather', main: '#a0482a', sub: '#4a3a2a', trim: '#ffb040' },
     head: 'cap', weapon: 'crossbow',
   },
 };
@@ -251,7 +251,7 @@ TD.ART = {
           [84, 116].map(x => `<circle cx="${x}" cy="66" r="10" fill="#6a4a3a" stroke="#c8a060" stroke-width="2"/><circle cx="${x}" cy="66" r="7" fill="#ffb040" opacity=".85"/><circle cx="${x - 2}" cy="63" r="2.2" fill="#fff"/>`).join('');
       case 'cap':
         if (back) return '';
-        return `<path d="M60 76 Q60 40 100 40 Q140 40 140 76Z" fill="#6a4a2a"/><path d="M58 76 L142 76 L148 82 L54 82Z" fill="#4a3a2a"/><circle cx="100" cy="42" r="4" fill="#e04a3a"/>`;
+        return `<path d="M60 76 Q60 40 100 40 Q140 40 140 76Z" fill="#8a2a1a"/><path d="M58 76 L142 76 L148 82 L54 82Z" fill="#4a3a2a"/><circle cx="100" cy="42" r="4" fill="#ffb040"/>`;
       case 'droppin':
         if (back) return '';
         // しずく形の髪飾り（こめかみ）
@@ -343,7 +343,7 @@ TD.ART = {
         return `<g transform="translate(66 186)"><path d="M-26 -44 L26 -44 L26 10 Q0 40 -26 10Z" fill="url(#metal${u})" stroke="${r >= 4 ? a.outfit.trim : '#5a4010'}" stroke-width="3"/>` +
           `<path d="M0 -36 L0 22 M-18 -12 L18 -12" stroke="#6a4a1a" stroke-width="5"/>` + (r >= 4 ? `<circle cx="0" cy="-12" r="6" fill="#d4a94a" stroke="#fff" stroke-width="1.5"/>` : '') + `</g>`;
       case 'roundshield':
-        return `<g transform="translate(66 186)"><circle r="20" fill="#8a96aa" stroke="#5a6a8a" stroke-width="3"/><circle r="6" fill="#c8d0dc"/></g>`;
+        return `<g transform="translate(66 186)"><circle r="20" fill="#8a96aa" stroke="#2f5a9a" stroke-width="3"/><circle r="6" fill="#7ad8ff"/></g>`;
       case 'katana':
         return `<g transform="translate(138 182) rotate(26)"><path d="M-2.5 -110 Q4 -60 3 -12 L-3 -12 Q-2 -60 -2.5 -110Z" fill="url(#blade${u})" stroke="#c0c8d8" stroke-width=".8"/>` +
           `<ellipse cx="0" cy="-12" rx="8" ry="3" fill="#2a2438" stroke="#c0c8d8"/><rect x="-3" y="-10" width="6" height="22" rx="2" fill="#6a3aa8"/>` +

@@ -22,7 +22,6 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 .el-fire  { --ec: #ff6b4a; --ed: #a8321c; }
 .el-water { --ec: #4aa8ff; --ed: #1d5aa8; }
 .el-wind  { --ec: #5fd68a; --ed: #23804a; }
-.el-earth { --ec: #d4a94a; --ed: #7a5a1a; }
 .el-light { --ec: #ffe066; --ed: #b08a10; }
 .el-dark  { --ec: #a77bff; --ed: #4b2a99; }
 
