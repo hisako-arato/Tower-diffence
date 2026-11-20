@@ -36,6 +36,7 @@ window.TD = window.TD || {};
       this.units = [];
       this.enemies = [];
       this.shots = [];
+      this.warns = [];   // ボスの範囲攻撃の予兆
       this.fx = [];
       this.pops = [];
       // party: [{ id, def }]（def は育成状態を反映済みのステータス）
@@ -332,6 +333,51 @@ window.TD = window.TD || {};
           for (const e of alive) if (dist(e, u) <= d.range * T) { e.slowT = s.dur; this.hit(u, e, this.atkOf(u) * s.mult); }
           this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 10, r1: d.range * T, t: 0, dur: 0.7, color: '#b8ffd0', width: 8 });
           break;
+        case 'drainHeal': {
+          for (const e of alive) this.hit(u, e, this.atkOf(u) * s.mult);
+          for (const a of this.units) {
+            const h = a.maxHp * s.ratio;
+            a.hp = Math.min(a.maxHp, a.hp + h);
+            this.pop(a.x, a.y - 18, '+' + Math.round(h), '#ff9ad0', { size: 12 });
+            this.fx.push({ type: 'ring', x: a.x, y: a.y, r0: 4, r1: 22, t: 0, dur: 0.5, color: '#ff9ad0' });
+          }
+          this.fx.push({ type: 'flash', t: 0, dur: 0.5, color: 'rgba(200,80,200,' });
+          break;
+        }
+        case 'bind':
+          for (const e of alive) if (dist(e, u) <= s.radius * T) { e.frozen = Math.max(e.frozen, s.bindDur); e.bound = true; }
+          u.buff = Object.assign({}, s, { type: 'guard', noBlock: true }); u.buffT = s.dur;
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 10, r1: s.radius * T, t: 0, dur: 0.7, color: '#ffb04a', width: 7 });
+          break;
+        case 'tidal':
+          for (const e of alive) if (dist(e, u) <= s.radius * T) {
+            this.hit(u, e, this.atkOf(u) * s.mult);
+            if (!e.dead && !e.def.boss) this.pushBack(e, s.push * T);
+          }
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 10, r1: s.radius * T, t: 0, dur: 0.8, color: '#5ab0ff', width: 12 });
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 4, r1: s.radius * T * 0.7, t: 0, dur: 0.6, color: '#a77bff', width: 6 });
+          break;
+        case 'execute': {
+          let tgt = u.blocking.find(e => !e.dead);
+          if (!tgt) tgt = this.frontEnemy(u, d.range * T + T);
+          if (tgt) {
+            this.hit(u, tgt, this.atkOf(u) * s.mult);
+            this.fx.push({ type: 'slash', x: tgt.x, y: tgt.y, t: 0, dur: 0.4, color: '#8affc0', a: Math.atan2(tgt.y - u.y, tgt.x - u.x) });
+            if (tgt.dead) {
+              this.mana = Math.min(99, this.mana + s.mana);
+              this.pop(u.x, u.y - 30, `マナ+${s.mana}`, '#9be7ff', { size: 13 });
+            }
+          }
+          break;
+        }
+        case 'battery':
+          for (const a of this.units) {
+            if (a === u) continue;
+            a.sp = Math.min(a.def.skill.sp, a.sp + s.amount);
+            this.pop(a.x, a.y - 22, `SP+${s.amount}`, '#ffe066', { size: 11 });
+            this.fx.push({ type: 'ring', x: a.x, y: a.y, r0: 4, r1: 20, t: 0, dur: 0.5, color: '#ffe066' });
+          }
+          break;
         case 'explosion': {
           const inRange = alive.filter(e => dist(e, u) <= d.range * T);
           const c = inRange.sort((a, b) => b.hp - a.hp)[0] || u;
@@ -360,10 +406,35 @@ window.TD = window.TD || {};
       this._cutinT = setTimeout(() => c.classList.remove('show'), 1300);
     }
 
+    // 射程内で最もゴールに近い敵
+    frontEnemy(u, range) {
+      let best = null, bp = -1;
+      for (const e of this.enemies) {
+        if (e.dead || dist(e, u) > range) continue;
+        const prog = e.idx * 1000 - dist(e, e.route[Math.min(e.idx, e.route.length - 1)]);
+        if (prog > bp) { bp = prog; best = e; }
+      }
+      return best;
+    }
+
+    // 敵を通ってきた道に沿って押し戻す
+    pushBack(e, d) {
+      if (e.blockedBy) {
+        e.blockedBy.blocking = e.blockedBy.blocking.filter(x => x !== e);
+        e.blockedBy = null;
+      }
+      while (d > 0 && e.idx > 1) {
+        const p = e.route[e.idx - 1], dx = p.x - e.x, dy = p.y - e.y, l = Math.hypot(dx, dy);
+        if (l <= d) { e.x = p.x; e.y = p.y; e.idx--; d -= l; }
+        else { e.x += dx / l * d; e.y += dy / l * d; d = 0; }
+      }
+      e.passed.clear();
+    }
+
     // ---------- ステータス ----------
     atkOf(u) { return u.def.atk * (u.buff && u.buff.atk ? u.buff.atk : 1); }
     defOf(u) { return u.def.def * (u.buff && u.buff.type === 'guard' ? 2 : 1); }
-    blockOf(u) { return (u.def.block || 0) + (u.buff && u.buff.type === 'guard' ? 2 : 0); }
+    blockOf(u) { return (u.def.block || 0) + (u.buff && u.buff.type === 'guard' && !u.buff.noBlock ? 2 : 0); }
     rateOf(u) { return u.buff && u.buff.rate ? u.buff.rate : 1; }
 
     hit(src, e, power) {
@@ -383,9 +454,10 @@ window.TD = window.TD || {};
       }
     }
 
-    hurt(e, u) {
+    hurt(e, u, power) {
+      if (u.removed) return;
       const m = TD.elemMult(e.def.element, u.def.element);
-      const raw = e.atk * m;
+      const raw = (power != null ? power : e.atk) * m;
       const d = Math.round(Math.max(raw - this.defOf(u), raw * 0.15));
       u.hp -= d;
       u.flash = 0.12;
@@ -426,6 +498,7 @@ window.TD = window.TD || {};
       this.updateEnemies(dt);
       this.updateUnits(dt);
       this.updateShots(dt);
+      this.updateWarns(dt);
 
       for (const f of this.fx) f.t += dt;
       this.fx = this.fx.filter(f => f.t < f.dur);
@@ -455,12 +528,29 @@ window.TD = window.TD || {};
       for (const e of this.enemies) {
         if (e.dead) continue;
         e.flash = Math.max(0, e.flash - dt);
-        if (e.frozen > 0) { e.frozen -= dt; continue; }
+        if (e.frozen > 0) { e.frozen -= dt; if (e.frozen <= 0) e.bound = false; continue; }
         if (e.blockedBy && e.blockedBy.removed) e.blockedBy = null;
+        // ボス：予兆付きの範囲攻撃
+        if (e.def.aoe && this.units.length) {
+          e.aoeT = (e.aoeT || 0) + dt;
+          if (e.aoeT >= e.def.aoe.every) { e.aoeT = 0; this.castAoe(e); }
+        }
         if (e.blockedBy) {
           e.cd -= dt;
           if (e.cd <= 0) { e.cd = e.def.interval; this.hurt(e, e.blockedBy); }
           continue;
+        }
+        // 遠距離攻撃：歩きながら射程内のキャラを撃つ（剣・盾以外も狙われる）
+        if (e.def.ranged) {
+          e.rcd = (e.rcd == null ? 1 : e.rcd) - dt;
+          if (e.rcd <= 0) {
+            let tgt = null, bd = Infinity;
+            for (const u of this.units) { const dd = dist(e, u); if (dd <= e.def.ranged * T && dd < bd) { bd = dd; tgt = u; } }
+            if (tgt) {
+              e.rcd = e.def.interval;
+              this.shots.push({ x: e.x, y: e.y, target: tgt, src: e, enemyShot: true, speed: 260, color: TD.ELEMENTS[e.def.element].color });
+            }
+          }
         }
         e.walk += dt * 8;
         if (e.slowT > 0) e.slowT -= dt;
@@ -531,6 +621,32 @@ window.TD = window.TD || {};
       }
     }
 
+    castAoe(e) {
+      const a = e.def.aoe, r = a.radius * T;
+      // 一番多くのキャラを巻き込める位置を狙う
+      let best = null, bn = -1;
+      for (const u of this.units) {
+        const n = this.units.filter(o => dist(o, u) <= r).length;
+        if (n > bn) { bn = n; best = u; }
+      }
+      if (!best) return;
+      this.warns.push({ x: best.x, y: best.y, r, t: 0, warn: a.warn, power: e.atk * a.mult, src: e });
+    }
+
+    updateWarns(dt) {
+      for (const w of this.warns) {
+        w.t += dt;
+        if (w.src.dead || w.src.leaked) { w.done = true; continue; }
+        if (w.t >= w.warn) {
+          w.done = true;
+          for (const u of [...this.units]) if (dist(u, w) <= w.r) this.hurt(w.src, u, w.power);
+          this.fx.push({ type: 'burst', x: w.x, y: w.y, t: 0, dur: 0.5, color: '#ff5a4a', big: true });
+          this.fx.push({ type: 'ring', x: w.x, y: w.y, r0: 6, r1: w.r, t: 0, dur: 0.4, color: '#ff8a4a', width: 8 });
+        }
+      }
+      this.warns = this.warns.filter(w => !w.done);
+    }
+
     updateShots(dt) {
       for (const s of this.shots) {
         const t = s.target;
@@ -539,7 +655,9 @@ window.TD = window.TD || {};
         s.angle = Math.atan2(dy, dx);
         if (d <= m + 4) {
           s.done = true;
-          if (s.heal) {
+          if (s.enemyShot) {
+            this.hurt(s.src, t);
+          } else if (s.heal) {
             t.hp = Math.min(t.maxHp, t.hp + s.power);
             this.pop(t.x, t.y - 18, '+' + Math.round(s.power), '#7dffa0', { size: 11 });
           } else if (s.splash) {
@@ -619,6 +737,7 @@ window.TD = window.TD || {};
 
       for (const u of this.units) this.drawUnit(g, u);
       for (const e of [...this.enemies].sort((a, b) => a.y - b.y)) this.drawEnemy(g, e);
+      for (const w of this.warns) this.drawWarn(g, w);
       for (const s of this.shots) this.drawShot(g, s);
       for (const f of this.fx) this.drawFx(g, f);
       for (const p of this.pops) this.drawPop(g, p);
@@ -641,11 +760,10 @@ window.TD = window.TD || {};
       const grd = g.createRadialGradient(u.x - 4, u.y - 5, 2, u.x, u.y, 15);
       grd.addColorStop(0, '#ffffff'); grd.addColorStop(0.35, el.color); grd.addColorStop(1, el.dark);
       // キャラアート（円形に切り抜き）
-      const img = TD.charImage(u.card.id);
       g.save();
       g.beginPath(); g.arc(u.x, u.y, 15, 0, Math.PI * 2); g.clip();
       g.fillStyle = grd; g.fillRect(u.x - 15, u.y - 15, 30, 30);
-      if (img.complete && img.naturalWidth) g.drawImage(img, u.x - 15, u.y - 15, 30, 30);
+      TD.drawCharBust(g, u.card.id, u.x - 15, u.y - 15, 30);
       if (u.flash > 0) { g.fillStyle = 'rgba(255,80,80,.55)'; g.fillRect(u.x - 15, u.y - 15, 30, 30); }
       g.restore();
       const rc = u.def.rarity === 5 ? '#f2c94c' : u.def.rarity === 4 ? '#c8a8ff' : '#e8e8f0';
@@ -676,7 +794,7 @@ window.TD = window.TD || {};
       const x = e.x, y = e.y + (e.blockedBy || e.frozen > 0 ? 0 : bob);
       g.fillStyle = 'rgba(0,0,0,.3)';
       g.beginPath(); g.ellipse(e.x, e.y + s * 0.8, s, s * 0.3, 0, 0, Math.PI * 2); g.fill();
-      const body = e.flash > 0 ? '#ffffff' : e.frozen > 0 ? '#bfe8ff' : e.slowT > 0 ? '#c8f5d8' : el.color;
+      const body = e.flash > 0 ? '#ffffff' : e.frozen > 0 ? (e.bound ? '#ffc890' : '#bfe8ff') : e.slowT > 0 ? '#c8f5d8' : el.color;
       g.fillStyle = body;
       g.strokeStyle = 'rgba(0,0,0,.55)'; g.lineWidth = 1.5;
       switch (e.def.shape) {
@@ -697,6 +815,12 @@ window.TD = window.TD || {};
           g.fillStyle = '#ffd36b';
           for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(x + i * 5 - 3, y - s * 0.7); g.lineTo(x + i * 5, y - s * 1.3); g.lineTo(x + i * 5 + 3, y - s * 0.7); g.fill(); }
           break;
+        case 'mage':
+          g.beginPath(); g.moveTo(x, y - s * 1.6); g.lineTo(x + s, y + s * 0.8); g.lineTo(x - s, y + s * 0.8); g.closePath(); g.fill(); g.stroke();
+          g.fillStyle = '#1b1430'; g.beginPath(); g.arc(x, y - s * 0.1, s * 0.55, 0, Math.PI * 2); g.fill();
+          g.strokeStyle = '#c8a8ff'; g.lineWidth = 2; g.beginPath(); g.moveTo(x + s * 0.9, y + s); g.lineTo(x + s * 1.2, y - s * 1.2); g.stroke();
+          g.fillStyle = '#e07aff'; g.beginPath(); g.arc(x + s * 1.2, y - s * 1.3, 3, 0, Math.PI * 2); g.fill();
+          break;
         case 'skeleton':
           g.fillStyle = e.flash > 0 ? '#fff' : e.frozen > 0 ? '#bfe8ff' : '#e9e4d8';
           g.beginPath(); g.arc(x, y, s, 0, Math.PI * 2); g.fill();
@@ -713,6 +837,12 @@ window.TD = window.TD || {};
           break;
         }
       }
+      if (e.def.ranged && e.def.shape === 'goblin') { // 弓兵の目印
+        g.strokeStyle = '#8a5a2a'; g.lineWidth = 2;
+        g.beginPath(); g.arc(x - s * 1.1, y, s * 0.9, -1.2, 1.2); g.stroke();
+        g.strokeStyle = '#eee'; g.lineWidth = 0.8;
+        g.beginPath(); g.moveTo(x - s * 1.1 + Math.cos(-1.2) * s * 0.9, y + Math.sin(-1.2) * s * 0.9); g.lineTo(x - s * 1.1 + Math.cos(1.2) * s * 0.9, y + Math.sin(1.2) * s * 0.9); g.stroke();
+      }
       // 目
       const eyeY = e.def.shape === 'slime' ? y - s * 0.2 : y - s * 0.15, eyeColor = e.def.boss ? '#ff3030' : '#1b1410';
       g.fillStyle = e.def.shape === 'skeleton' ? '#2a2030' : eyeColor;
@@ -728,8 +858,25 @@ window.TD = window.TD || {};
       }
     }
 
+    drawWarn(g, w) {
+      const p = Math.min(1, w.t / w.warn), blink = 0.5 + Math.sin(w.t * 18) * 0.25;
+      g.fillStyle = `rgba(255,60,40,${0.12 + 0.18 * p})`;
+      g.beginPath(); g.arc(w.x, w.y, w.r, 0, Math.PI * 2); g.fill();
+      g.fillStyle = `rgba(255,90,60,${0.35 * blink})`;
+      g.beginPath(); g.arc(w.x, w.y, w.r * p, 0, Math.PI * 2); g.fill();
+      g.strokeStyle = '#ff4a3a'; g.lineWidth = 2; g.setLineDash([6, 4]);
+      g.beginPath(); g.arc(w.x, w.y, w.r, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+      g.fillStyle = '#fff'; g.font = 'bold 12px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText('!', w.x, w.y - w.r + 10);
+    }
+
     drawShot(g, s) {
       g.fillStyle = s.color;
+      if (s.enemyShot) {
+        g.globalAlpha = 0.5; g.beginPath(); g.arc(s.x, s.y, 6, 0, Math.PI * 2); g.fill();
+        g.globalAlpha = 1; g.fillStyle = '#2a0a1a'; g.beginPath(); g.arc(s.x, s.y, 2.5, 0, Math.PI * 2); g.fill();
+        return;
+      }
       if (s.kind === 'archer') {
         g.save(); g.translate(s.x, s.y); g.rotate(s.angle || 0);
         g.fillRect(-8, -1, 12, 2); g.beginPath(); g.moveTo(6, -3); g.lineTo(10, 0); g.lineTo(6, 3); g.fill();

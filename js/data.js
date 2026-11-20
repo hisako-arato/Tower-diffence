@@ -120,6 +120,50 @@ TD.CHARS = {
              desc: '8秒間、攻撃速度が2.5倍になる' },
     lines: { deploy: 'ドワーフの石弓をなめるなよ！', skill: '全弾装填、撃てーっ！' },
   },
+
+  // ---------- 追加キャラ（AI生成イラスト） ----------
+  meltia: {
+    name: 'メルティア', title: '魔界の恋姫', rarity: 5, element: 'dark', role: 'priest',
+    cost: 13, hp: 800, atk: 110, def: 20, interval: 1.5, range: 2.8, redeploy: 30,
+    profile: '魔界から家出してきたお姫さま。退屈しのぎに人間の味方をしているらしい。',
+    skill: { name: '魔王の慈愛', type: 'drainHeal', sp: 32, ratio: 0.5, mult: 1.5,
+             desc: '敵全体に攻撃力150%の闇ダメージを与え、味方全員のHPを最大HPの50%回復' },
+    lines: { deploy: 'ふふっ、わたしが遊んであげる♪', skill: 'みんなの痛み、ぜーんぶ吸い取っちゃう！' },
+  },
+  kagura: {
+    name: 'カグラ', title: '紅鎖の星姫', rarity: 5, element: 'fire', role: 'shield',
+    cost: 17, hp: 3000, atk: 90, def: 160, interval: 1.3, range: 1.3, block: 4, redeploy: 35,
+    profile: '星の鎖を操る巫女。ブロック数4はゲーム中で最多。',
+    skill: { name: '星鎖封縛', type: 'bind', sp: 30, radius: 2.0, bindDur: 5, dur: 10,
+             desc: '周囲2マスの敵を5秒間鎖で縛って動けなくし、10秒間自分の防御2倍' },
+    lines: { deploy: '……この先へは、行かせません', skill: '星よ、鎖となりて縛めよ' },
+  },
+  nereia: {
+    name: 'ネレイア', title: '深淵竜の魔女', rarity: 5, element: 'dark', role: 'mage',
+    cost: 16, hp: 720, atk: 120, def: 15, interval: 1.9, range: 2.6, splash: 0.9, redeploy: 35,
+    profile: '深海の竜を従える魔女。竜の大波は敵を押し流す。',
+    skill: { name: '深淵竜の大波', type: 'tidal', sp: 34, mult: 3.5, radius: 2.6, push: 2,
+             desc: '周囲の敵に攻撃力350%のダメージを与え、2マス押し戻す（ボスには無効）' },
+    lines: { deploy: '……深淵から、来たわ', skill: '呑み込みなさい、深淵の竜' },
+  },
+  akane: {
+    name: 'アカネ', title: '異界の剣道少女', rarity: 4, element: 'wind', role: 'sword',
+    cost: 8, hp: 900, atk: 115, def: 30, interval: 0.8, range: 1.3, block: 1, redeploy: 20,
+    traits: ['fastRedeploy'],
+    profile: '召喚の儀のはずみで、異世界の学校から呼ばれてしまった剣道部員。',
+    skill: { name: '一閃・疾風', type: 'execute', sp: 15, mult: 6, mana: 6,
+             desc: '敵1体に攻撃力600%のダメージ。倒すとマナが6回復する' },
+    lines: { deploy: 'えっ、ここどこ!? ……まあいっか、いくよ！', skill: '面ーーーっ！' },
+  },
+  shizuku: {
+    name: 'シズク', title: '腹ペコ弓道少女', rarity: 4, element: 'dark', role: 'archer',
+    cost: 8, hp: 560, atk: 64, def: 10, interval: 1.0, range: 3.4, redeploy: 20,
+    traits: ['fastRedeploy'],
+    profile: 'アカネと一緒に異世界から呼ばれた弓道部員。肉まんがあれば戦える。',
+    skill: { name: '肉まん配給', type: 'battery', sp: 20, amount: 10,
+             desc: '配置中の味方全員の必殺技ゲージを10増やす' },
+    lines: { deploy: '……もぐもぐ。狙いは、つけた', skill: 'みんなの分もあるよ。……一個ずつね' },
+  },
 };
 
 // ---------- 育成 ----------
@@ -167,7 +211,11 @@ TD.ENEMIES = {
   wolf:       { name: '魔狼',     element: 'wind',  hp: 300,  atk: 55,  def: 5,   speed: 1.15, interval: 1.0, size: 11, shape: 'wolf' },
   salamander: { name: '火蜥蜴',   element: 'fire',  hp: 520,  atk: 95,  def: 15,  speed: 0.5,  interval: 1.6, size: 13, shape: 'lizard' },
   skeleton:   { name: '骸骨騎士', element: 'dark',  hp: 1200, atk: 140, def: 90,  speed: 0.4,  interval: 1.8, size: 14, shape: 'skeleton' },
-  boss:       { name: '災厄の先触れ ヴァルグ', element: 'dark', hp: 9000, atk: 320, def: 110, speed: 0.28, interval: 2.0, size: 22, shape: 'boss', life: 5, boss: true },
+  boss:       { name: '災厄の先触れ ヴァルグ', element: 'dark', hp: 9000, atk: 320, def: 110, speed: 0.28, interval: 2.0, size: 22, shape: 'boss', life: 5, boss: true,
+                aoe: { every: 12, radius: 1.4, mult: 0.25, warn: 2.0 } },
+  // 遠距離攻撃をする敵：歩きながら射程内のキャラ（剣・盾以外も）を撃つ
+  goblinArcher: { name: 'ゴブリン弓兵', element: 'wind', hp: 300, atk: 55, def: 5, speed: 0.55, interval: 2.0, size: 11, shape: 'goblin', ranged: 2.4 },
+  darkMage:     { name: '闇の魔導兵', element: 'dark', hp: 420, atk: 80, def: 10, speed: 0.45, interval: 2.6, size: 12, shape: 'mage', ranged: 2.6 },
 };
 
 // マップ記号: . 草地(遠距離職) / # 道(近接職) / S 出現地点 / G 結界(防衛地点) / x 岩・木(配置不可)
@@ -229,7 +277,7 @@ TD.STAGES = [
   },
   {
     id: '1-3', chapter: '第1章 結界のほころび', name: '二つの門',
-    brief: '敵が左右の門から同時に攻めてきます。合流地点を固めるのが勝利の鍵です！',
+    brief: '敵が左右の門から同時に攻めてきます。合流地点を固めるのが勝利の鍵です！ 弓を持ったゴブリンは遠くから後衛を狙ってくるので、回復役を連れていきましょう。',
     lives: 10, mana: 14, hpScale: 1.7, reward: 50,
     map: [
       'S.......S',
@@ -251,6 +299,7 @@ TD.STAGES = [
       { t: 4, e: 'goblin', n: 3, gap: 2.5, s: 1 },
       { t: 18, e: 'salamander', n: 3, gap: 3, s: 0 },
       { t: 20, e: 'wolf', n: 5, gap: 1.2, s: 1 },
+      { t: 28, e: 'goblinArcher', n: 3, gap: 3, s: 1 },
       { t: 35, e: 'skeleton', n: 2, gap: 5, s: 0 },
       { t: 38, e: 'goblin', n: 5, gap: 1.5, s: 1 },
       { t: 52, e: 'wolf', n: 6, gap: 1, s: 0 },
@@ -259,7 +308,7 @@ TD.STAGES = [
   },
   {
     id: '1-4', chapter: '第1章 結界のほころび', name: '王都城門・決戦',
-    brief: '七つの災厄の先触れ、ヴァルグが現れました！光属性の攻撃が有効です。必殺技を温存して迎え撃って！',
+    brief: '七つの災厄の先触れ、ヴァルグが現れました！光属性の攻撃が有効です。ヴァルグは赤い円の範囲をまとめて攻撃してきます。円が出たら撤退でかわすのも手ですよ！',
     lives: 10, mana: 16, hpScale: 2.1, reward: 80,
     map: [
       '..S...S..',
@@ -281,6 +330,7 @@ TD.STAGES = [
       { t: 5, e: 'slime', n: 4, gap: 2, s: 1 },
       { t: 20, e: 'skeleton', n: 2, gap: 4, s: 1 },
       { t: 22, e: 'wolf', n: 6, gap: 1, s: 0 },
+      { t: 30, e: 'goblinArcher', n: 2, gap: 3, s: 1 },
       { t: 38, e: 'salamander', n: 4, gap: 2, s: 0 },
       { t: 40, e: 'skeleton', n: 2, gap: 4, s: 1 },
       { t: 58, e: 'boss', n: 1, gap: 0, s: 0 },
@@ -299,7 +349,8 @@ TD.NAVI_LINES = [
   '必殺技ゲージが溜まったら、キャラのカードをタップ！',
   'ひゃっ！？つ、つつかないでください～！',
   'いつか、七つの災厄をすべて退けられる日が来るはずです。',
-  '撤退させるとマナが半分戻ってきます。うまく使ってくださいね。',
+  '撤退させるとマナが半分戻ってきます。HPが多いうちに下げれば、すぐに再配置できますよ。',
+  '弓や魔法を使う敵は、後ろのキャラも狙ってきます。回復役を忘れずに！',
 ];
 
 // ========== フェーズ4：ログインボーナス・ミッション・デイリー・イベント ==========
@@ -372,7 +423,8 @@ TD.DAILY_STAGES = [
 ];
 
 // 期間限定イベント
-TD.ENEMIES.starbeast = { name: '星喰らいの魔獣', element: 'fire', hp: 7000, atk: 260, def: 90, speed: 0.3, interval: 1.8, size: 20, shape: 'boss', life: 3, boss: true };
+TD.ENEMIES.starbeast = { name: '星喰らいの魔獣', element: 'fire', hp: 7000, atk: 260, def: 90, speed: 0.3, interval: 1.8, size: 20, shape: 'boss', life: 3, boss: true,
+  aoe: { every: 12, radius: 1.5, mult: 0.25, warn: 2.0 } };
 
 TD.EVENT = {
   id: 'starfest',
@@ -405,6 +457,7 @@ TD.EVENT = {
       waves: [
         { t: 3, e: 'wolf', n: 5, gap: 1.5 },
         { t: 14, e: 'salamander', n: 3, gap: 3 },
+        { t: 20, e: 'goblinArcher', n: 2, gap: 3 },
         { t: 26, e: 'goblin', n: 6, gap: 1.5 },
         { t: 38, e: 'wolf', n: 8, gap: 1 },
         { t: 50, e: 'skeleton', n: 2, gap: 4 },
@@ -434,6 +487,7 @@ TD.EVENT = {
         { t: 4, e: 'wolf', n: 5, gap: 1.2, s: 1 },
         { t: 20, e: 'skeleton', n: 2, gap: 4, s: 0 },
         { t: 22, e: 'goblin', n: 5, gap: 1.5, s: 1 },
+        { t: 30, e: 'darkMage', n: 1, gap: 3, s: 0 },
         { t: 40, e: 'starbeast', n: 1, gap: 0, s: 0 },
         { t: 44, e: 'salamander', n: 4, gap: 2, s: 1 },
         { t: 55, e: 'wolf', n: 6, gap: 1, s: 0 },

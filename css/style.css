@@ -692,7 +692,8 @@ textarea { width: 100%; background: #0e0a1f; color: var(--text); border: 1px sol
 
 /* ========== キャラクターアート ========== */
 .pt-art { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; }
-.pt-art svg, .pt-art img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.pt-art svg { width: 100%; height: 100%; display: block; }
+.pt-art img.char-img.bust { position: absolute; max-width: none; height: auto; display: block; }
 .pt b { display: none; }
 .pt { z-index: 0; }
 .pt i { z-index: 2; }
@@ -751,3 +752,15 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .cd-stats span.wide { grid-column: 1 / -1; }
 .cd-stats small { font-weight: 500; color: var(--muted); margin-left: 4px; font-size: 10px; }
 .c-trait { position: absolute; top: -6px; right: -4px; z-index: 2; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; background: #3a2a08; border: 1.5px solid #ffe066; }
+
+/* ========== 画像キャラの表示調整（横長の絵にも対応） ========== */
+.full-art img.char-img.full { width: auto; max-width: 100%; height: auto; margin: 0 auto; }
+.cd-full { width: 128px; }
+.cd-full .full-art { width: 128px; height: 150px; display: flex; align-items: center; justify-content: center; }
+.cd-full .full-art img.char-img.full { max-height: 150px; }
+.stand-char .full-art:has(img) { width: auto; }
+.stand-char .full-art img.char-img.full { max-width: 300px; max-height: 300px; }
+.sf-results.single .full-art:has(img) { width: auto; }
+.sf-results.single .full-art img.char-img.full { max-width: 250px; max-height: 260px; }
+.bn-feat .full-art img.char-img.full { max-height: 200px; }
+.cd-profile { margin: 10px 0 -4px; font-size: 12px; line-height: 1.6; color: #d8d0f0; font-style: italic; }

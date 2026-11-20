@@ -6,8 +6,19 @@
 // TD.CUSTOM_ART に画像パスを登録すると、そのキャラはSVGの代わりに画像で表示される。
 window.TD = window.TD || {};
 
+// src: 画像パス / ratio: 画像の 高さ÷幅 / face: [顔の中心x, 顔の中心y, 切り抜く大きさ]（いずれも画像幅・高さに対する割合）
 TD.CUSTOM_ART = {
-  // 例: lydia: 'assets/chars/lydia.png',
+  meltia:  { src: 'assets/chars/meltia.webp',  ratio: 0.808, face: [0.60, 0.30, 0.34] },
+  kagura:  { src: 'assets/chars/kagura.webp',  ratio: 0.622, face: [0.58, 0.39, 0.30] },
+  nereia:  { src: 'assets/chars/nereia.webp',  ratio: 0.629, face: [0.59, 0.27, 0.34] },
+  akane:   { src: 'assets/chars/akane.webp',   ratio: 1.686, face: [0.30, 0.15, 0.56] },
+  shizuku: { src: 'assets/chars/shizuku.webp', ratio: 1.818, face: [0.56, 0.21, 0.50] },
+};
+// 文字列だけで登録した場合にも対応
+TD.customArt = function (id) {
+  const c = TD.CUSTOM_ART[id];
+  if (!c) return null;
+  return typeof c === 'string' ? { src: c, ratio: 1, face: [0.5, 0.3, 0.6] } : c;
 };
 
 TD.ART = {
@@ -394,19 +405,34 @@ TD.ART = {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VIEW[view]}" class="char-svg r${r}"><defs>${defs}${au ? au.defs : ''}</defs>${parts}</svg>`;
   };
 
-  // バトル（canvas）用に画像化したバストアップをキャッシュ
+  // バトル（canvas）用の画像をキャッシュ
   const imgCache = {};
   TD.charImage = function (id) {
     if (imgCache[id]) return imgCache[id];
-    const img = new Image();
-    img.src = TD.CUSTOM_ART[id] || 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(TD.charSVG(id, 'bust', { anim: false }));
+    const img = new Image(), c = TD.customArt(id);
+    img.src = c ? c.src : 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(TD.charSVG(id, 'bust', { anim: false }));
     imgCache[id] = img;
     return img;
+  };
+  // canvas に顔まわりを正方形で描く
+  TD.drawCharBust = function (g, id, x, y, size) {
+    const img = TD.charImage(id);
+    if (!img.complete || !img.naturalWidth) return;
+    const c = TD.customArt(id);
+    if (!c) { g.drawImage(img, x, y, size, size); return; }
+    const w = img.naturalWidth, h = img.naturalHeight, s = c.face[2] * w;
+    g.drawImage(img, c.face[0] * w - s / 2, c.face[1] * h - s / 2, s, s, x, y, size, size);
   };
 
   // HTMLで使う絵（カスタム画像があればそちら）
   TD.charArtHTML = function (id, view) {
-    if (TD.CUSTOM_ART[id]) return `<img class="char-img ${view}" src="${TD.CUSTOM_ART[id]}" alt="${TD.CHARS[id].name}">`;
-    return TD.charSVG(id, view);
+    const c = TD.customArt(id);
+    if (!c) return TD.charSVG(id, view);
+    const alt = TD.CHARS[id].name;
+    if (view !== 'bust') return `<img class="char-img full" src="${c.src}" alt="${alt}" loading="lazy">`;
+    // 丸枠いっぱいに顔が来るよう、拡大して位置をずらす
+    const [fx, fy, fs] = c.face, wPct = 100 / fs;
+    const left = 50 - fx * wPct, top = 50 - fy * c.ratio * wPct;
+    return `<img class="char-img bust" src="${c.src}" alt="${alt}" loading="lazy" style="width:${wPct.toFixed(1)}%;left:${left.toFixed(1)}%;top:${top.toFixed(1)}%">`;
   };
 })();
