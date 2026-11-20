@@ -270,7 +270,7 @@ window.TD = window.TD || {};
       m.innerHTML =
         `<div class="um-name">${d.name}<small>${TD.ELEMENTS[d.element].name}・${TD.ROLES[d.role].name}</small></div>` +
         `<div class="um-hp">HP ${Math.ceil(u.hp)} / ${u.maxHp}</div>` +
-        `<button class="um-skill" ${ready ? '' : 'disabled'}>必殺技「${d.skill.name}」${ready ? '' : ` (${Math.floor(u.sp)}/${d.skill.sp})`}</button>` +
+        `<button class="um-skill" ${ready ? '' : 'disabled'}>スキル「${d.skill.name}」${ready ? '' : ` (${Math.floor(u.sp)}/${d.skill.sp})`}</button>` +
         `<button class="um-retreat">${this.retreatLabel(u)}</button>`;
       m.querySelector('.um-skill').onclick = () => { this.activateSkill(u); this.hideMenu(); };
       m.querySelector('.um-retreat').onclick = () => { this.removeUnit(u, true); this.hideMenu(); };
@@ -296,7 +296,7 @@ window.TD = window.TD || {};
       t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
     }
 
-    // ---------- 必殺技 ----------
+    // ---------- スキル ----------
     activateSkill(u) {
       const d = u.def, s = d.skill;
       if (u.removed || u.sp < s.sp || this.over) return;
@@ -796,7 +796,7 @@ window.TD = window.TD || {};
         if (sk) {
           const ready = this.menuUnit.sp >= d.skill.sp;
           sk.disabled = !ready;
-          sk.textContent = `必殺技「${d.skill.name}」` + (ready ? '' : ` (${Math.floor(this.menuUnit.sp)}/${d.skill.sp})`);
+          sk.textContent = `スキル「${d.skill.name}」` + (ready ? '' : ` (${Math.floor(this.menuUnit.sp)}/${d.skill.sp})`);
         }
       }
     }

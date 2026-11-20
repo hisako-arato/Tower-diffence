@@ -482,7 +482,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
         ? `<div class="lv-row">${lvBtn('+1', prog.lv + 1)}${lvBtn('+5', prog.lv + 5)}${lvBtn('最大', Math.max(affordable, prog.lv + 1))}</div>`
         : `<div class="lv-max">${prog.lb < TD.GROWTH.maxLB ? 'レベル上限です。限界突破で上限が上がります' : 'これ以上は上げられません'}</div>`) +
       `</div>` +
-      `<div class="cd-skill"><div class="cd-skill-name">必殺技「${base.skill.name}」<small>SP ${base.skill.sp}</small></div><div>${base.skill.desc}</div></div>` +
+      `<div class="cd-skill"><div class="cd-skill-name">スキル「${base.skill.name}」<small>SP ${base.skill.sp}</small></div><div>${base.skill.desc}</div></div>` +
       `<button class="btn ${inParty ? 'ghost' : 'primary'}" id="btn-toggle-party">${inParty ? '編成から外す' : '編成に加える'}</button>`;
     box.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => {
       const to = +b.dataset.lv, cost = lvUpCost(prog.lv, to);
