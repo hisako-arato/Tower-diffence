@@ -356,7 +356,10 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   function onBattleEnd(r) {
     const st = currentStage;
     let stones = 0, notes = [];
-    const exp = r.win ? TD.stageExp(st) : Math.round(TD.stageExp(st) * 0.2);
+    let exp = r.win ? TD.stageExp(st) : Math.round(TD.stageExp(st) * 0.2);
+    // 常時スキル「宝探し」：出撃メンバーにいれば経験の書が増える（重複しない・最大のもの）
+    const expBonus = Math.max(1, ...save.party.map(id => TD.CHARS[id].passive && TD.CHARS[id].passive.type === 'expBonus' ? TD.CHARS[id].passive.mult : 1));
+    exp = Math.round(exp * expBonus);
     let evPts = 0;
     TD.Live.track(save, 'kills', r.killed);
     TD.Live.track(save, 'skills', r.skills || 0);
@@ -382,7 +385,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="res-stats">撃破 ${r.killed}/${r.total}・残りライフ ${r.lives}/${r.maxLives}</div>` +
       (r.win ? `<div class="res-cond"><div class="${r.stars >= 1 ? 'ok' : ''}">★ ステージクリア</div><div class="${r.stars >= 2 ? 'ok' : ''}">★ ライフを半分以上残す</div><div class="${r.stars >= 3 ? 'ok' : ''}">★ ライフを減らさずクリア</div></div>` : '') +
       `<div class="res-reward">` +
-      `<div><i class="expbook"></i> 経験の書 +${exp}</div>` +
+      `<div><i class="expbook"></i> 経験の書 +${exp}${expBonus > 1 ? `<small class="bonus">（宝探し +${Math.round((expBonus - 1) * 100)}%）</small>` : ''}</div>` +
       (evPts ? `<div><i class="star"></i> ${esc(TD.EVENT.currency)} +${evPts}</div>` : '') +
       (stones ? `<div><i class="gem"></i> 魔晶石 +${stones}</div><small>${notes.join(' / ')}</small>` : '') +
       `</div></div>` +
@@ -457,6 +460,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       return;
     }
     const prog = save.chars[id], d = TD.charStats(id, prog), maxLv = TD.maxLv(prog.lb), inParty = save.party.includes(id);
+    const pv = base.passive;
     const next = prog.lv < maxLv ? TD.charStats(id, { lv: prog.lv + 1, lb: prog.lb }) : null;
     const up = (k) => next ? `<em>→${next[k]}</em>` : '';
     // 所持している経験の書で上げられる最大レベル
@@ -475,14 +479,17 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="cd-role">${r.desc}</div>` +
       ((base.traits || []).length ? `<div class="cd-traits">${base.traits.filter(k => TD.TRAITS[k]).map(k => `<div class="trait"><b>${TD.TRAITS[k].icon} ${TD.TRAITS[k].name}</b><span>${TD.TRAITS[k].desc}</span></div>`).join('')}</div>` : '') +
       `<div class="cd-stats"><span>HP<b>${d.hp}${up('hp')}</b></span><span>${base.role === 'priest' ? '回復' : '攻撃'}<b>${d.atk}${up('atk')}</b></span><span>防御<b>${d.def}${up('def')}</b></span>` +
-      `<span>コスト<b>${d.cost}</b></span><span>射程<b>${d.range}</b></span><span>${r.melee ? 'ブロック' : '配置先'}<b>${r.melee ? d.block : '草地'}</b></span>` +
+      `<span>コスト<b>${d.cost}</b></span><span>射程<b>${pv && pv.type === 'range' ? `${+(d.range * pv.mult).toFixed(1)}<small>(${d.range}×${pv.mult})</small>` : d.range}</b></span>` +
+      `<span>${r.melee ? 'ブロック' : '配置先'}<b>${!r.melee ? '草地' : pv && pv.type === 'blockMult' ? `${Math.floor(d.block * pv.mult)}<small>(${d.block}×${pv.mult})</small>` : d.block}</b></span>` +
       `<span class="wide">再配置<b>${Math.round(TD.redeployTime(d))}秒<small>（撤退時 ${TD.RETREAT.minCooldown}〜${Math.round(TD.redeployTime(d))}秒）</small></b></span></div>` +
       `<div class="cd-levelup"><div class="cd-own"><i class="expbook"></i> 経験の書 <b>${save.crystals}</b></div>` +
       (prog.lv < maxLv
         ? `<div class="lv-row">${lvBtn('+1', prog.lv + 1)}${lvBtn('+5', prog.lv + 5)}${lvBtn('最大', Math.max(affordable, prog.lv + 1))}</div>`
         : `<div class="lv-max">${prog.lb < TD.GROWTH.maxLB ? 'レベル上限です。限界突破で上限が上がります' : 'これ以上は上げられません'}</div>`) +
       `</div>` +
-      `<div class="cd-skill"><div class="cd-skill-name">スキル「${base.skill.name}」<small>SP ${base.skill.sp}</small></div><div>${base.skill.desc}</div></div>` +
+      (base.skill
+        ? `<div class="cd-skill"><div class="cd-skill-name">スキル「${base.skill.name}」<small>SP ${base.skill.sp}・タップで発動</small></div><div>${base.skill.desc}</div></div>`
+        : `<div class="cd-skill passive"><div class="cd-skill-name">常時スキル「${base.passive.name}」<small>配置中ずっと有効</small></div><div>${base.passive.desc}</div></div>`) +
       `<button class="btn ${inParty ? 'ghost' : 'primary'}" id="btn-toggle-party">${inParty ? '編成から外す' : '編成に加える'}</button>`;
     box.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => {
       const to = +b.dataset.lv, cost = lvUpCost(prog.lv, to);

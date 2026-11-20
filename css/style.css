@@ -764,3 +764,15 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .sf-results.single .full-art img.char-img.full { max-width: 250px; max-height: 260px; }
 .bn-feat .full-art img.char-img.full { max-height: 200px; }
 .cd-profile { margin: 10px 0 -4px; font-size: 12px; line-height: 1.6; color: #d8d0f0; font-style: italic; }
+
+/* ========== 常時スキル ========== */
+.c-pas { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 8px; font-weight: 900; padding: 0 5px; border-radius: 4px; background: #2a6a8a; color: #dff6ff; letter-spacing: .05em; }
+.card.passive .c-sp { visibility: hidden; }
+.card.passive { padding-bottom: 12px; }
+.cd-skill.passive { background: rgba(122, 216, 255, .08); border-color: rgba(122, 216, 255, .4); }
+.cd-skill.passive .cd-skill-name { color: #9fe4ff; }
+.um-passive { margin-top: 6px; padding: 7px 8px; border-radius: 8px; font-size: 11px; line-height: 1.5; background: rgba(122, 216, 255, .1); border: 1px solid rgba(122, 216, 255, .35); color: #cfeaff; }
+.um-passive b { display: block; color: #9fe4ff; font-size: 12px; }
+.res-reward small.bonus { display: inline; font-size: 11px; color: #ffd08a; margin-left: 4px; }
+.cd-stats span { white-space: nowrap; gap: 4px; }
+.cd-stats b small { font-size: 9px; margin-left: 2px; }

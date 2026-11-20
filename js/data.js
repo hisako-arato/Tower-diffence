@@ -46,22 +46,19 @@ TD.CHARS = {
   fin: {
     name: 'フィン', title: '森の狩人', rarity: 4, element: 'wind', role: 'archer',
     cost: 10, hp: 600, atk: 72, def: 10, interval: 0.9, range: 3.6, redeploy: 25,
-    skill: { name: '疾風連射', type: 'rapid', sp: 25, rate: 3, dur: 8,
-             desc: '8秒間、攻撃速度が3倍になる' },
+    passive: { name: '鷹の目', type: 'range', mult: 1.5, desc: '射程が1.5倍になる' },
     lines: { deploy: '狙いは外さないよ', skill: '風よ、俺の矢に乗れ！疾風連射！' },
   },
   gald: {
     name: 'ガルド', title: '鉄壁の守護者', rarity: 4, element: 'light', role: 'shield',
     cost: 15, hp: 2600, atk: 50, def: 140, interval: 1.4, range: 1.3, block: 3, redeploy: 30,
-    skill: { name: '不動の誓い', type: 'guard', sp: 30, dur: 10,
-             desc: '10秒間、防御2倍・ブロック数+2。HPを50%回復' },
+    passive: { name: '隊長の号令', type: 'adjAtk', mult: 1.2, desc: '隣接するマスの味方の攻撃力+20%' },
     lines: { deploy: 'ここは一歩も通さん', skill: '我が盾は砕けぬ！不動の誓い！' },
   },
   nox: {
     name: 'ノクス', title: '影の剣士', rarity: 4, element: 'dark', role: 'sword',
     cost: 11, hp: 1100, atk: 145, def: 40, interval: 0.8, range: 1.3, block: 1, redeploy: 25,
-    skill: { name: '影縫い', type: 'power', sp: 20, atk: 2.5, dur: 8,
-             desc: '8秒間、攻撃力が250%になる' },
+    passive: { name: '影の刃', type: 'crit', chance: 0.25, mult: 2, desc: '攻撃の25%が2倍ダメージ（クリティカル）になる' },
     lines: { deploy: '……斬るだけだ', skill: '影に沈め。影縫い' },
   },
   mia: {
@@ -81,43 +78,37 @@ TD.CHARS = {
   zephyr: {
     name: 'ゼファー', title: '嵐を纏う射手', rarity: 4, element: 'wind', role: 'archer',
     cost: 10, hp: 680, atk: 85, def: 15, interval: 0.85, range: 3.8, redeploy: 25,
-    skill: { name: '天嵐の矢雨', type: 'storm', sp: 26, mult: 2.5, dur: 4,
-             desc: '射程内の全ての敵に攻撃力250%のダメージを与え、4秒間移動速度を半減' },
+    passive: { name: '風の双矢', type: 'multi', count: 2, desc: '攻撃が敵2体に当たる' },
     lines: { deploy: '風が騒いでる……来るぞ', skill: '吹き荒れろ、天嵐の矢雨！' },
   },
   blaire: {
     name: 'ブレア', title: '紅蓮の拳闘士', rarity: 4, element: 'fire', role: 'sword',
     cost: 11, hp: 1200, atk: 125, def: 45, interval: 0.75, range: 1.3, block: 1, redeploy: 25,
-    skill: { name: '烈火連撃', type: 'power', sp: 22, atk: 2.2, dur: 8,
-             desc: '8秒間、攻撃力が220%になる' },
+    passive: { name: '連撃', type: 'ramp', step: 0.05, max: 0.5, desc: '攻撃するたびに攻撃速度+5%（最大+50%）。撤退すると元に戻る' },
     lines: { deploy: 'さぁ、かかってきな！', skill: '燃え上がれ！烈火連撃！' },
   },
   rune: {
     name: 'ルーン', title: '黒書の魔導士', rarity: 4, element: 'dark', role: 'mage',
     cost: 14, hp: 650, atk: 105, def: 10, interval: 1.9, range: 2.6, splash: 0.9, redeploy: 30,
-    skill: { name: '深淵の頁', type: 'explosion', sp: 28, mult: 4.5, radius: 1.8,
-             desc: '射程内の敵を中心に闇の爆発。攻撃力450%の範囲ダメージ' },
+    passive: { name: '深淵の知識', type: 'splash', mult: 1.5, desc: '魔法の範囲が1.5倍になる' },
     lines: { deploy: '……この頁を読むのは、何年ぶりかしら', skill: '開け、深淵の頁' },
   },
   thomas: {
     name: 'トマス', title: '見習い騎士', rarity: 3, element: 'water', role: 'shield',
     cost: 12, hp: 1900, atk: 40, def: 110, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
-    skill: { name: '騎士の意地', type: 'guard', sp: 30, dur: 10,
-             desc: '10秒間、防御2倍・ブロック数+2。HPを50%回復' },
+    passive: { name: '根性', type: 'lastStand', threshold: 0.3, defMult: 2, desc: 'HPが30%以下になると防御2倍' },
     lines: { deploy: 'ぼ、僕だって騎士です！', skill: 'ここで退いたら騎士じゃない！' },
   },
   lily: {
     name: 'リリィ', title: '泉の巫女', rarity: 3, element: 'water', role: 'priest',
     cost: 9, hp: 520, atk: 80, def: 5, interval: 1.5, range: 2.6, redeploy: 20,
-    skill: { name: '癒しの泉', type: 'healAll', sp: 28, ratio: 0.35,
-             desc: '全ての味方のHPを最大HPの35%回復' },
+    passive: { name: '泉の加護', type: 'healUp', mult: 1.3, desc: '回復量+30%' },
     lines: { deploy: '泉の加護を、あなたに', skill: '湧き出でよ、癒しの泉' },
   },
   popo: {
     name: 'ポポ', title: 'ドワーフの石弓兵', rarity: 3, element: 'fire', role: 'archer',
     cost: 9, hp: 620, atk: 66, def: 20, interval: 1.0, range: 3.2, redeploy: 20,
-    skill: { name: '連装石弓', type: 'rapid', sp: 25, rate: 2.5, dur: 8,
-             desc: '8秒間、攻撃速度が2.5倍になる' },
+    passive: { name: '宝探し', type: 'expBonus', mult: 1.3, desc: '出撃メンバーにいると、クリア時の経験の書+30%（配置しなくても有効）' },
     lines: { deploy: 'ドワーフの石弓をなめるなよ！', skill: '全弾装填、撃てーっ！' },
   },
 
@@ -134,8 +125,7 @@ TD.CHARS = {
     name: 'カグラ', title: '紅鎖の星姫', rarity: 5, element: 'fire', role: 'shield',
     cost: 17, hp: 3000, atk: 90, def: 160, interval: 1.3, range: 1.3, block: 4, redeploy: 35,
     profile: '星の鎖を操る巫女。ブロック数4はゲーム中で最多。',
-    skill: { name: '星鎖封縛', type: 'bind', sp: 30, radius: 2.0, bindDur: 5, dur: 10,
-             desc: '周囲2マスの敵を5秒間鎖で縛って動けなくし、10秒間自分の防御2倍' },
+    passive: { name: '紅鎖の陣', type: 'blockMult', mult: 1.5, desc: 'ブロック数が1.5倍になる（4→6）' },
     lines: { deploy: '……この先へは、行かせません', skill: '星よ、鎖となりて縛めよ' },
   },
   nereia: {
@@ -176,8 +166,7 @@ TD.CHARS = {
     name: 'セイラ', title: '蒼波の剣聖', rarity: 5, element: 'water', role: 'sword',
     cost: 15, hp: 1700, atk: 125, def: 70, interval: 0.95, range: 1.3, block: 2, redeploy: 30,
     profile: '水の都の剣術道場を継ぐ剣聖。受けた刃をそのまま返す「水鏡」の使い手。',
-    skill: { name: '水鏡の構え', type: 'reflect', sp: 28, dur: 8, defMult: 1.5,
-             desc: '8秒間、防御1.5倍。受けたダメージを攻撃してきた敵にそのまま返す' },
+    passive: { name: '常時水鏡', type: 'reflect', ratio: 0.5, defMult: 1.2, desc: '受けたダメージの50%を常に相手に返す。防御+20%' },
     lines: { deploy: '参ります。……お覚悟を', skill: '水鏡に映るは、あなた自身の刃' },
   },
   xeno: {
@@ -225,8 +214,7 @@ TD.CHARS = {
   emil: {
     name: 'エミル', title: '王都の新米衛兵', rarity: 3, element: 'light', role: 'sword',
     cost: 9, hp: 950, atk: 95, def: 40, interval: 0.95, range: 1.3, block: 1, redeploy: 20,
-    skill: { name: '勇気の一撃', type: 'power', sp: 20, atk: 2, dur: 6,
-             desc: '6秒間、攻撃力が200%になる' },
+    passive: { name: '衛兵の誇り', type: 'pride', threshold: 0.5, mult: 1.3, desc: 'HPが半分以上の間、攻撃力+30%' },
     lines: { deploy: '衛兵エミル、ただいま参上！', skill: 'ここが踏ん張りどころ！' },
   },
   bold: {
@@ -248,36 +236,31 @@ TD.CHARS = {
   hayate: {
     name: 'ハヤテ', title: '疾風の飛脚', rarity: 3, element: 'wind', role: 'sword',
     cost: 8, hp: 850, atk: 80, def: 30, interval: 0.7, range: 1.3, block: 1, redeploy: 20,
-    skill: { name: '韋駄天', type: 'rapid', sp: 20, rate: 2.2, dur: 6,
-             desc: '6秒間、攻撃速度が2.2倍になる' },
+    passive: { name: '疾風二刀', type: 'multi', count: 2, desc: '攻撃が敵2体に当たる' },
     lines: { deploy: '速達だよ！ ……あれ、戦い？', skill: '足には自信があるんだ！' },
   },
   mint: {
     name: 'ミント', title: '森の見張り番', rarity: 3, element: 'wind', role: 'archer',
     cost: 8, hp: 560, atk: 62, def: 10, interval: 1.0, range: 3.3, redeploy: 20,
-    skill: { name: '風切りの矢', type: 'storm', sp: 24, mult: 1.6, dur: 3,
-             desc: '射程内の全ての敵に攻撃力160%のダメージを与え、3秒間移動速度を半減' },
+    passive: { name: '見張り', type: 'slowAura', mult: 0.85, desc: '射程内の敵の移動速度を常に15%下げる' },
     lines: { deploy: '見張りなら任せて', skill: 'まとめて足止めっ！' },
   },
   kagerou: {
     name: 'カゲロウ', title: '夜回りの忍び', rarity: 3, element: 'dark', role: 'sword',
     cost: 9, hp: 880, atk: 100, def: 30, interval: 0.85, range: 1.3, block: 1, redeploy: 20,
-    skill: { name: '影走り', type: 'power', sp: 20, atk: 2, dur: 6,
-             desc: '6秒間、攻撃力が200%になる' },
+    passive: { name: '隠れ身', type: 'stealth', desc: '遠距離攻撃やボスの範囲攻撃の標的にならない' },
     lines: { deploy: '……御意', skill: '影より出でて、影に消ゆ' },
   },
   glen: {
     name: 'グレン', title: '墓守の大男', rarity: 3, element: 'dark', role: 'shield',
     cost: 12, hp: 2000, atk: 45, def: 105, interval: 1.5, range: 1.3, block: 2, redeploy: 25,
-    skill: { name: '墓守の意地', type: 'guard', sp: 30, dur: 10,
-             desc: '10秒間、防御2倍・ブロック数+2。HPを50%回復' },
+    passive: { name: '巨躯', type: 'blockMult', mult: 1.5, desc: 'ブロック数が1.5倍になる（2→3）' },
     lines: { deploy: '……眠りを妨げる者は、通さん', skill: 'ぬうぅん！' },
   },
   luna: {
     name: 'ルナ', title: '月影の狩人', rarity: 3, element: 'dark', role: 'archer',
     cost: 9, hp: 580, atk: 66, def: 12, interval: 1.0, range: 3.2, redeploy: 20,
-    skill: { name: '月影連射', type: 'rapid', sp: 24, rate: 2.2, dur: 7,
-             desc: '7秒間、攻撃速度が2.2倍になる' },
+    passive: { name: '月影', type: 'pierce', ratio: 0.3, desc: '攻撃が敵の防御を30%無視する' },
     lines: { deploy: '月が綺麗な夜ね', skill: '月の光は、外れない' },
   },
   viola: {
@@ -297,8 +280,7 @@ TD.CHARS = {
   garo: {
     name: 'ガロ', title: '酒場の用心棒', rarity: 3, element: 'fire', role: 'sword',
     cost: 10, hp: 1000, atk: 98, def: 40, interval: 1.0, range: 1.3, block: 1, redeploy: 20,
-    skill: { name: '酔拳・火炎', type: 'power', sp: 22, atk: 2.1, dur: 6,
-             desc: '6秒間、攻撃力が210%になる' },
+    passive: { name: '酔拳', type: 'evade', chance: 0.2, desc: '敵の攻撃を20%の確率でかわす' },
     lines: { deploy: 'ひっく……喧嘩なら買うぜ', skill: '燃えてきたぁ！' },
   },
 };
@@ -599,7 +581,7 @@ TD.EVENT = {
     {
       id: 'E-2', type: 'event', name: '魔導祭の夜【上級】', chapter: '星降る夜の魔導祭', unlockAfter: 'E-1',
       brief: '星喰らいの魔獣が現れました！火属性の魔獣には水属性が有効です。報酬の星の欠片は2倍以上！',
-      lives: 10, mana: 16, hpScale: 2.2, reward: 80, exp: 900, eventPoints: 70,
+      lives: 10, mana: 16, hpScale: 2.0, reward: 80, exp: 900, eventPoints: 70,
       map: [
         'S.......S',
         '#.......#',

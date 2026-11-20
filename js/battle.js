@@ -142,13 +142,13 @@ window.TD = window.TD || {};
       wrap.innerHTML = '';
       for (const card of this.cards) {
         const d = card.def, el = document.createElement('button');
-        el.className = `card el-${d.element}`;
+        el.className = `card el-${d.element}${d.skill ? '' : ' passive'}`;
         el.innerHTML =
           `<span class="c-cost">${d.cost}</span>` +
           ((d.traits || []).includes('fastRedeploy') ? `<span class="c-trait" title="高速再配置">⚡</span>` : '') +
           `<span class="c-face">${TD.portraitHTML(card.id)}</span>` +
           `<span class="c-name">${d.name}</span>` +
-          `<span class="c-sp"><i></i></span>` +
+          (d.skill ? `<span class="c-sp"><i></i></span>` : `<span class="c-sp"><i></i></span><span class="c-pas">常時</span>`) +
           `<span class="c-cool"></span>`;
         el.addEventListener('click', () => this.onCard(card));
         card.el = el;
@@ -182,7 +182,7 @@ window.TD = window.TD || {};
     onCard(card) {
       if (this.over || this.paused) return;
       if (card.state === 'deployed') {
-        if (card.unit.sp >= card.def.skill.sp) this.activateSkill(card.unit);
+        if (card.def.skill && card.unit.sp >= card.def.skill.sp) this.activateSkill(card.unit);
         else this.showMenu(card.unit);
         return;
       }
@@ -266,13 +266,16 @@ window.TD = window.TD || {};
     showMenu(u) {
       this.menuUnit = u;
       const m = this.els.menu, d = u.def;
-      const ready = u.sp >= d.skill.sp;
+      const ready = d.skill && u.sp >= d.skill.sp;
       m.innerHTML =
         `<div class="um-name">${d.name}<small>${TD.ELEMENTS[d.element].name}・${TD.ROLES[d.role].name}</small></div>` +
         `<div class="um-hp">HP ${Math.ceil(u.hp)} / ${u.maxHp}</div>` +
-        `<button class="um-skill" ${ready ? '' : 'disabled'}>スキル「${d.skill.name}」${ready ? '' : ` (${Math.floor(u.sp)}/${d.skill.sp})`}</button>` +
+        (d.skill
+          ? `<button class="um-skill" ${ready ? '' : 'disabled'}>スキル「${d.skill.name}」${ready ? '' : ` (${Math.floor(u.sp)}/${d.skill.sp})`}</button>`
+          : `<div class="um-passive"><b>常時スキル「${d.passive.name}」</b>${d.passive.desc}</div>`) +
         `<button class="um-retreat">${this.retreatLabel(u)}</button>`;
-      m.querySelector('.um-skill').onclick = () => { this.activateSkill(u); this.hideMenu(); };
+      const skb = m.querySelector('.um-skill');
+      if (skb) skb.onclick = () => { this.activateSkill(u); this.hideMenu(); };
       m.querySelector('.um-retreat').onclick = () => { this.removeUnit(u, true); this.hideMenu(); };
       const cv = this.els.canvas, r = cv.getBoundingClientRect(), pr = cv.parentElement.getBoundingClientRect();
       const sx = r.width / W, sy = r.height / H;
@@ -299,7 +302,7 @@ window.TD = window.TD || {};
     // ---------- スキル ----------
     activateSkill(u) {
       const d = u.def, s = d.skill;
-      if (u.removed || u.sp < s.sp || this.over) return;
+      if (!s || u.removed || u.sp < s.sp || this.over) return;
       u.sp = 0;
       this.skillCount = (this.skillCount || 0) + 1;
       const alive = this.enemies.filter(e => !e.dead);
@@ -432,7 +435,7 @@ window.TD = window.TD || {};
         }
         case 'battery':
           for (const a of this.units) {
-            if (a === u) continue;
+            if (a === u || !a.def.skill) continue;
             a.sp = Math.min(a.def.skill.sp, a.sp + s.amount);
             this.pop(a.x, a.y - 22, `SP+${s.amount}`, '#ffe066', { size: 11 });
             this.fx.push({ type: 'ring', x: a.x, y: a.y, r0: 4, r1: 20, t: 0, dur: 0.5, color: '#ffe066' });
@@ -492,36 +495,59 @@ window.TD = window.TD || {};
     }
 
     // ---------- ステータス ----------
-    atkOf(u) { return u.def.atk * (u.buff && u.buff.atk ? u.buff.atk : 1) * (u.atkUpT > 0 ? u.atkUpMult : 1); }
+    // 常時スキル
+    pas(u, type) { const p = u.def.passive; return p && p.type === type ? p : null; }
+    rangeOf(u) { const p = this.pas(u, 'range'); return u.def.range * (p ? p.mult : 1); }
+    splashOf(u) { const p = this.pas(u, 'splash'); return u.def.splash ? u.def.splash * (p ? p.mult : 1) : 0; }
+    atkOf(u) {
+      let a = u.def.atk * (u.buff && u.buff.atk ? u.buff.atk : 1) * (u.atkUpT > 0 ? u.atkUpMult : 1);
+      const pr = this.pas(u, 'pride');
+      if (pr && u.hp / u.maxHp >= pr.threshold) a *= pr.mult;
+      // 隊長の号令：隣接（8方向）の味方の攻撃力アップ（自分は対象外・重複しない）
+      let adj = 1;
+      for (const o of this.units) { const p = this.pas(o, 'adjAtk'); if (p && o !== u && Math.abs(o.cx - u.cx) <= 1 && Math.abs(o.cy - u.cy) <= 1) adj = Math.max(adj, p.mult); }
+      return a * adj;
+    }
     defOf(u) {
       const b = u.buff;
-      return u.def.def * (!b ? 1 : b.defMult ? b.defMult : b.type === 'guard' ? 2 : 1);
+      let d = u.def.def * (!b ? 1 : b.defMult ? b.defMult : b.type === 'guard' ? 2 : 1);
+      const rf = this.pas(u, 'reflect'); if (rf) d *= rf.defMult;
+      const ls = this.pas(u, 'lastStand'); if (ls && u.hp / u.maxHp <= ls.threshold) d *= ls.defMult;
+      return d;
     }
     // 挑発中で、この敵を引きつけている味方
     tauntUnit(e) {
       for (const u of this.units) if (u.buff && u.buff.type === 'taunt' && dist(e, u) <= u.buff.radius * T) return u;
       return null;
     }
-    blockOf(u) { return (u.def.block || 0) + (u.buff && u.buff.type === 'guard' && !u.buff.noBlock ? 2 : 0); }
+    blockOf(u) {
+      const bm = this.pas(u, 'blockMult');
+      return Math.floor((u.def.block || 0) * (bm ? bm.mult : 1)) + (u.buff && u.buff.type === 'guard' && !u.buff.noBlock ? 2 : 0);
+    }
     rateOf(u) {
       let r = u.buff && u.buff.rate ? u.buff.rate : 1;
       if (u.hasteT > 0) r *= u.hasteMult;
       // 常時効果（オーラ）：近くの味方の攻撃速度アップ（重複はしない・最大のもの）
       let aura = 1;
       for (const o of this.units) if (o.def.aura && dist(o, u) <= o.def.aura.radius * T) aura = Math.max(aura, o.def.aura.haste);
-      return r * aura;
+      return r * aura * (1 + (u.ramp || 0));
     }
 
     hit(src, e, power) {
       if (e.dead) return;
       const m = TD.elemMult(src.def.element, e.def.element);
+      let crit = false;
+      const cp = src.def && src.def.passive && src.def.passive.type === 'crit' ? src.def.passive : null;
+      if (cp && Math.random() < cp.chance) { power *= cp.mult; crit = true; }
       const raw = power * m;
-      const edef = e.def.def * (e.defDownT > 0 ? e.defDownMult : 1);
+      const pc = src.def && src.def.passive && src.def.passive.type === 'pierce' ? src.def.passive : null;
+      const edef = e.def.def * (e.defDownT > 0 ? e.defDownMult : 1) * (pc ? 1 - pc.ratio : 1);
       const d = Math.round(Math.max(raw - edef, raw * 0.15));
       e.hp -= d;
       e.flash = 0.12;
       const color = m > 1 ? '#ffd23f' : m < 1 ? '#a8b0b8' : '#ffffff';
-      this.pop(e.x + (Math.random() * 10 - 5), e.y - e.size - 6, String(d), color, { size: m > 1 ? 15 : 12, weak: m > 1 });
+      this.pop(e.x + (Math.random() * 10 - 5), e.y - e.size - 6, String(d), crit ? '#ff8a3a' : color, { size: crit || m > 1 ? 15 : 12, weak: m > 1 });
+      if (crit) this.pop(e.x, e.y - e.size - 20, 'CRITICAL', '#ff8a3a', { size: 9 });
       if (e.hp <= 0) {
         e.dead = true;
         this.killed++;
@@ -532,6 +558,8 @@ window.TD = window.TD || {};
 
     hurt(e, u, power) {
       if (u.removed) return;
+      const ev = this.pas(u, 'evade');
+      if (ev && Math.random() < ev.chance) { this.pop(u.x, u.y - 20, 'MISS', '#c8f0ff', { size: 11 }); return; }
       const m = TD.elemMult(e.def.element, u.def.element);
       const raw = (power != null ? power : e.atk) * m;
       let d = Math.max(raw - this.defOf(u), raw * 0.15);
@@ -541,8 +569,9 @@ window.TD = window.TD || {};
       u.flash = 0.12;
       this.pop(u.x, u.y - 20, String(d), '#ff7a7a', { size: 11 });
       // 水鏡の構え：受けたダメージを攻撃してきた敵に返す
-      if (u.buff && u.buff.type === 'reflect' && e && !e.dead && e.hp != null) {
-        this.hit(u, e, d);
+      const rp = this.pas(u, 'reflect');
+      if (((u.buff && u.buff.type === 'reflect') || rp) && e && !e.dead && e.hp != null) {
+        this.hit(u, e, u.buff && u.buff.type === 'reflect' ? d : d * rp.ratio);
         this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 10, r1: 20, t: 0, dur: 0.3, color: '#9fe4ff', width: 3 });
       }
       if (u.hp <= 0) this.removeUnit(u, false);
@@ -629,7 +658,7 @@ window.TD = window.TD || {};
           e.rcd = (e.rcd == null ? 1 : e.rcd) - dt;
           if (e.rcd <= 0) {
             let tgt = this.tauntUnit(e), bd = Infinity;
-            if (!tgt) for (const u of this.units) { const dd = dist(e, u); if (dd <= e.def.ranged * T && dd < bd) { bd = dd; tgt = u; } }
+            if (!tgt) for (const u of this.units) { if (this.pas(u, 'stealth')) continue; const dd = dist(e, u); if (dd <= e.def.ranged * T && dd < bd) { bd = dd; tgt = u; } }
             if (tgt) {
               e.rcd = e.def.interval;
               this.shots.push({ x: e.x, y: e.y, target: tgt, src: e, enemyShot: true, speed: 260, color: TD.ELEMENTS[e.def.element].color });
@@ -638,7 +667,9 @@ window.TD = window.TD || {};
         }
         e.walk += dt * 8;
         if (e.slowT > 0) e.slowT -= dt;
-        let move = e.def.speed * T * dt * (e.slowT > 0 ? 0.5 : 1);
+        let slowAura = 1;
+        for (const u of this.units) { const p = this.pas(u, 'slowAura'); if (p && dist(e, u) <= this.rangeOf(u) * T) slowAura = Math.min(slowAura, p.mult); }
+        let move = e.def.speed * T * dt * (e.slowT > 0 ? 0.5 : 1) * slowAura;
         while (move > 0 && e.idx < e.route.length) {
           const tgt = e.route[e.idx], dx = tgt.x - e.x, dy = tgt.y - e.y, d = Math.hypot(dx, dy);
           if (d <= move) { e.x = tgt.x; e.y = tgt.y; e.idx++; move -= d; }
@@ -669,18 +700,19 @@ window.TD = window.TD || {};
         if (u.hasteT > 0) u.hasteT -= dt;
         if (u.shieldT > 0) u.shieldT -= dt;
         if (u.buff) { u.buffT -= dt; if (u.buffT <= 0) { u.buff = null; } }
-        else u.sp = Math.min(u.def.skill.sp, u.sp + dt);
+        else if (u.def.skill) u.sp = Math.min(u.def.skill.sp, u.sp + dt);
 
         u.cd -= dt * this.rateOf(u);
         if (u.cd > 0) continue;
-        const d = u.def, range = d.range * T;
+        const d = u.def, range = this.rangeOf(u) * T;
 
         if (d.role === 'priest') {
           const hurtAlly = this.units.filter(a => a.hp < a.maxHp && dist(a, u) <= range)
             .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
           if (hurtAlly) {
             u.cd = d.interval;
-            this.shots.push({ x: u.x, y: u.y, target: hurtAlly, heal: true, power: this.atkOf(u), src: u, speed: 300, color: '#9dffb8' });
+            const hu = this.pas(u, 'healUp');
+            this.shots.push({ x: u.x, y: u.y, target: hurtAlly, heal: true, power: this.atkOf(u) * (hu ? hu.mult : 1), src: u, speed: 300, color: '#9dffb8' });
           }
           continue;
         }
@@ -698,13 +730,25 @@ window.TD = window.TD || {};
         if (!target) continue;
         u.cd = d.interval;
         u.angle = Math.atan2(target.y - u.y, target.x - u.x);
-        if (u.melee) {
-          this.hit(u, target, this.atkOf(u));
-          this.fx.push({ type: 'slash', x: target.x, y: target.y, t: 0, dur: 0.2, color: TD.ELEMENTS[d.element].color, a: u.angle });
-        } else {
-          this.shots.push({ x: u.x, y: u.y, target, power: this.atkOf(u), src: u, splash: d.splash, speed: d.role === 'archer' ? 520 : 330,
-                            color: TD.ELEMENTS[d.element].color, kind: d.role });
+        // 疾風二刀・風の双矢：射程内の別の敵にも同時に攻撃
+        const targets = [target], mp = this.pas(u, 'multi');
+        if (mp) {
+          const extra = this.enemies.filter(e => !e.dead && e !== target && dist(e, u) <= range)
+            .sort((a, b) => (b.idx * 1000 - dist(b, b.route[Math.min(b.idx, b.route.length - 1)])) - (a.idx * 1000 - dist(a, a.route[Math.min(a.idx, a.route.length - 1)])));
+          targets.push(...extra.slice(0, mp.count - 1));
         }
+        for (const tg of targets) {
+          if (u.melee) {
+            this.hit(u, tg, this.atkOf(u));
+            this.fx.push({ type: 'slash', x: tg.x, y: tg.y, t: 0, dur: 0.2, color: TD.ELEMENTS[d.element].color, a: Math.atan2(tg.y - u.y, tg.x - u.x) });
+          } else {
+            this.shots.push({ x: u.x, y: u.y, target: tg, power: this.atkOf(u), src: u, splash: this.splashOf(u), speed: d.role === 'archer' ? 520 : 330,
+                              color: TD.ELEMENTS[d.element].color, kind: d.role });
+          }
+        }
+        // 連撃：攻撃するたびに加速
+        const rp = this.pas(u, 'ramp');
+        if (rp) u.ramp = Math.min(rp.max, (u.ramp || 0) + rp.step);
       }
     }
 
@@ -713,6 +757,7 @@ window.TD = window.TD || {};
       // 一番多くのキャラを巻き込める位置を狙う
       let best = this.units.find(u => u.buff && u.buff.type === 'taunt') || null, bn = -1;
       if (!best) for (const u of this.units) {
+        if (this.pas(u, 'stealth')) continue;
         const n = this.units.filter(o => dist(o, u) <= r).length;
         if (n > bn) { bn = n; best = u; }
       }
@@ -776,9 +821,9 @@ window.TD = window.TD || {};
         el.classList.toggle('deployed', c.state === 'deployed');
         el.classList.toggle('cooling', c.state === 'cool');
         el.classList.toggle('nomana', c.state === 'ready' && this.mana < d.cost);
-        const ready = c.state === 'deployed' && c.unit.sp >= d.skill.sp;
+        const ready = c.state === 'deployed' && !!d.skill && c.unit.sp >= d.skill.sp;
         el.classList.toggle('skill-ready', ready);
-        c.spBar.style.width = c.state === 'deployed' ? (c.unit.buff ? c.unit.buffT / c.unit.buff.dur * 100 : c.unit.sp / d.skill.sp * 100) + '%' : '0%';
+        c.spBar.style.width = c.state === 'deployed' && d.skill ? (c.unit.buff ? c.unit.buffT / c.unit.buff.dur * 100 : c.unit.sp / d.skill.sp * 100) + '%' : '0%';
         c.spBar.classList.toggle('active', !!(c.unit && c.unit.buff));
         c.coolEl.textContent = c.state === 'cool' ? Math.ceil(c.cd) : '';
       }
@@ -794,9 +839,9 @@ window.TD = window.TD || {};
         if (rt) rt.textContent = this.retreatLabel(this.menuUnit);
         const sk = e.menu.querySelector('.um-skill'), d = this.menuUnit.def;
         if (sk) {
-          const ready = this.menuUnit.sp >= d.skill.sp;
+          const ready = !!d.skill && this.menuUnit.sp >= d.skill.sp;
           sk.disabled = !ready;
-          sk.textContent = `スキル「${d.skill.name}」` + (ready ? '' : ` (${Math.floor(this.menuUnit.sp)}/${d.skill.sp})`);
+          if (d.skill) sk.textContent = `スキル「${d.skill.name}」` + (ready ? '' : ` (${Math.floor(this.menuUnit.sp)}/${d.skill.sp})`);
         }
       }
     }
@@ -819,7 +864,7 @@ window.TD = window.TD || {};
       if (this.menuUnit) {
         const u = this.menuUnit;
         g.strokeStyle = 'rgba(255,255,255,.4)'; g.lineWidth = 1.5; g.setLineDash([4, 4]);
-        g.beginPath(); g.arc(u.x, u.y, u.def.range * T, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+        g.beginPath(); g.arc(u.x, u.y, this.rangeOf(u) * T, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
       }
 
       for (const u of this.units) this.drawUnit(g, u);
@@ -857,7 +902,7 @@ window.TD = window.TD || {};
         g.fillStyle = '#ff8a3a';
         g.beginPath(); g.moveTo(u.x - 13, u.y - 9); g.lineTo(u.x - 9, u.y - 15); g.lineTo(u.x - 5, u.y - 9); g.closePath(); g.fill();
       }
-      if (u.sp >= u.def.skill.sp) {
+      if (u.def.skill && u.sp >= u.def.skill.sp) {
         g.strokeStyle = '#ffd23f'; g.lineWidth = 2.5;
         g.beginPath(); g.arc(u.x, u.y, 17 + Math.sin(t * 6) * 1.5, 0, Math.PI * 2); g.stroke();
       }
@@ -889,7 +934,7 @@ window.TD = window.TD || {};
       g.fillStyle = u.hp / u.maxHp > 0.35 ? '#6be37a' : '#ff6b5a';
       g.fillRect(u.x - 14, u.y + 17, 28 * Math.max(0, u.hp / u.maxHp), 2);
       g.fillStyle = u.buff ? '#ffd23f' : '#5fd0ff';
-      const sp = u.buff ? u.buffT / u.buff.dur : u.sp / u.def.skill.sp;
+      const sp = u.buff ? u.buffT / u.buff.dur : u.def.skill ? u.sp / u.def.skill.sp : 0;
       g.fillRect(u.x - 14, u.y + 20, 28 * sp, 1.5);
     }
 
