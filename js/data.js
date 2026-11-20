@@ -37,9 +37,9 @@ TD.CHARS = {
     lines: { deploy: '聖剣の名にかけて！', skill: '天よ、裂けよ――天穹断！' },
   },
   celes: {
-    name: 'セレス', title: '氷華の魔女', rarity: 5, element: 'water', role: 'mage',
-    cost: 16, hp: 700, atk: 115, def: 10, interval: 1.8, range: 2.6, splash: 0.9, redeploy: 35,
-    skill: { name: '氷華結界', type: 'freeze', sp: 35, mult: 2, radius: 2.6, dur: 4,
+    name: 'セレス', title: '氷華の魔女', rarity: 4, element: 'water', role: 'mage',
+    cost: 12, hp: 650, atk: 100, def: 10, interval: 1.8, range: 2.6, splash: 0.9, redeploy: 30,
+    skill: { name: '氷華結界', type: 'freeze', sp: 30, mult: 2, radius: 2.6, dur: 4,
              desc: '周囲の敵を4秒間凍結し、攻撃力200%のダメージ' },
     lines: { deploy: '……凍える覚悟はある？', skill: '咲き誇れ、氷の華――氷華結界' },
   },
@@ -79,10 +79,10 @@ TD.CHARS = {
     lines: { deploy: '燃やし尽くしてやるぜ！', skill: 'まとめて吹き飛べ！爆炎陣！' },
   },
   zephyr: {
-    name: 'ゼファー', title: '嵐を纏う射手', rarity: 5, element: 'wind', role: 'archer',
-    cost: 13, hp: 750, atk: 95, def: 15, interval: 0.85, range: 3.8, redeploy: 30,
-    skill: { name: '天嵐の矢雨', type: 'storm', sp: 28, mult: 3, dur: 4,
-             desc: '射程内の全ての敵に攻撃力300%のダメージを与え、4秒間移動速度を半減' },
+    name: 'ゼファー', title: '嵐を纏う射手', rarity: 4, element: 'wind', role: 'archer',
+    cost: 10, hp: 680, atk: 85, def: 15, interval: 0.85, range: 3.8, redeploy: 25,
+    skill: { name: '天嵐の矢雨', type: 'storm', sp: 26, mult: 2.5, dur: 4,
+             desc: '射程内の全ての敵に攻撃力250%のダメージを与え、4秒間移動速度を半減' },
     lines: { deploy: '風が騒いでる……来るぞ', skill: '吹き荒れろ、天嵐の矢雨！' },
   },
   blaire: {
@@ -205,6 +205,102 @@ TD.CHARS = {
              desc: '射程内の敵全員に攻撃力200%の連射。8秒間、配置中の味方全員の受けるダメージを30%軽減' },
     lines: { deploy: '……雨の匂いがするねぇ', skill: '傘の内は、安全さ' },
   },
+
+  // ---------- ★3（初心者の戦力・サポート） ----------
+  lux: {
+    name: 'ルクス', title: '聖光の見習い狙撃手', rarity: 3, element: 'light', role: 'archer',
+    cost: 8, hp: 560, atk: 60, def: 12, interval: 1.0, range: 3.4, redeploy: 20,
+    profile: '【サポート】敵の守りを崩す専門家。硬い敵やボス戦で真価を発揮する。',
+    skill: { name: '聖光の刻印', type: 'defDown', sp: 22, dur: 10, mult: 0.5,
+             desc: '射程内の敵全員の防御を10秒間半減する' },
+    lines: { deploy: '弱点、見つけてみせます', skill: '光よ、印を刻め！' },
+  },
+  pico: {
+    name: 'ピコ', title: '見習い光術士', rarity: 3, element: 'light', role: 'mage',
+    cost: 10, hp: 540, atk: 75, def: 8, interval: 1.9, range: 2.4, splash: 0.8, redeploy: 20,
+    skill: { name: '閃光弾', type: 'flash', sp: 22, radius: 1.6, stun: 2, mult: 2,
+             desc: '周囲の敵を2秒間気絶させ、攻撃力200%のダメージ' },
+    lines: { deploy: 'ぼ、ぼくだってやれます！', skill: 'まぶしいの、いっきまーす！' },
+  },
+  emil: {
+    name: 'エミル', title: '王都の新米衛兵', rarity: 3, element: 'light', role: 'sword',
+    cost: 9, hp: 950, atk: 95, def: 40, interval: 0.95, range: 1.3, block: 1, redeploy: 20,
+    skill: { name: '勇気の一撃', type: 'power', sp: 20, atk: 2, dur: 6,
+             desc: '6秒間、攻撃力が200%になる' },
+    lines: { deploy: '衛兵エミル、ただいま参上！', skill: 'ここが踏ん張りどころ！' },
+  },
+  bold: {
+    name: 'ボルド', title: '風車小屋の番人', rarity: 3, element: 'wind', role: 'shield',
+    cost: 11, hp: 1800, atk: 45, def: 100, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
+    skill: { name: '向かい風', type: 'gust', sp: 24, push: 1, dur: 8, defMult: 2,
+             desc: '足止め中の敵を1マス押し戻し、8秒間防御2倍' },
+    lines: { deploy: 'わしの風車は、壊させんぞ', skill: 'ふんっ、吹き飛べい！' },
+  },
+  soyo: {
+    name: 'ソヨ', title: 'そよ風の歌い手', rarity: 3, element: 'wind', role: 'priest',
+    cost: 9, hp: 520, atk: 65, def: 5, interval: 1.6, range: 2.6, redeploy: 20,
+    aura: { radius: 2, haste: 1.15 },
+    profile: '【バフ専門】配置しているだけで、周囲2マスの味方の攻撃速度が15%上がる。',
+    skill: { name: '追い風の歌', type: 'haste', sp: 24, dur: 8, mult: 1.4, ratio: 0.15,
+             desc: '8秒間、配置中の味方全員の攻撃速度1.4倍。さらにHPを15%回復' },
+    lines: { deploy: 'ラララ～♪ 風よ、みんなに届いて', skill: '追い風の歌、聴いてください！' },
+  },
+  hayate: {
+    name: 'ハヤテ', title: '疾風の飛脚', rarity: 3, element: 'wind', role: 'sword',
+    cost: 8, hp: 850, atk: 80, def: 30, interval: 0.7, range: 1.3, block: 1, redeploy: 20,
+    skill: { name: '韋駄天', type: 'rapid', sp: 20, rate: 2.2, dur: 6,
+             desc: '6秒間、攻撃速度が2.2倍になる' },
+    lines: { deploy: '速達だよ！ ……あれ、戦い？', skill: '足には自信があるんだ！' },
+  },
+  mint: {
+    name: 'ミント', title: '森の見張り番', rarity: 3, element: 'wind', role: 'archer',
+    cost: 8, hp: 560, atk: 62, def: 10, interval: 1.0, range: 3.3, redeploy: 20,
+    skill: { name: '風切りの矢', type: 'storm', sp: 24, mult: 1.6, dur: 3,
+             desc: '射程内の全ての敵に攻撃力160%のダメージを与え、3秒間移動速度を半減' },
+    lines: { deploy: '見張りなら任せて', skill: 'まとめて足止めっ！' },
+  },
+  kagerou: {
+    name: 'カゲロウ', title: '夜回りの忍び', rarity: 3, element: 'dark', role: 'sword',
+    cost: 9, hp: 880, atk: 100, def: 30, interval: 0.85, range: 1.3, block: 1, redeploy: 20,
+    skill: { name: '影走り', type: 'power', sp: 20, atk: 2, dur: 6,
+             desc: '6秒間、攻撃力が200%になる' },
+    lines: { deploy: '……御意', skill: '影より出でて、影に消ゆ' },
+  },
+  glen: {
+    name: 'グレン', title: '墓守の大男', rarity: 3, element: 'dark', role: 'shield',
+    cost: 12, hp: 2000, atk: 45, def: 105, interval: 1.5, range: 1.3, block: 2, redeploy: 25,
+    skill: { name: '墓守の意地', type: 'guard', sp: 30, dur: 10,
+             desc: '10秒間、防御2倍・ブロック数+2。HPを50%回復' },
+    lines: { deploy: '……眠りを妨げる者は、通さん', skill: 'ぬうぅん！' },
+  },
+  luna: {
+    name: 'ルナ', title: '月影の狩人', rarity: 3, element: 'dark', role: 'archer',
+    cost: 9, hp: 580, atk: 66, def: 12, interval: 1.0, range: 3.2, redeploy: 20,
+    skill: { name: '月影連射', type: 'rapid', sp: 24, rate: 2.2, dur: 7,
+             desc: '7秒間、攻撃速度が2.2倍になる' },
+    lines: { deploy: '月が綺麗な夜ね', skill: '月の光は、外れない' },
+  },
+  viola: {
+    name: 'ヴィオラ', title: '見習い呪術師', rarity: 3, element: 'dark', role: 'mage',
+    cost: 11, hp: 560, atk: 80, def: 8, interval: 2.0, range: 2.4, splash: 0.8, redeploy: 25,
+    skill: { name: '呪いの霧', type: 'explosion', sp: 25, mult: 3.5, radius: 1.5,
+             desc: '射程内の敵を中心に呪いの霧。攻撃力350%の範囲ダメージ' },
+    lines: { deploy: 'うふふ、呪っちゃおっかな～', skill: 'のろのろ～、のろわれろ～！' },
+  },
+  shion: {
+    name: 'シオン', title: '港町の水術士', rarity: 3, element: 'water', role: 'mage',
+    cost: 10, hp: 580, atk: 78, def: 10, interval: 1.9, range: 2.4, splash: 0.8, redeploy: 20,
+    skill: { name: '水牢', type: 'freeze', sp: 26, mult: 1.5, radius: 1.6, dur: 2,
+             desc: '周囲の敵を2秒間凍結し、攻撃力150%のダメージ' },
+    lines: { deploy: '潮の流れは、読めてます', skill: '閉じ込めろ、水牢！' },
+  },
+  garo: {
+    name: 'ガロ', title: '酒場の用心棒', rarity: 3, element: 'fire', role: 'sword',
+    cost: 10, hp: 1000, atk: 98, def: 40, interval: 1.0, range: 1.3, block: 1, redeploy: 20,
+    skill: { name: '酔拳・火炎', type: 'power', sp: 22, atk: 2.1, dur: 6,
+             desc: '6秒間、攻撃力が210%になる' },
+    lines: { deploy: 'ひっく……喧嘩なら買うぜ', skill: '燃えてきたぁ！' },
+  },
 };
 
 // ---------- 育成 ----------
@@ -233,10 +329,6 @@ TD.GACHA = {
   rates: { 5: 0.03, 4: 0.17, 3: 0.80 },
   starterGift: 900,    // はじめての召喚士への贈り物
   banners: [
-    {
-      id: 'pickup-celes', name: '氷華の魔女 ピックアップ召喚', pickup: ['celes'], pickupShare: 0.5,
-      desc: '★5「氷華の魔女 セレス」の出現率アップ中！', element: 'water',
-    },
     {
       id: 'standard', name: '英雄召喚', pickup: [], desc: '大陸の英雄たちが召喚に応じる、常設の召喚。', element: 'light',
     },

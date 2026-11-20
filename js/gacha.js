@@ -6,11 +6,21 @@ TD.Gacha = {
     return Object.keys(TD.CHARS).filter(id => TD.CHARS[id].rarity === rarity);
   },
 
-  // 1キャラ分の確率表（提供割合の表示用）
-  rateTable(banner) {
+  // 限界突破が最大に達したキャラ（排出対象から外す）
+  maxed(save, id) {
+    return !!(save && save.chars && save.chars[id] && save.chars[id].lb >= TD.GROWTH.maxLB);
+  },
+  // そのプレイヤーの排出対象
+  activePool(save, rarity) {
+    return this.pool(rarity).filter(id => !this.maxed(save, id));
+  },
+
+  // 1キャラ分の確率表（提供割合の表示用）。save を渡すとそのプレイヤーの排出対象で計算する
+  rateTable(banner, save) {
     const G = TD.GACHA, rows = [];
     for (const r of [5, 4, 3]) {
-      const ids = this.pool(r), total = G.rates[r];
+      const ids = this.activePool(save, r), total = G.rates[r];
+      if (!ids.length) continue;
       const pick = r === 5 ? banner.pickup.filter(id => ids.includes(id)) : [];
       for (const id of ids) {
         let p;
@@ -32,8 +42,9 @@ TD.Gacha = {
     return Math.max(r, minRarity || 3);
   },
 
-  pickChar(banner, rarity) {
-    const ids = this.pool(rarity);
+  pickChar(banner, rarity, save) {
+    const ids = this.activePool(save, rarity);
+    if (!ids.length) return null;
     const pick = rarity === 5 ? banner.pickup.filter(id => ids.includes(id)) : [];
     if (pick.length && Math.random() < banner.pickupShare) return pick[Math.floor(Math.random() * pick.length)];
     return ids[Math.floor(Math.random() * ids.length)];
@@ -51,7 +62,9 @@ TD.Gacha = {
       const rarity = this.rollRarity(save, needHigh ? 4 : 3);
       save.totalPulls++;
       save.pity = rarity === 5 ? 0 : save.pity + 1;
-      const id = this.pickChar(banner, rarity);
+      const id = this.pickChar(banner, rarity, save);
+      // そのレアリティが全員限界突破済みの場合は魔晶石に変換
+      if (!id) { const st = TD.GROWTH.dupStones[rarity]; save.stones += st; results.push({ id: null, rarity, converted: st }); continue; }
       results.push(this.grant(save, id));
     }
     return results;

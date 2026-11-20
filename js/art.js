@@ -92,6 +92,72 @@ TD.ART = {
     outfit: { type: 'leather', main: '#a0482a', sub: '#4a3a2a', trim: '#ffb040' },
     head: 'cap', weapon: 'crossbow',
   },
+  // ---------- ★3 追加分 ----------
+  lux: {
+    skin: '#ffe6d6', hair: ['#fff0a8', '#d8b040'], hairStyle: 'short', bangs: 'side', eyes: '#3a8ad0', eyeShape: 'normal', mouth: 'smile',
+    outfit: { type: 'leather', main: '#f4f0e0', sub: '#c8a040', trim: '#e8d8a0' },
+    head: 'none', weapon: 'bow',
+  },
+  pico: {
+    skin: '#ffe8da', hair: ['#ffd88a', '#c89a3a'], hairStyle: 'short', bangs: 'round', eyes: '#e0a020', eyeShape: 'soft', mouth: 'open',
+    outfit: { type: 'robe', main: '#f8f4ff', sub: '#e0c060', trim: '#c8c8e0' },
+    head: 'witchhat', weapon: 'crossstaff',
+  },
+  emil: {
+    skin: '#ffe6d6', hair: ['#ffe08a', '#c89a2a'], hairStyle: 'ponytail', bangs: 'messy', eyes: '#3a7ad0', eyeShape: 'normal', mouth: 'grin',
+    outfit: { type: 'armor', main: '#dfe6f0', sub: '#4a6ab0', trim: '#b8c4d8', skirt: true },
+    head: 'none', weapon: 'holysword',
+  },
+  bold: {
+    skin: '#e8b898', hair: ['#9a7a4a', '#6a4a2a'], hairStyle: 'short', bangs: 'short', eyes: '#4a6a3a', eyeShape: 'dot', mouth: 'grin', beard: '#8a6a3a',
+    outfit: { type: 'leather', main: '#6a9a4a', sub: '#5a4a2a', trim: '#c8b88a' },
+    head: 'cap', weapon: 'roundshield',
+  },
+  soyo: {
+    skin: '#fff0e6', hair: ['#a8f0c8', '#3aa878'], hairStyle: 'braids', bangs: 'round', eyes: '#2aa878', eyeShape: 'soft', mouth: 'open',
+    outfit: { type: 'gown', main: '#e8fff0', sub: '#3aa878', trim: '#b8f0d0' },
+    head: 'featherband', weapon: 'waterorb',
+  },
+  hayate: {
+    skin: '#f6d2b8', hair: ['#4ad8b0', '#1a8a6a'], hairStyle: 'spiky', bangs: 'spiky', eyes: '#2a8a5a', eyeShape: 'normal', mouth: 'grin',
+    outfit: { type: 'fighter', main: '#4ab88a', sub: '#2a3a3a', trim: '#e8e8e8' },
+    head: 'headband', weapon: 'katana',
+  },
+  mint: {
+    skin: '#ffe6d6', hair: ['#9ae07a', '#4a9a3a'], hairStyle: 'bob', bangs: 'round', eyes: '#3a9a5a', eyeShape: 'soft', mouth: 'smile',
+    outfit: { type: 'leather', main: '#4a8a4a', sub: '#6a4a2a', trim: '#c8e0b0' },
+    head: 'hood', hoodColor: '#5aa04a', weapon: 'bow',
+  },
+  kagerou: {
+    skin: '#f2dcd0', hair: ['#4a3a5a', '#1a1428'], hairStyle: 'short', bangs: 'messy', eyes: '#a050e0', eyeShape: 'sharp', mouth: 'none',
+    outfit: { type: 'coat', main: '#2a2a3a', sub: '#4a2a6a', trim: '#8a8aa0' },
+    head: 'mask', weapon: 'katana',
+  },
+  glen: {
+    skin: '#d8a888', hair: ['#4a4a5a', '#2a2a3a'], hairStyle: 'short', bangs: 'short', eyes: '#8a4ac8', eyeShape: 'sharp', mouth: 'neutral', beard: '#3a3a4a',
+    outfit: { type: 'heavy', main: '#5a5a6a', sub: '#2a2a3a', trim: '#8a8aa0' },
+    head: 'helmet', weapon: 'towershield',
+  },
+  luna: {
+    skin: '#f8e6e0', hair: ['#c0a0f0', '#6a4aa8'], hairStyle: 'long', bangs: 'side', eyes: '#8a5ad8', eyeShape: 'cool', mouth: 'neutral',
+    outfit: { type: 'coat', main: '#3a2a5a', sub: '#6a4aa8', trim: '#c8b8e8' },
+    head: 'hood', hoodColor: '#2a2048', weapon: 'crossbow',
+  },
+  viola: {
+    skin: '#fff0ea', hair: ['#c060d0', '#7a2a8a'], hairStyle: 'bob', bangs: 'hime', eyes: '#d040a0', eyeShape: 'cool', mouth: 'smirk',
+    outfit: { type: 'robe', main: '#4a2a5a', sub: '#c060d0', trim: '#e0b0f0' },
+    head: 'witchhat', weapon: 'book',
+  },
+  shion: {
+    skin: '#f8dcc8', hair: ['#5a9ae0', '#2a5aa0'], hairStyle: 'short', bangs: 'side', eyes: '#2a6ab0', eyeShape: 'normal', mouth: 'smile',
+    outfit: { type: 'coat', main: '#e8f4ff', sub: '#2a6ab0', trim: '#9fd0ff' },
+    head: 'goggles', weapon: 'waterorb',
+  },
+  garo: {
+    skin: '#e8b898', hair: ['#e04a2a', '#902010'], hairStyle: 'wild', bangs: 'messy', eyes: '#e08a20', eyeShape: 'sharp', mouth: 'grin', beard: '#c03a1a',
+    outfit: { type: 'fighter', main: '#a83a1a', sub: '#3a2a2a', trim: '#e8c080' },
+    head: 'headband', weapon: 'katana',
+  },
 };
 
 (function () {

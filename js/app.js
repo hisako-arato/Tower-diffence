@@ -513,7 +513,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   function renderSummon() {
     updateCurrency();
     const banners = TD.GACHA.banners, bn = banners[bannerIdx];
-    $('#banner-tabs').innerHTML = banners.map((b, i) => `<button class="${i === bannerIdx ? 'on' : ''}" data-bi="${i}">${esc(b.name)}</button>`).join('');
+    if (bannerIdx >= banners.length) bannerIdx = 0;
+    $('#banner-tabs').innerHTML = banners.length > 1 ? banners.map((b, i) => `<button class="${i === bannerIdx ? 'on' : ''}" data-bi="${i}">${esc(b.name)}</button>`).join('') : '';
     $('#banner-tabs').querySelectorAll('[data-bi]').forEach(b => b.onclick = () => { bannerIdx = +b.dataset.bi; renderSummon(); });
     const feat = bn.pickup.length ? bn.pickup : TD.Gacha.pool(5);
     $('#banner').className = `banner el-${bn.element}`;
@@ -534,13 +535,14 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   $('#btn-pull1').addEventListener('click', () => doPull(1));
   $('#btn-pull10').addEventListener('click', () => doPull(10));
   $('#btn-rates').addEventListener('click', () => {
-    const bn = TD.GACHA.banners[bannerIdx], rows = TD.Gacha.rateTable(bn);
+    const bn = TD.GACHA.banners[bannerIdx], rows = TD.Gacha.rateTable(bn, save);
+    const maxedNames = Object.keys(TD.CHARS).filter(id => TD.Gacha.maxed(save, id)).map(id => TD.CHARS[id].name);
     const sum = r => (TD.GACHA.rates[r] * 100).toFixed(0) + '%';
     modal(
       `<div class="pause-title">提供割合</div><div class="small" style="text-align:center">${esc(bn.name)}</div>` +
       `<div class="rate-sum"><span>★5 ${sum(5)}</span><span>★4 ${sum(4)}</span><span>★3 ${sum(3)}</span></div>` +
       `<table class="rate-table">${rows.map(r => `<tr class="${r.pickup ? 'pick' : ''}"><td>${TD.starsHTML(r.rarity, 0)}</td><td>${TD.CHARS[r.id].name}${r.pickup ? ' <b>PICK UP</b>' : ''}</td><td>${(r.rate * 100).toFixed(3)}%</td></tr>`).join('')}</table>` +
-      `<p class="small">・10回召喚では★4以上が1体以上確定します。<br>・${TD.GACHA.pity}回以内に★5が出なかった場合、${TD.GACHA.pity}回目は★5確定です（全バナー共通）。<br>・限界突破が最大のキャラが重複した場合は魔晶石に変換されます（★3:${TD.GROWTH.dupStones[3]} / ★4:${TD.GROWTH.dupStones[4]} / ★5:${TD.GROWTH.dupStones[5]}）。<br>・魔晶石はゲーム内で入手できるアイテムです。現実のお金は使いません。</p>` +
+      `<p class="small">・10回召喚では★4以上が1体以上確定します。<br>・${TD.GACHA.pity}回以内に★5が出なかった場合、${TD.GACHA.pity}回目は★5確定です。<br>・限界突破が最大（${TD.GROWTH.maxLB}回）になったキャラは排出されなくなり、そのレアリティの他のキャラの確率が上がります。${maxedNames.length ? `<br>　現在の対象外：${maxedNames.map(esc).join('、')}` : ''}<br>・あるレアリティのキャラが全員限界突破済みの場合、そのレアリティが出たときは魔晶石に変換されます（★3:${TD.GROWTH.dupStones[3]} / ★4:${TD.GROWTH.dupStones[4]} / ★5:${TD.GROWTH.dupStones[5]}）。<br>・魔晶石はゲーム内で入手できるアイテムです。現実のお金は使いません。</p>` +
       `<div class="btn-row"><button class="btn primary" onclick="document.getElementById('modal').classList.remove('show')">閉じる</button></div>`);
   });
 
@@ -569,6 +571,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       fx.classList.add('reveal');
       const box = fx.querySelector('.sf-results');
       box.innerHTML = results.map((r, i) => {
+        if (!r.id) return `<div class="sf-card r${r.rarity}" style="animation-delay:${results.length === 1 ? 0 : i * 0.12}s"><i class="gem big"></i><em class="conv">魔晶石+${r.converted}</em><div class="sf-name">魔晶石</div>${TD.starsHTML(r.rarity, 0)}</div>`;
         const d = TD.CHARS[r.id];
         const tag = r.isNew ? '<em class="new">NEW</em>' : r.limitBreak ? `<em class="lbup">限界突破 ${r.limitBreak}</em>` : `<em class="conv">魔晶石+${r.converted}</em>`;
         return `<div class="sf-card r${r.rarity}" style="animation-delay:${results.length === 1 ? 0 : i * 0.12}s">` +

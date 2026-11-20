@@ -330,6 +330,34 @@ window.TD = window.TD || {};
           this.fx.push({ type: 'burst', x: cx, y: cy, t: 0, dur: 0.6, color: '#c8ffe0', big: true });
           break;
         }
+        case 'defDown':
+          for (const e of alive) if (dist(e, u) <= d.range * T) {
+            e.defDownT = s.dur; e.defDownMult = s.mult;
+            this.pop(e.x, e.y - e.size - 14, '防御DOWN', '#ffe066', { size: 10 });
+          }
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 6, r1: d.range * T, t: 0, dur: 0.6, color: '#ffe066', width: 4 });
+          break;
+        case 'flash':
+          for (const e of alive) if (dist(e, u) <= s.radius * T) {
+            e.frozen = Math.max(e.frozen, s.stun); e.bound = false;
+            this.hit(u, e, this.atkOf(u) * s.mult);
+          }
+          this.fx.push({ type: 'flash', t: 0, dur: 0.35, color: 'rgba(255,255,220,' });
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 6, r1: s.radius * T, t: 0, dur: 0.4, color: '#fff6c0', width: 8 });
+          break;
+        case 'gust':
+          for (const e of [...u.blocking]) if (!e.dead && !e.def.boss) this.pushBack(e, s.push * T);
+          u.buff = s; u.buffT = s.dur;
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 6, r1: 40, t: 0, dur: 0.5, color: '#b8ffd0', width: 6 });
+          break;
+        case 'haste':
+          for (const a of this.units) {
+            a.hasteT = s.dur; a.hasteMult = s.mult;
+            const h = a.maxHp * s.ratio; a.hp = Math.min(a.maxHp, a.hp + h);
+            this.pop(a.x, a.y - 22, '速度UP', '#8affc0', { size: 11 });
+            this.fx.push({ type: 'ring', x: a.x, y: a.y, r0: 4, r1: 22, t: 0, dur: 0.5, color: '#8affc0' });
+          }
+          break;
         case 'rally':
           for (const a of this.units) {
             a.atkUpT = s.dur; a.atkUpMult = s.atkMult;
@@ -475,13 +503,21 @@ window.TD = window.TD || {};
       return null;
     }
     blockOf(u) { return (u.def.block || 0) + (u.buff && u.buff.type === 'guard' && !u.buff.noBlock ? 2 : 0); }
-    rateOf(u) { return u.buff && u.buff.rate ? u.buff.rate : 1; }
+    rateOf(u) {
+      let r = u.buff && u.buff.rate ? u.buff.rate : 1;
+      if (u.hasteT > 0) r *= u.hasteMult;
+      // 常時効果（オーラ）：近くの味方の攻撃速度アップ（重複はしない・最大のもの）
+      let aura = 1;
+      for (const o of this.units) if (o.def.aura && dist(o, u) <= o.def.aura.radius * T) aura = Math.max(aura, o.def.aura.haste);
+      return r * aura;
+    }
 
     hit(src, e, power) {
       if (e.dead) return;
       const m = TD.elemMult(src.def.element, e.def.element);
       const raw = power * m;
-      const d = Math.round(Math.max(raw - e.def.def, raw * 0.15));
+      const edef = e.def.def * (e.defDownT > 0 ? e.defDownMult : 1);
+      const d = Math.round(Math.max(raw - edef, raw * 0.15));
       e.hp -= d;
       e.flash = 0.12;
       const color = m > 1 ? '#ffd23f' : m < 1 ? '#a8b0b8' : '#ffffff';
@@ -575,6 +611,7 @@ window.TD = window.TD || {};
       for (const e of this.enemies) {
         if (e.dead) continue;
         e.flash = Math.max(0, e.flash - dt);
+        if (e.defDownT > 0) e.defDownT -= dt;
         if (e.frozen > 0) { e.frozen -= dt; if (e.frozen <= 0) e.bound = false; continue; }
         if (e.blockedBy && e.blockedBy.removed) e.blockedBy = null;
         // ボス：予兆付きの範囲攻撃
@@ -629,6 +666,7 @@ window.TD = window.TD || {};
         u.flash = Math.max(0, u.flash - dt);
         u.blocking = u.blocking.filter(e => !e.dead && e.blockedBy === u);
         if (u.atkUpT > 0) u.atkUpT -= dt;
+        if (u.hasteT > 0) u.hasteT -= dt;
         if (u.shieldT > 0) u.shieldT -= dt;
         if (u.buff) { u.buffT -= dt; if (u.buffT <= 0) { u.buff = null; } }
         else u.sp = Math.min(u.def.skill.sp, u.sp + dt);
@@ -807,6 +845,14 @@ window.TD = window.TD || {};
         g.fillStyle = 'rgba(122,216,255,.18)'; g.strokeStyle = 'rgba(160,230,255,.7)'; g.lineWidth = 1.5;
         g.beginPath(); g.arc(u.x, u.y, 21, 0, Math.PI * 2); g.fill(); g.stroke();
       }
+      if (u.def.aura) { // 常時オーラの範囲
+        g.strokeStyle = 'rgba(138,255,192,.25)'; g.lineWidth = 1; g.setLineDash([2, 5]);
+        g.beginPath(); g.arc(u.x, u.y, u.def.aura.radius * T, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+      }
+      if (u.hasteT > 0) { // 攻撃速度アップの印
+        g.strokeStyle = '#8affc0'; g.lineWidth = 2;
+        g.beginPath(); g.moveTo(u.x + 7, u.y - 15); g.lineTo(u.x + 11, u.y - 11); g.lineTo(u.x + 7, u.y - 7); g.stroke();
+      }
       if (u.atkUpT > 0) { // 攻撃力アップの印
         g.fillStyle = '#ff8a3a';
         g.beginPath(); g.moveTo(u.x - 13, u.y - 9); g.lineTo(u.x - 9, u.y - 15); g.lineTo(u.x - 5, u.y - 9); g.closePath(); g.fill();
@@ -894,6 +940,10 @@ window.TD = window.TD || {};
           g.beginPath(); g.arc(x, y, s + 4 + Math.sin(aura) * 2, 0, Math.PI * 2); g.stroke();
           break;
         }
+      }
+      if (e.defDownT > 0) { // 防御ダウン中
+        g.strokeStyle = '#ffe066'; g.lineWidth = 1.5; g.setLineDash([3, 3]);
+        g.beginPath(); g.arc(x, y, s + 4, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
       }
       if (e.def.ranged && e.def.shape === 'goblin') { // 弓兵の目印
         g.strokeStyle = '#8a5a2a'; g.lineWidth = 2;
