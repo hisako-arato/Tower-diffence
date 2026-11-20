@@ -130,7 +130,7 @@ TD.GROWTH = {
   maxLB: 4,           // 限界突破の最大回数
   statPerLv: 0.02,    // 1レベルごとのHP/攻撃/防御の上昇率
   statPerLB: 0.05,    // 限界突破1回ごとの上昇率
-  expCost: lv => 40 + lv * 15,                  // Lv → Lv+1 に必要な経験の結晶
+  expCost: lv => 40 + lv * 15,                  // Lv → Lv+1 に必要な経験の書
   dupStones: { 3: 5, 4: 20, 5: 60 },            // 限界突破上限を超えた重複の変換量
 };
 TD.maxLv = lb => TD.GROWTH.baseMaxLv + TD.GROWTH.lvPerLB * lb;
@@ -158,7 +158,7 @@ TD.GACHA = {
     },
   ],
 };
-// ステージ報酬の経験の結晶（勝利時）
+// ステージ報酬の経験の書（勝利時）
 TD.stageExp = st => st.exp || Math.round(300 * st.hpScale);
 
 // speed はタイル/秒
@@ -323,7 +323,7 @@ TD.DAILY_MISSIONS = [
   { id: 'd-kill',   name: '敵を50体倒す',                  key: 'kills',    goal: 50, reward: { stones: 20 } },
   { id: 'd-skill',  name: '必殺技を5回使う',               key: 'skills',   goal: 5,  reward: { crystals: 300 } },
   { id: 'd-lvup',   name: 'キャラをレベルアップする',       key: 'levelups', goal: 1,  reward: { crystals: 200 } },
-  { id: 'd-cave',   name: '「結晶の洞窟」をクリアする',     key: 'caves',    goal: 1,  reward: { crystals: 300 } },
+  { id: 'd-cave',   name: '「古代の書庫」をクリアする',     key: 'caves',    goal: 1,  reward: { crystals: 300 } },
   { id: 'd-all',    name: 'デイリーミッションをすべて達成', key: '_all',     goal: 6,  reward: { stones: 50 } },
 ];
 
@@ -344,8 +344,8 @@ TD.ACHIEVEMENTS = [
 // デイリークエスト（1日の挑戦回数に制限あり）
 TD.DAILY_STAGES = [
   {
-    id: 'D-1', type: 'daily', name: '結晶の洞窟', chapter: 'デイリークエスト', unlockAfter: '1-1', dailyLimit: 3,
-    brief: '経験の結晶がたくさん眠る洞窟です。1日3回まで挑戦できますよ！',
+    id: 'D-1', type: 'daily', name: '古代の書庫', chapter: 'デイリークエスト', unlockAfter: '1-1', dailyLimit: 3,
+    brief: '古の魔導書が眠る書庫です。経験の書がたくさん手に入りますよ！1日3回まで挑戦できます。',
     lives: 10, mana: 14, hpScale: 1.4, reward: 0, exp: 1500,
     map: [
       'xxxxSxxxx',
@@ -445,7 +445,7 @@ TD.EVENT = {
   shop: [
     { id: 'rune',  name: '★4 ルーン（加入 or 限界突破）', char: 'rune', cost: 300, limit: 2 },
     { id: 'st100', name: '魔晶石 ×100', reward: { stones: 100 }, cost: 120, limit: 5 },
-    { id: 'cr1k',  name: '経験の結晶 ×1000', reward: { crystals: 1000 }, cost: 40, limit: 10 },
+    { id: 'cr1k',  name: '経験の書 ×1000', reward: { crystals: 1000 }, cost: 40, limit: 10 },
     { id: 'st30',  name: '魔晶石 ×30', reward: { stones: 30 }, cost: 40, limit: 99 },
   ],
 };

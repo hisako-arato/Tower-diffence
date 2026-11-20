@@ -51,6 +51,20 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     document.querySelectorAll('.crystals-val').forEach(e => e.textContent = save.crystals);
   }
 
+  // 通貨表示をタップすると用途を説明する
+  document.querySelectorAll('[data-cur]').forEach(b => b.addEventListener('click', () => {
+    const books = b.dataset.cur === 'books';
+    const body = modal(
+      `<div class="cur-help"><div class="ch-icon">${books ? '<i class="expbook big"></i>' : '<i class="gem big"></i>'}</div>` +
+      `<div class="ch-name">${books ? '経験の書' : '魔晶石'}<small class="cur-label ${books ? 'grow' : 'summon'}">${books ? '育成用' : '召喚用'}</small></div>` +
+      `<p>${books
+        ? 'キャラのレベルアップに使う本です。<br>ステージクリアで毎回手に入ります。デイリークエスト「古代の書庫」ならたくさん集められます。'
+        : '英雄の召喚に使う魔法の石です。<br>初回クリア報酬・ミッション・ログインボーナス・イベント交換所で手に入ります。'}</p>` +
+      `<div class="ch-own">所持数 <b>${books ? save.crystals : save.stones}</b></div></div>` +
+      `<div class="btn-row"><button class="btn primary">閉じる</button></div>`);
+    body.querySelector('button').onclick = closeModal;
+  }));
+
   function alertBox(text) {
     const body = modal(`<p class="alert-text">${esc(text)}</p><div class="btn-row"><button class="btn primary">OK</button></div>`);
     body.querySelector('button').onclick = closeModal;
@@ -109,7 +123,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   function loginGrid(day) {
     return `<div class="lb-grid">${TD.LOGIN_BONUS.map((r, i) => {
       const d = i + 1, got = d <= day, today = d === day;
-      const icon = r.stones ? '<i class="gem"></i>' : '<i class="crystal"></i>';
+      const icon = r.stones ? '<i class="gem"></i>' : '<i class="expbook"></i>';
       return `<div class="lb-day${got ? ' got' : ''}${today ? ' today' : ''}${d === 7 ? ' big' : ''}"><span class="lbd">${d}日目</span>${icon}<b>×${r.stones || r.crystals}</b>${got ? '<span class="stamp">済</span>' : ''}</div>`;
     }).join('')}</div>`;
   }
@@ -150,7 +164,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       sorted.map(x => `<div class="mission${x.claimed ? ' claimed' : x.done ? ' done' : ''}">` +
         `<div class="ms-body"><div class="ms-name">${esc(x.m.name)}</div>` +
         `<div class="ms-bar"><i style="width:${x.cur / x.m.goal * 100}%"></i></div>` +
-        `<div class="ms-meta"><span>${x.cur}/${x.m.goal}</span><span>${x.m.reward.stones ? '<i class="gem"></i>' : '<i class="crystal"></i>'} ×${x.m.reward.stones || x.m.reward.crystals}</span></div></div>` +
+        `<div class="ms-meta"><span>${x.cur}/${x.m.goal}</span><span>${x.m.reward.stones ? '<i class="gem"></i>' : '<i class="expbook"></i>'} ×${x.m.reward.stones || x.m.reward.crystals}</span></div></div>` +
         `<button class="btn ${x.done && !x.claimed ? 'primary' : 'ghost'}" data-claim="${x.m.id}" ${x.done && !x.claimed ? '' : 'disabled'}>${x.claimed ? '受取済' : x.done ? '受け取る' : '未達成'}</button></div>`).join('');
     $('#mission-list').querySelectorAll('[data-claim]').forEach(b => b.onclick = () => {
       const r = TD.Live.claim(save, missionTab, b.dataset.claim);
@@ -185,7 +199,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     for (const st of ev.stages) stages.appendChild(stageItem(st, active && eventStageOpen(st), active ? `${ev.currency} ×${st.eventPoints}` : '期間外'));
     $('#event-shop').innerHTML = ev.shop.map(it => {
       const used = es.shop[it.id] || 0, left = it.limit - used, ok = active && left > 0 && es.pts >= it.cost;
-      return `<div class="shop-item"><div class="si-icon">${it.char ? TD.portraitHTML(it.char) : it.reward.stones ? '<i class="gem big"></i>' : '<i class="crystal big"></i>'}</div>` +
+      return `<div class="shop-item"><div class="si-icon">${it.char ? TD.portraitHTML(it.char) : it.reward.stones ? '<i class="gem big"></i>' : '<i class="expbook big"></i>'}</div>` +
         `<div class="si-body"><div class="si-title">${esc(it.name)}</div><div class="si-sub">交換上限 ${left}/${it.limit}</div></div>` +
         `<button class="btn ${ok ? 'primary' : 'ghost'}" data-shop="${it.id}" ${ok ? '' : 'disabled'}><i class="star"></i>${it.cost}</button></div>`;
     }).join('');
@@ -254,7 +268,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       const open = stageUnlocked(i), best = save.cleared[st.id] || 0;
       const el = document.createElement('button');
       el.className = 'stage-item' + (open ? '' : ' locked') + (st.waves.some(w => TD.ENEMIES[w.e].boss) ? ' boss' : '');
-      el.innerHTML = `<span class="st-id">${st.id}</span><span class="st-name">${st.name}<small>経験の結晶 ×${TD.stageExp(st)}</small></span>` +
+      el.innerHTML = `<span class="st-id">${st.id}</span><span class="st-name">${st.name}<small>経験の書 ×${TD.stageExp(st)}</small></span>` +
         `<span class="st-stars">${open ? TD.starsHTML(best, 3) : '🔒'}</span>`;
       const unreadStory = open && [storyFor(st, 'pre'), storyFor(st, 'post')].some(id => id && !save.story[id]);
       if (unreadStory) el.insertAdjacentHTML('beforeend', '<span class="st-story">STORY</span>');
@@ -264,7 +278,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     list.insertAdjacentHTML('beforeend', `<div class="chapter-title daily">デイリークエスト</div>`);
     for (const st of TD.DAILY_STAGES) {
       const unlocked = save.cleared[st.unlockAfter] > 0, left = TD.Live.runsLeft(save, st);
-      list.appendChild(stageItem(st, unlocked && left > 0, `経験の結晶 ×${TD.stageExp(st)}・本日あと${left}回`,
+      list.appendChild(stageItem(st, unlocked && left > 0, `経験の書 ×${TD.stageExp(st)}・本日あと${left}回`,
         !unlocked ? `${st.unlockAfter}クリアで解放` : '本日の挑戦回数は終了しました'));
     }
     if (TD.Live.eventActive()) {
@@ -282,9 +296,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     }).join('');
     const party = save.party.map(id => `<span class="bp">${TD.portraitHTML(id)}<small>Lv${save.chars[id].lv}</small></span>`).join('');
     const first = !save.cleared[st.id];
-    const rewardText = st.type === 'daily' ? `経験の結晶 ×${TD.stageExp(st)}（本日あと${TD.Live.runsLeft(save, st)}回）`
-      : st.type === 'event' ? `${TD.EVENT.currency} ×${st.eventPoints}・経験の結晶 ×${TD.stageExp(st)}${first ? `・魔晶石 ×${st.reward}（初回）` : ''}`
-      : `経験の結晶 ×${TD.stageExp(st)}・魔晶石 ×${first ? st.reward + '（初回）' : 5}`;
+    const rewardText = st.type === 'daily' ? `経験の書 ×${TD.stageExp(st)}（本日あと${TD.Live.runsLeft(save, st)}回）`
+      : st.type === 'event' ? `${TD.EVENT.currency} ×${st.eventPoints}・経験の書 ×${TD.stageExp(st)}${first ? `・魔晶石 ×${st.reward}（初回）` : ''}`
+      : `経験の書 ×${TD.stageExp(st)}・魔晶石 ×${first ? st.reward + '（初回）' : 5}`;
     const body = modal(
       `<div class="brief-head"><span class="st-id">${st.id}</span>${esc(st.name)}</div>` +
       `<div class="brief-navi"><span class="mini-navi"></span><p>${esc(st.brief)}</p></div>` +
@@ -368,7 +382,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="res-stats">撃破 ${r.killed}/${r.total}・残りライフ ${r.lives}/${r.maxLives}</div>` +
       (r.win ? `<div class="res-cond"><div class="${r.stars >= 1 ? 'ok' : ''}">★ ステージクリア</div><div class="${r.stars >= 2 ? 'ok' : ''}">★ ライフを半分以上残す</div><div class="${r.stars >= 3 ? 'ok' : ''}">★ ライフを減らさずクリア</div></div>` : '') +
       `<div class="res-reward">` +
-      `<div><i class="crystal"></i> 経験の結晶 +${exp}</div>` +
+      `<div><i class="expbook"></i> 経験の書 +${exp}</div>` +
       (evPts ? `<div><i class="star"></i> ${esc(TD.EVENT.currency)} +${evPts}</div>` : '') +
       (stones ? `<div><i class="gem"></i> 魔晶石 +${stones}</div><small>${notes.join(' / ')}</small>` : '') +
       `</div></div>` +
@@ -445,12 +459,12 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const prog = save.chars[id], d = TD.charStats(id, prog), maxLv = TD.maxLv(prog.lb), inParty = save.party.includes(id);
     const next = prog.lv < maxLv ? TD.charStats(id, { lv: prog.lv + 1, lb: prog.lb }) : null;
     const up = (k) => next ? `<em>→${next[k]}</em>` : '';
-    // 所持結晶で上げられる最大レベル
+    // 所持している経験の書で上げられる最大レベル
     let affordable = prog.lv;
     while (affordable < maxLv && lvUpCost(prog.lv, affordable + 1) <= save.crystals) affordable++;
     const lvBtn = (label, to) => {
       const t = Math.min(to, maxLv), cost = lvUpCost(prog.lv, t), ok = t > prog.lv && cost <= save.crystals;
-      return `<button class="btn lvbtn" data-lv="${t}" ${ok ? '' : 'disabled'}>${label}<small>${t > prog.lv ? '結晶 ' + cost : '-'}</small></button>`;
+      return `<button class="btn lvbtn" data-lv="${t}" ${ok ? '' : 'disabled'}>${label}<small>${t > prog.lv ? '書 ' + cost : '-'}</small></button>`;
     };
     box.innerHTML =
       `<div class="cd-head"><div class="cd-full">${TD.fullArtHTML(id)}</div><div><div class="cd-title">${base.title}</div>` +
@@ -460,7 +474,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="cd-role">${r.desc}</div>` +
       `<div class="cd-stats"><span>HP<b>${d.hp}${up('hp')}</b></span><span>${base.role === 'priest' ? '回復' : '攻撃'}<b>${d.atk}${up('atk')}</b></span><span>防御<b>${d.def}${up('def')}</b></span>` +
       `<span>コスト<b>${d.cost}</b></span><span>射程<b>${d.range}</b></span><span>${r.melee ? 'ブロック' : '再配置'}<b>${r.melee ? d.block : d.redeploy + 's'}</b></span></div>` +
-      `<div class="cd-levelup"><div class="cd-own"><i class="crystal"></i> 経験の結晶 <b>${save.crystals}</b></div>` +
+      `<div class="cd-levelup"><div class="cd-own"><i class="expbook"></i> 経験の書 <b>${save.crystals}</b></div>` +
       (prog.lv < maxLv
         ? `<div class="lv-row">${lvBtn('+1', prog.lv + 1)}${lvBtn('+5', prog.lv + 5)}${lvBtn('最大', Math.max(affordable, prog.lv + 1))}</div>`
         : `<div class="lv-max">${prog.lb < TD.GROWTH.maxLB ? 'レベル上限です。限界突破で上限が上がります' : 'これ以上は上げられません'}</div>`) +

@@ -362,10 +362,13 @@ textarea { width: 100%; background: #0e0a1f; color: var(--text); border: 1px sol
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
 
 /* ========== フェーズ2：召喚・育成 ========== */
-.crystal {
-  display: inline-block; width: 12px; height: 16px; clip-path: polygon(50% 0, 100% 35%, 80% 100%, 20% 100%, 0 35%);
-  background: linear-gradient(160deg, #e8fff6, #4fe0b0 50%, #1a8a6a); filter: drop-shadow(0 0 3px #4fe0b0);
+.expbook {
+  /* 経験の書：茶色の革表紙の本（召喚用の紫の宝石と形も色も違うように） */
+  position: relative; display: inline-block; width: 14px; height: 16px; border-radius: 2px 3px 3px 2px;
+  background: linear-gradient(90deg, #6a3a12 0 3px, #c8742a 3px 100%);
+  box-shadow: inset -2.5px 0 0 #f4ead0, inset -3.5px 0 0 #a8742a, 0 0 4px rgba(242, 160, 60, .55);
 }
+.expbook::after { content: ""; position: absolute; left: 5.5px; top: 5px; width: 4px; height: 4px; background: #ffe066; transform: rotate(45deg); }
 .gem.big { width: 26px; height: 26px; margin-right: 12px; }
 .currencies { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
 .currencies .currency { padding: 2px 10px; font-size: 13px; min-width: 84px; justify-content: space-between; }
@@ -395,11 +398,11 @@ textarea { width: 100%; background: #0e0a1f; color: var(--text); border: 1px sol
 .cd-lb .lb { font-size: 13px; margin-left: 4px; }
 .cd-lb small { display: block; font-size: 10px; }
 .cd-stats em { font-style: normal; color: #7dffa0; margin-left: 3px; font-size: 10px; }
-.cd-levelup { margin-top: 10px; padding: 10px; border-radius: 8px; background: rgba(79, 224, 176, .08); border: 1px solid rgba(79, 224, 176, .3); }
+.cd-levelup { margin-top: 10px; padding: 10px; border-radius: 8px; background: rgba(200, 116, 42, .1); border: 1px solid rgba(242, 160, 60, .4); }
 .cd-own { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .cd-own b { color: #fff; font-size: 14px; }
 .lv-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
-.lvbtn { padding: 6px 4px; min-height: 48px; font-size: 14px; display: flex; flex-direction: column; align-items: center; background: linear-gradient(180deg, #2f8a6a, #1d5a46); border-color: #4fe0b0; }
+.lvbtn { padding: 6px 4px; min-height: 48px; font-size: 14px; display: flex; flex-direction: column; align-items: center; background: linear-gradient(180deg, #c8742a, #7a4218); border-color: #f2a050; }
 .lvbtn small { font-size: 10px; font-weight: 600; opacity: .85; }
 .lvbtn:disabled { filter: grayscale(1); opacity: .45; }
 .lv-max { margin-top: 8px; font-size: 12px; color: var(--gold); text-align: center; }
@@ -601,7 +604,8 @@ textarea { width: 100%; background: #0e0a1f; color: var(--text); border: 1px sol
   clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   background: linear-gradient(160deg, #fff8d0, #ffd23f 50%, #e08a1a); filter: drop-shadow(0 0 3px #ffd23f);
 }
-.crystal.big { width: 22px; height: 28px; }
+.expbook.big { width: 22px; height: 26px; }
+.expbook.big::after { left: 8px; top: 8px; width: 6px; height: 6px; }
 .home-side { position: absolute; z-index: 3; left: 12px; top: 84px; display: flex; flex-direction: column; gap: 10px; }
 .side-btn {
   position: relative; width: 62px; height: 58px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
@@ -724,3 +728,18 @@ textarea { width: 100%; background: #0e0a1f; color: var(--text); border: 1px sol
 .stand-char .full-art { width: 230px; }
 .stand-char { gap: 0; }
 .adv-stage { bottom: 186px; }
+
+/* ========== 通貨ラベル ========== */
+button.currency { color: inherit; font-family: inherit; cursor: pointer; }
+.cur-label { font-size: 9px; font-weight: 900; padding: 1px 5px; border-radius: 4px; line-height: 1.3; letter-spacing: .05em; }
+.cur-label.summon { background: #6a3ad0; color: #fff; }
+.cur-label.grow { background: #c8742a; color: #fff; }
+.currencies .currency { min-width: 104px; gap: 6px; }
+.cur-help { text-align: center; }
+.ch-icon { margin: 4px 0 10px; }
+.ch-icon .gem.big { margin: 6px 0; }
+.ch-name { font-size: 20px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.ch-name .cur-label { font-size: 11px; }
+.cur-help p { font-size: 13px; line-height: 1.7; color: var(--muted); margin: 10px 0; }
+.ch-own { font-size: 13px; }
+.ch-own b { font-size: 18px; color: var(--gold); margin-left: 4px; }

@@ -39,8 +39,8 @@
     <header class="topbar">
       <div class="tb-left"><div class="player-name" id="home-name">召喚士</div><div id="home-progress" class="progress"></div></div>
       <div class="currencies">
-        <div class="currency"><i class="gem"></i><span class="stones-val">0</span></div>
-        <div class="currency"><i class="crystal"></i><span class="crystals-val">0</span></div>
+        <button class="currency" data-cur="stones"><small class="cur-label summon">召喚</small><i class="gem"></i><span class="stones-val">0</span></button>
+        <button class="currency" data-cur="books"><small class="cur-label grow">育成</small><i class="expbook"></i><span class="crystals-val">0</span></button>
       </div>
     </header>
 
@@ -97,7 +97,7 @@
     <header class="topbar sub">
       <button class="back" data-go="screen-home">‹ ホーム</button>
       <div class="sub-title">クエスト</div>
-      <div class="currency"><i class="gem"></i><span class="stones-val">0</span></div>
+      <button class="currency" data-cur="stones"><small class="cur-label summon">召喚</small><i class="gem"></i><span class="stones-val">0</span></button>
     </header>
     <div id="stage-list" class="scroll"></div>
   </section>
@@ -109,7 +109,7 @@
       <div class="sub-title">編成・育成</div>
       <button class="back" data-go="screen-stages">出撃 ›</button>
     </header>
-    <div class="sub-currency"><div class="currency"><i class="crystal"></i><span class="crystals-val">0</span></div></div>
+    <div class="sub-currency"><button class="currency" data-cur="books"><small class="cur-label grow">育成</small><i class="expbook"></i><span class="crystals-val">0</span></button></div>
     <div class="scroll">
       <div class="sec-label">出撃メンバー（最大6人）</div>
       <div id="party-slots"></div>
@@ -149,7 +149,7 @@
     <header class="topbar sub">
       <button class="back" data-go="screen-home">‹ ホーム</button>
       <div class="sub-title">イベント</div>
-      <div class="currency"><i class="gem"></i><span class="stones-val">0</span></div>
+      <button class="currency" data-cur="stones"><small class="cur-label summon">召喚</small><i class="gem"></i><span class="stones-val">0</span></button>
     </header>
     <div class="scroll">
       <div id="event-head"></div>
@@ -165,7 +165,7 @@
     <header class="topbar sub">
       <button class="back" data-go="screen-home">‹ ホーム</button>
       <div class="sub-title">召喚</div>
-      <div class="currency"><i class="gem"></i><span class="stones-val">0</span></div>
+      <button class="currency" data-cur="stones"><small class="cur-label summon">召喚</small><i class="gem"></i><span class="stones-val">0</span></button>
     </header>
     <div id="banner-tabs"></div>
     <div id="banner"></div>

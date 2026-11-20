@@ -38,7 +38,7 @@ TD.Live = {
   rewardText(r) {
     const a = [];
     if (r.stones) a.push(`魔晶石 ×${r.stones}`);
-    if (r.crystals) a.push(`経験の結晶 ×${r.crystals}`);
+    if (r.crystals) a.push(`経験の書 ×${r.crystals}`);
     return a.join('・');
   },
 

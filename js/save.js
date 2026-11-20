@@ -8,7 +8,7 @@ TD.Save = {
     return {
       v: 1,
       stones: 0,          // 魔晶石（召喚に使う）
-      crystals: 0,        // 経験の結晶（レベルアップに使う）
+      crystals: 0,        // 経験の書（レベルアップに使う）
       cleared: {},        // { '1-1': 3 } ステージID → 最高★
       party: ['lydia', 'fin', 'gald', 'mia', 'kai'],
       owned: ['lydia', 'fin', 'gald', 'mia', 'kai'],
