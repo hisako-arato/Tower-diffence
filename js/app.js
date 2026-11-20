@@ -1,9 +1,15 @@
 // 画面遷移・ホーム・編成/育成・召喚・ステージ選択・設定
 window.TD = window.TD || {};
 
-TD.portraitHTML = function (id, big) {
+// 丸いバストアップ（silhouette=true で未所持のシルエット表示）
+TD.portraitHTML = function (id, big, silhouette) {
   const d = TD.CHARS[id];
-  return `<span class="pt el-${d.element}${big ? ' big' : ''}"><b>${d.name[0]}</b><i>${TD.ROLES[d.role].glyph}</i></span>`;
+  return `<span class="pt el-${d.element} r${d.rarity}${big ? ' big' : ''}${silhouette ? ' silhouette' : ''}"><span class="pt-art">${TD.charArtHTML(id, 'bust')}</span><i>${TD.ROLES[d.role].glyph}</i></span>`;
+};
+// 全身の立ち絵
+TD.fullArtHTML = function (id, silhouette) {
+  const d = TD.CHARS[id];
+  return `<span class="full-art el-${d.element} r${d.rarity}${silhouette ? ' silhouette' : ''}">${TD.charArtHTML(id, 'full')}</span>`;
 };
 TD.starsHTML = (n, max = 5) => `<span class="stars">${'★'.repeat(n)}<span class="off">${'★'.repeat(Math.max(0, max - n))}</span></span>`;
 TD.elemChip = el => `<span class="chip el-${el}">${TD.ELEMENTS[el].name}</span>`;
@@ -409,7 +415,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     for (const id of ids) {
       const d = TD.CHARS[id], el = document.createElement('button'), have = owns(id);
       el.className = `char-card r${d.rarity}` + (have ? '' : ' unowned') + (save.party.includes(id) ? ' in-party' : '') + (partySel === id ? ' sel' : '');
-      el.innerHTML = `${TD.portraitHTML(id)}<span class="cc-name">${have ? d.name : '？？？'}</span>${TD.starsHTML(d.rarity, 0)}` +
+      el.innerHTML = `${TD.portraitHTML(id, false, !have)}<span class="cc-name">${have ? d.name : '？？？'}</span>${TD.starsHTML(d.rarity, 0)}` +
         (have ? `<span class="cc-lv">Lv${save.chars[id].lv}</span>${TD.lbHTML(save.chars[id].lb)}` : '<span class="cc-lv">未所持</span>');
       el.addEventListener('click', () => { partySel = id; renderParty(); });
       roster.appendChild(el);
@@ -429,7 +435,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const id = partySel, base = TD.CHARS[id], r = TD.ROLES[base.role], have = owns(id);
     if (!have) {
       box.innerHTML =
-        `<div class="cd-head">${TD.portraitHTML(id, true)}<div><div class="cd-title">${base.title}</div>` +
+        `<div class="cd-head">${TD.portraitHTML(id, true, true)}<div><div class="cd-title">${base.title}</div>` +
         `<div class="cd-name">？？？</div>${TD.starsHTML(base.rarity, 0)} ${TD.elemChip(base.element)}<span class="chip role">${r.name}</span></div></div>` +
         `<p class="hint">まだ出会っていない英雄です。「召喚」で仲間にしましょう。</p>` +
         `<button class="btn primary" data-go-summon>召喚へ</button>`;
@@ -447,7 +453,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       return `<button class="btn lvbtn" data-lv="${t}" ${ok ? '' : 'disabled'}>${label}<small>${t > prog.lv ? '結晶 ' + cost : '-'}</small></button>`;
     };
     box.innerHTML =
-      `<div class="cd-head">${TD.portraitHTML(id, true)}<div><div class="cd-title">${base.title}</div>` +
+      `<div class="cd-head"><div class="cd-full">${TD.fullArtHTML(id)}</div><div><div class="cd-title">${base.title}</div>` +
       `<div class="cd-name">${base.name}</div>${TD.starsHTML(base.rarity, 0)} ${TD.elemChip(base.element)}<span class="chip role">${r.name}</span></div></div>` +
       `<div class="cd-grow"><div class="cd-lv">Lv <b>${prog.lv}</b><small>/${maxLv}</small></div>` +
       `<div class="cd-lb">限界突破 ${TD.lbHTML(prog.lb)}<small>${prog.lb < TD.GROWTH.maxLB ? '同じキャラを召喚すると突破' : '最大'}</small></div></div>` +
@@ -496,7 +502,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     $('#banner').className = `banner el-${bn.element}`;
     $('#banner').innerHTML =
       `<div class="bn-circle"></div>` +
-      `<div class="bn-feat">${feat.map(id => TD.portraitHTML(id, true)).join('')}</div>` +
+      `<div class="bn-feat${feat.length > 1 ? ' multi' : ''}">${feat.map(id => TD.fullArtHTML(id)).join('')}</div>` +
       `<div class="bn-name">${esc(bn.name)}</div>` +
       `<div class="bn-desc">${esc(bn.desc)}</div>` +
       (bn.pickup.length ? `<div class="bn-pick">${bn.pickup.map(id => `PICK UP ★5 ${TD.CHARS[id].title} ${TD.CHARS[id].name}`).join('')}</div>` : '');
@@ -549,7 +555,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
         const d = TD.CHARS[r.id];
         const tag = r.isNew ? '<em class="new">NEW</em>' : r.limitBreak ? `<em class="lbup">限界突破 ${r.limitBreak}</em>` : `<em class="conv">魔晶石+${r.converted}</em>`;
         return `<div class="sf-card r${r.rarity}" style="animation-delay:${results.length === 1 ? 0 : i * 0.12}s">` +
-          `${TD.portraitHTML(r.id, true)}${tag}<div class="sf-name">${d.name}</div>${TD.starsHTML(r.rarity, 0)}` +
+          `${results.length === 1 ? TD.fullArtHTML(r.id) : TD.portraitHTML(r.id, true)}${tag}<div class="sf-name">${d.name}</div>${TD.starsHTML(r.rarity, 0)}` +
           (results.length === 1 ? `<div class="sf-title">${d.title}</div><div class="sf-line">「${d.lines.deploy}」</div>` : '') + `</div>`;
       }).join('');
       fx.querySelector('.sf-skip').textContent = '';

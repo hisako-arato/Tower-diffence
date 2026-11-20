@@ -630,16 +630,28 @@ window.TD = window.TD || {};
       }
       const grd = g.createRadialGradient(u.x - 4, u.y - 5, 2, u.x, u.y, 15);
       grd.addColorStop(0, '#ffffff'); grd.addColorStop(0.35, el.color); grd.addColorStop(1, el.dark);
-      g.fillStyle = u.flash > 0 ? '#ff9a9a' : grd;
-      g.beginPath(); g.arc(u.x, u.y, 14, 0, Math.PI * 2); g.fill();
-      g.strokeStyle = '#2a2018'; g.lineWidth = 1.5; g.stroke();
+      // キャラアート（円形に切り抜き）
+      const img = TD.charImage(u.card.id);
+      g.save();
+      g.beginPath(); g.arc(u.x, u.y, 15, 0, Math.PI * 2); g.clip();
+      g.fillStyle = grd; g.fillRect(u.x - 15, u.y - 15, 30, 30);
+      if (img.complete && img.naturalWidth) g.drawImage(img, u.x - 15, u.y - 15, 30, 30);
+      if (u.flash > 0) { g.fillStyle = 'rgba(255,80,80,.55)'; g.fillRect(u.x - 15, u.y - 15, 30, 30); }
+      g.restore();
+      const rc = u.def.rarity === 5 ? '#f2c94c' : u.def.rarity === 4 ? '#c8a8ff' : '#e8e8f0';
+      g.strokeStyle = '#1b1410'; g.lineWidth = 3.5;
+      g.beginPath(); g.arc(u.x, u.y, 15, 0, Math.PI * 2); g.stroke();
+      g.strokeStyle = rc; g.lineWidth = 2; g.stroke();
       // 向き
       g.fillStyle = '#fff';
-      g.beginPath(); g.arc(u.x + Math.cos(u.angle) * 14, u.y + Math.sin(u.angle) * 14, 2.5, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#1b1410';
-      g.font = 'bold 13px "Hiragino Sans","Noto Sans JP",sans-serif';
+      g.beginPath(); g.arc(u.x + Math.cos(u.angle) * 16, u.y + Math.sin(u.angle) * 16, 2.5, 0, Math.PI * 2); g.fill();
+      // 職業バッジ
+      g.fillStyle = '#1b1430'; g.strokeStyle = el.color; g.lineWidth = 1;
+      g.beginPath(); g.arc(u.x + 11, u.y + 9, 6, 0, Math.PI * 2); g.fill(); g.stroke();
+      g.fillStyle = '#fff';
+      g.font = 'bold 8px "Hiragino Sans","Noto Sans JP",sans-serif';
       g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.fillText(TD.ROLES[u.def.role].glyph, u.x, u.y + 1);
+      g.fillText(TD.ROLES[u.def.role].glyph, u.x + 11, u.y + 9.5);
       // HP/SP
       g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(u.x - 15, u.y + 16, 30, 6);
       g.fillStyle = u.hp / u.maxHp > 0.35 ? '#6be37a' : '#ff6b5a';

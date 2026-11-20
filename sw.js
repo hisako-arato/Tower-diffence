@@ -1,6 +1,6 @@
 // オフライン対応用サービスワーカー
 // ファイルを更新したら VERSION を上げると、古いキャッシュが入れ替わる。
-const VERSION = 'v4.0.0';
+const VERSION = 'v5.0.0';
 const CACHE = 'kekkai-' + VERSION;
 const ASSETS = [
   './',
@@ -8,6 +8,7 @@ const ASSETS = [
   './manifest.webmanifest',
   './css/style.css',
   './js/data.js',
+  './js/art.js',
   './js/save.js',
   './js/gacha.js',
   './js/battle.js',

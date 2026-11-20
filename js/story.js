@@ -168,7 +168,7 @@ TD.CHAPTERS = { 1: '第1章 結界のほころび', ev: 'イベントストー�
     }
     if (sp.char) {
       const d = TD.CHARS[sp.char];
-      return `<div class="stand-char">${TD.portraitHTML(sp.char, true)}<div class="stand-title">${d.title}</div></div>`;
+      return `<div class="stand-char">${TD.fullArtHTML(sp.char)}<div class="stand-title">${d.title}</div></div>`;
     }
     if (sp.enemy) return `<div class="stand-enemy"><span class="se-body"><i></i><i></i></span></div>`;
     return '';
