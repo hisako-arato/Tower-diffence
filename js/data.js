@@ -20,7 +20,7 @@ TD.elemMult = function (atk, def) {
 };
 
 TD.ROLES = {
-  sword:  { name: '剣士',   glyph: '剣', melee: true,  desc: '道に配置。敵を足止めして斬る' },
+  sword:  { name: '剣士',   glyph: '剣', melee: true,  desc: '道に配置。敵を足止めして斬る。1マス後ろからも攻撃が届く' },
   shield: { name: '盾騎士', glyph: '盾', melee: true,  desc: '道に配置。多くの敵を食い止める' },
   archer: { name: '弓兵',   glyph: '弓', melee: false, desc: '草地に配置。長射程の単体攻撃' },
   mage:   { name: '魔導士', glyph: '魔', melee: false, desc: '草地に配置。範囲魔法攻撃' },
@@ -31,7 +31,7 @@ TD.ROLES = {
 TD.CHARS = {
   lydia: {
     name: 'リディア', title: '聖剣の騎士姫', rarity: 5, element: 'light', role: 'sword',
-    cost: 14, hp: 1600, atk: 130, def: 60, interval: 1.0, range: 1.3, block: 2, redeploy: 30,
+    cost: 14, hp: 1600, atk: 130, def: 60, interval: 1.0, range: 1.6, block: 2, redeploy: 30,
     skill: { name: '天穹断', type: 'allStrike', sp: 30, mult: 4,
              desc: 'フィールド上の全ての敵に攻撃力400%の光属性ダメージ' },
     lines: { deploy: '聖剣の名にかけて！', skill: '天よ、裂けよ――天穹断！' },
@@ -57,7 +57,7 @@ TD.CHARS = {
   },
   nox: {
     name: 'ノクス', title: '影の剣士', rarity: 4, element: 'dark', role: 'sword',
-    cost: 11, hp: 1100, atk: 145, def: 40, interval: 0.8, range: 1.3, block: 1, redeploy: 25,
+    cost: 11, hp: 1100, atk: 145, def: 40, interval: 0.8, range: 1.6, block: 1, redeploy: 25,
     passive: { name: '影の刃', type: 'crit', chance: 0.25, mult: 2, desc: '攻撃の25%が2倍ダメージ（クリティカル）になる' },
     lines: { deploy: '……斬るだけだ', skill: '影に沈め。影縫い' },
   },
@@ -83,7 +83,7 @@ TD.CHARS = {
   },
   blaire: {
     name: 'ブレア', title: '紅蓮の拳闘士', rarity: 4, element: 'fire', role: 'sword',
-    cost: 11, hp: 1200, atk: 125, def: 45, interval: 0.75, range: 1.3, block: 1, redeploy: 25,
+    cost: 11, hp: 1200, atk: 125, def: 45, interval: 0.75, range: 1.6, block: 1, redeploy: 25,
     passive: { name: '連撃', type: 'ramp', step: 0.05, max: 0.5, desc: '攻撃するたびに攻撃速度+5%（最大+50%）。撤退すると元に戻る' },
     lines: { deploy: 'さぁ、かかってきな！', skill: '燃え上がれ！烈火連撃！' },
   },
@@ -138,7 +138,7 @@ TD.CHARS = {
   },
   akane: {
     name: 'アカネ', title: '異界の剣道少女', rarity: 4, element: 'wind', role: 'sword',
-    cost: 8, hp: 900, atk: 115, def: 30, interval: 0.8, range: 1.3, block: 1, redeploy: 20,
+    cost: 8, hp: 900, atk: 115, def: 30, interval: 0.8, range: 1.6, block: 1, redeploy: 20,
     traits: ['fastRedeploy'],
     profile: '召喚の儀のはずみで、異世界の学校から呼ばれてしまった剣道部員。',
     skill: { name: '一閃・疾風', type: 'execute', sp: 15, mult: 6, mana: 6,
@@ -164,7 +164,7 @@ TD.CHARS = {
   },
   seira: {
     name: 'セイラ', title: '蒼波の剣聖', rarity: 5, element: 'water', role: 'sword',
-    cost: 15, hp: 1700, atk: 125, def: 70, interval: 0.95, range: 1.3, block: 2, redeploy: 30,
+    cost: 15, hp: 1700, atk: 125, def: 70, interval: 0.95, range: 1.6, block: 2, redeploy: 30,
     profile: '水の都の剣術道場を継ぐ剣聖。受けた刃をそのまま返す「水鏡」の使い手。',
     passive: { name: '常時水鏡', type: 'reflect', ratio: 0.5, defMult: 1.2, desc: '受けたダメージの50%を常に相手に返す。防御+20%' },
     lines: { deploy: '参ります。……お覚悟を', skill: '水鏡に映るは、あなた自身の刃' },
@@ -213,7 +213,7 @@ TD.CHARS = {
   },
   emil: {
     name: 'エミル', title: '王都の新米衛兵', rarity: 3, element: 'light', role: 'sword',
-    cost: 9, hp: 950, atk: 95, def: 40, interval: 0.95, range: 1.3, block: 1, redeploy: 20,
+    cost: 9, hp: 950, atk: 95, def: 40, interval: 0.95, range: 1.6, block: 1, redeploy: 20,
     passive: { name: '衛兵の誇り', type: 'pride', threshold: 0.5, mult: 1.3, desc: 'HPが半分以上の間、攻撃力+30%' },
     lines: { deploy: '衛兵エミル、ただいま参上！', skill: 'ここが踏ん張りどころ！' },
   },
@@ -235,7 +235,7 @@ TD.CHARS = {
   },
   hayate: {
     name: 'ハヤテ', title: '疾風の飛脚', rarity: 3, element: 'wind', role: 'sword',
-    cost: 8, hp: 850, atk: 80, def: 30, interval: 0.7, range: 1.3, block: 1, redeploy: 20,
+    cost: 8, hp: 850, atk: 80, def: 30, interval: 0.7, range: 1.6, block: 1, redeploy: 20,
     passive: { name: '疾風二刀', type: 'multi', count: 2, desc: '攻撃が敵2体に当たる' },
     lines: { deploy: '速達だよ！ ……あれ、戦い？', skill: '足には自信があるんだ！' },
   },
@@ -247,7 +247,7 @@ TD.CHARS = {
   },
   kagerou: {
     name: 'カゲロウ', title: '夜回りの忍び', rarity: 3, element: 'dark', role: 'sword',
-    cost: 9, hp: 880, atk: 100, def: 30, interval: 0.85, range: 1.3, block: 1, redeploy: 20,
+    cost: 9, hp: 880, atk: 100, def: 30, interval: 0.85, range: 1.6, block: 1, redeploy: 20,
     passive: { name: '隠れ身', type: 'stealth', desc: '遠距離攻撃やボスの範囲攻撃の標的にならない' },
     lines: { deploy: '……御意', skill: '影より出でて、影に消ゆ' },
   },
@@ -279,7 +279,7 @@ TD.CHARS = {
   },
   garo: {
     name: 'ガロ', title: '酒場の用心棒', rarity: 3, element: 'fire', role: 'sword',
-    cost: 10, hp: 1000, atk: 98, def: 40, interval: 1.0, range: 1.3, block: 1, redeploy: 20,
+    cost: 10, hp: 1000, atk: 98, def: 40, interval: 1.0, range: 1.6, block: 1, redeploy: 20,
     passive: { name: '酔拳', type: 'evade', chance: 0.2, desc: '敵の攻撃を20%の確率でかわす' },
     lines: { deploy: 'ひっく……喧嘩なら買うぜ', skill: '燃えてきたぁ！' },
   },
