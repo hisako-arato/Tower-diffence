@@ -138,7 +138,7 @@ button { font-family: inherit; color: inherit; cursor: pointer; }
 .bubble.pop { animation: popIn .25s ease; }
 
 .home-menu {
-  position: relative; z-index: 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  position: relative; z-index: 2; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
   padding: 12px 16px max(16px, env(safe-area-inset-bottom));
 }
 .home-menu button {
@@ -781,3 +781,35 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .brief-rec { margin-top: 12px; font-size: 14px; font-weight: 800; color: #7dffa0; }
 .brief-rec small { font-size: 11px; font-weight: 500; color: var(--muted); margin-left: 4px; }
 .brief-rec.low { color: #ff9a7a; }
+
+/* ========== 編成・育成画面（一覧＋詳細シート） ========== */
+#screen-party { position: absolute; }
+.party-top { padding: 8px 12px 6px; background: linear-gradient(180deg, #1d1738, #171230); border-bottom: 1px solid var(--line); box-shadow: 0 4px 10px rgba(0, 0, 0, .35); z-index: 2; }
+.pt-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.pt-head .sec-label { margin: 0; }
+.pt-head .currency { padding: 2px 10px; font-size: 12px; }
+#party-slots { gap: 5px; }
+#party-slots .slot { min-height: 64px; padding: 6px 0; }
+#party-slots .slot .pt { width: 34px; height: 34px; }
+#party-slots .slot.sel { border-color: #fff; box-shadow: 0 0 10px rgba(255, 255, 255, .4); }
+#roster-filter { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+.frow { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; }
+.frow::-webkit-scrollbar { display: none; }
+.fchip { flex-shrink: 0; padding: 5px 11px; border-radius: 999px; font-size: 12px; font-weight: 800; background: rgba(255, 255, 255, .06); border: 1px solid var(--line); color: var(--muted); min-height: 30px; }
+.fchip.on { background: var(--gold); color: #3a2400; border-color: #fff3c4; }
+.fchip.el-fire.on, .fchip.el-water.on, .fchip.el-wind.on, .fchip.el-light.on, .fchip.el-dark.on { background: var(--ed); color: #fff; border-color: var(--ec); }
+.roster-scroll { padding-top: 8px; }
+#roster-count { margin: 0 0 8px; }
+.roster-hint { text-align: center; margin-top: 14px; }
+.char-card .cc-pas { position: absolute; top: 4px; right: 4px; font-size: 8px; font-weight: 900; padding: 0 4px; border-radius: 3px; background: #2a6a8a; color: #dff6ff; }
+/* 詳細シート */
+.char-sheet {
+  position: absolute; inset: 0; z-index: 20; display: flex; flex-direction: column; background: rgba(10, 8, 22, .97);
+  transform: translateY(100%); visibility: hidden; transition: transform .22s ease, visibility .22s;
+}
+.char-sheet.show { transform: none; visibility: visible; }
+.sheet-bar { display: flex; align-items: center; gap: 8px; padding: max(10px, env(safe-area-inset-top)) 12px 10px; border-bottom: 1px solid var(--line); background: #1d1738; }
+.sheet-nav { width: 42px; height: 38px; border-radius: 10px; font-size: 22px; font-weight: 900; background: rgba(255, 255, 255, .08); border: 1px solid var(--line); }
+.sheet-pos { flex: 1; text-align: center; font-size: 12px; color: var(--muted); }
+.sheet-close { padding: 8px 14px; border-radius: 10px; font-weight: 800; font-size: 13px; background: rgba(255, 255, 255, .08); border: 1px solid var(--line); min-height: 38px; }
+.char-sheet #char-detail { margin: 0; }

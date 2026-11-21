@@ -86,8 +86,7 @@
     <nav class="home-menu">
       <button class="menu-main" data-go="screen-stages"><span>出撃</span><small>QUEST</small></button>
       <button class="menu-sub" data-go="screen-party"><span>編成・育成</span><small>PARTY</small></button>
-      <button class="menu-sub summon" data-go="screen-summon"><span>召喚</span><small>SUMMON</small><em>PICK UP</em></button>
-      <button class="menu-sub" data-go="screen-story"><span>ストーリー</span><small>STORY</small></button>
+      <button class="menu-sub summon" data-go="screen-summon"><span>召喚</span><small>SUMMON</small></button>
       <button class="menu-sub" id="btn-settings"><span>設定</span><small>OPTION</small></button>
     </nav>
   </section>
@@ -109,13 +108,25 @@
       <div class="sub-title">編成・育成</div>
       <button class="back" data-go="screen-stages">出撃 ›</button>
     </header>
-    <div class="sub-currency"><button class="currency" data-cur="books"><small class="cur-label grow">育成</small><i class="expbook"></i><span class="crystals-val">0</span></button></div>
-    <div class="scroll">
-      <div class="sec-label">出撃メンバー（最大6人）</div>
+    <div class="party-top">
+      <div class="pt-head"><span class="sec-label">出撃メンバー（最大6人）</span><button class="currency" data-cur="books"><small class="cur-label grow">育成</small><i class="expbook"></i><span class="crystals-val">0</span></button></div>
       <div id="party-slots"></div>
-      <div id="char-detail"></div>
-      <div class="sec-label">所持キャラ</div>
+      <div id="roster-filter"></div>
+    </div>
+    <div class="scroll roster-scroll">
+      <div id="roster-count" class="small"></div>
       <div id="roster"></div>
+      <p class="small roster-hint">キャラをタップすると、ステータスの確認・レベルアップ・編成ができます。</p>
+    </div>
+    <!-- キャラ詳細（一覧の上に重ねて表示） -->
+    <div id="char-sheet" class="char-sheet">
+      <div class="sheet-bar">
+        <button class="sheet-nav" data-sheet="prev" aria-label="前のキャラ">‹</button>
+        <span class="sheet-pos" id="sheet-pos"></span>
+        <button class="sheet-nav" data-sheet="next" aria-label="次のキャラ">›</button>
+        <button class="sheet-close" data-sheet="close">✕ 閉じる</button>
+      </div>
+      <div class="scroll"><div id="char-detail"></div></div>
     </div>
   </section>
 

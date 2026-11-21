@@ -36,6 +36,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
     if (id === 'screen-home') renderHome();
     if (id === 'screen-stages') renderStages();
+    if (id !== 'screen-party') $('#char-sheet').classList.remove('show');
     if (id === 'screen-party') renderParty();
     if (id === 'screen-summon') renderSummon();
     if (id === 'screen-story') renderStoryList();
@@ -435,31 +436,71 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   }
 
   // ---------- 編成・育成 ----------
-  let partySel = null;
+  let partySel = null, listIds = [];
+  const filter = { rarity: 'all', element: 'all' };
+  const sheetOpen = () => $('#char-sheet').classList.contains('show');
+  function openSheet(id) {
+    partySel = id;
+    renderDetail();
+    const sh = $('#char-sheet');
+    if (!sh.classList.contains('show')) { sh.classList.add('show'); sh.querySelector('.scroll').scrollTop = 0; }
+    renderParty();
+  }
+  function closeSheet() { $('#char-sheet').classList.remove('show'); renderParty(); }
+  document.querySelectorAll('[data-sheet]').forEach(b => b.addEventListener('click', () => {
+    const a = b.dataset.sheet;
+    if (a === 'close') return closeSheet();
+    const i = listIds.indexOf(partySel);
+    if (i < 0 || !listIds.length) return;
+    const ni = (i + (a === 'next' ? 1 : -1) + listIds.length) % listIds.length;
+    partySel = listIds[ni];
+    renderDetail();
+    $('#char-sheet .scroll').scrollTop = 0;
+  }));
+
+  function renderFilter() {
+    const chips = [['rarity', 'all', 'すべて'], ['rarity', 5, '★5'], ['rarity', 4, '★4'], ['rarity', 3, '★3']];
+    const els = [['element', 'all', '全属性'], ...Object.keys(TD.ELEMENTS).map(k => ['element', k, TD.ELEMENTS[k].name])];
+    const html = arr => arr.map(([k, v, label]) => `<button class="fchip${String(filter[k]) === String(v) ? ' on' : ''}${k === 'element' && v !== 'all' ? ' el-' + v : ''}" data-fk="${k}" data-fv="${v}">${label}</button>`).join('');
+    $('#roster-filter').innerHTML = `<div class="frow">${html(chips)}</div><div class="frow">${html(els)}</div>`;
+    $('#roster-filter').querySelectorAll('[data-fk]').forEach(b => b.onclick = () => {
+      filter[b.dataset.fk] = b.dataset.fv === 'all' ? 'all' : (b.dataset.fk === 'rarity' ? +b.dataset.fv : b.dataset.fv);
+      renderParty();
+    });
+  }
+
   function renderParty() {
     updateCurrency();
     const slots = $('#party-slots');
     slots.innerHTML = '';
     for (let i = 0; i < 6; i++) {
       const id = save.party[i], el = document.createElement('button');
-      el.className = 'slot' + (id ? '' : ' empty');
+      el.className = 'slot' + (id ? '' : ' empty') + (id && id === partySel && sheetOpen() ? ' sel' : '');
       el.innerHTML = id ? `${TD.portraitHTML(id)}<span>Lv${save.chars[id].lv}</span>` : '<span>空き</span>';
-      if (id) el.addEventListener('click', () => { partySel = id; renderParty(); });
+      if (id) el.addEventListener('click', () => openSheet(id));
       slots.appendChild(el);
     }
-    const roster = $('#roster');
+    renderFilter();
+    const roster = $('#roster'), scroller = $('.roster-scroll'), keepTop = scroller.scrollTop;
+    roster.style.minHeight = roster.offsetHeight + 'px'; // 作り直しの間に高さが縮んでスクロール位置が飛ばないようにする
     roster.innerHTML = '';
-    const ids = Object.keys(TD.CHARS).sort((a, b) =>
-      (owns(b) - owns(a)) || (TD.CHARS[b].rarity - TD.CHARS[a].rarity));
-    for (const id of ids) {
+    listIds = Object.keys(TD.CHARS)
+      .filter(id => (filter.rarity === 'all' || TD.CHARS[id].rarity === filter.rarity) && (filter.element === 'all' || TD.CHARS[id].element === filter.element))
+      .sort((a, b) => (owns(b) - owns(a)) || (TD.CHARS[b].rarity - TD.CHARS[a].rarity));
+    const ownedN = listIds.filter(owns).length;
+    $('#roster-count').textContent = `表示中 ${listIds.length}人（所持 ${ownedN}人）`;
+    for (const id of listIds) {
       const d = TD.CHARS[id], el = document.createElement('button'), have = owns(id);
-      el.className = `char-card r${d.rarity}` + (have ? '' : ' unowned') + (save.party.includes(id) ? ' in-party' : '') + (partySel === id ? ' sel' : '');
+      el.className = `char-card r${d.rarity}` + (have ? '' : ' unowned') + (save.party.includes(id) ? ' in-party' : '') + (partySel === id && sheetOpen() ? ' sel' : '');
       el.innerHTML = `${TD.portraitHTML(id, false, !have)}<span class="cc-name">${have ? d.name : '？？？'}</span>${TD.starsHTML(d.rarity, 0)}` +
-        (have ? `<span class="cc-lv">Lv${save.chars[id].lv}</span>${TD.lbHTML(save.chars[id].lb)}` : '<span class="cc-lv">未所持</span>');
-      el.addEventListener('click', () => { partySel = id; renderParty(); });
+        (have ? `<span class="cc-lv">Lv${save.chars[id].lv}</span>${TD.lbHTML(save.chars[id].lb)}` : '<span class="cc-lv">未所持</span>') +
+        (d.passive ? '<span class="cc-pas">常時</span>' : '');
+      el.addEventListener('click', () => openSheet(id));
       roster.appendChild(el);
     }
-    renderDetail();
+    roster.style.minHeight = '';
+    scroller.scrollTop = keepTop;
+    if (sheetOpen()) renderDetail();
   }
 
   function lvUpCost(from, to) {
@@ -470,7 +511,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
 
   function renderDetail() {
     const box = $('#char-detail');
-    if (!partySel) { box.innerHTML = '<p class="hint">キャラをタップすると詳細が表示されます。<br>出撃メンバーは最大6人です。</p>'; return; }
+    if (!partySel) { box.innerHTML = ''; return; }
+    const pos = listIds.indexOf(partySel);
+    $('#sheet-pos').textContent = pos >= 0 ? `${pos + 1} / ${listIds.length}` : '';
     const id = partySel, base = TD.CHARS[id], r = TD.ROLES[base.role], have = owns(id);
     if (!have) {
       box.innerHTML =
@@ -478,7 +521,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
         `<div class="cd-name">？？？</div>${TD.starsHTML(base.rarity, 0)} ${TD.elemChip(base.element)}<span class="chip role">${r.name}</span></div></div>` +
         `<p class="hint">まだ出会っていない英雄です。「召喚」で仲間にしましょう。</p>` +
         `<button class="btn primary" data-go-summon>召喚へ</button>`;
-      box.querySelector('[data-go-summon]').onclick = () => show('screen-summon');
+      box.querySelector('[data-go-summon]').onclick = () => { $('#char-sheet').classList.remove('show'); show('screen-summon'); };
       return;
     }
     const prog = save.chars[id], d = TD.charStats(id, prog), maxLv = TD.maxLv(prog.lb), inParty = save.party.includes(id);
@@ -630,6 +673,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="brief-sec">アプリとしてインストール</div>` +
       `<p class="small">${installHelpText()}</p>` +
       (installPrompt ? `<button class="btn primary" data-act="install" style="width:100%">ホーム画面に追加する</button>` : '') +
+      `<div class="brief-sec">ストーリー</div>` +
+      `<button class="btn ghost" data-act="story" style="width:100%">ストーリーを見返す</button>` +
       `<div class="brief-sec">データのバックアップ</div>` +
       `<p class="small">セーブデータはこのブラウザに保存されています。別の端末へ移すときは引き継ぎコードを使ってください。</p>` +
       `<textarea id="backup-code" rows="3" placeholder="ここに引き継ぎコードが表示されます／貼り付けてください"></textarea>` +
@@ -654,6 +699,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       const v = body.querySelector('#set-name').value.trim().replace(/[<>{}]/g, '').slice(0, 10);
       save.playerName = v; persist(); renderHome(); alertBox(`プレイヤー名を「${v || '召喚士'}」にしました`);
     };
+    body.querySelector('[data-act=story]').onclick = () => { closeModal(); show('screen-story'); };
     const ib = body.querySelector('[data-act=install]');
     if (ib) ib.onclick = () => { closeModal(); promptInstall(); };
   }
