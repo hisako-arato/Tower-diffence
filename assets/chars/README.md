@@ -33,3 +33,5 @@
 | lydia.webp | リディア（★5 光・剣） | AI生成（背景除去：BiRefNet） |
 | soyo.webp | ソヨ（★3 風・癒） | AI生成（背景除去：isnet-anime） |
 | hayate.webp | ハヤテ（★3 風・剣） | AI生成（背景除去：BiRefNet） |
+| zephyr.webp | ゼファー（★4 風・弓） | AI生成（背景除去：isnet-anime） |
+| viola.webp | ヴィオラ（★3 闇・魔） | AI生成（背景除去：BiRefNet） |

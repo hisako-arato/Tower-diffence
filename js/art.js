@@ -21,6 +21,8 @@ TD.CUSTOM_ART = {
   lydia:    { src: 'assets/chars/lydia.webp',    ratio: 1.000, face: [0.52, 0.14, 0.24] },
   soyo:     { src: 'assets/chars/soyo.webp',     ratio: 1.000, face: [0.44, 0.17, 0.26] },
   hayate:   { src: 'assets/chars/hayate.webp',   ratio: 0.887, face: [0.58, 0.11, 0.22] },
+  zephyr:   { src: 'assets/chars/zephyr.webp',   ratio: 1.190, face: [0.55, 0.23, 0.32] },
+  viola:    { src: 'assets/chars/viola.webp',    ratio: 1.024, face: [0.46, 0.27, 0.34] },
 };
 // 文字列だけで登録した場合にも対応
 TD.customArt = function (id) {
