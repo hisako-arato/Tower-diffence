@@ -30,3 +30,6 @@
 | xeno.webp | ゼノ（★4 闇・盾） | AI生成（背景除去：BiRefNet） |
 | karin.webp | カリン（★4 火・癒） | AI生成（背景除去：BiRefNet） |
 | shigure.webp | シグレ（★4 水・弓） | AI生成・オリジナル（背景除去：isnet-anime） |
+| lydia.webp | リディア（★5 光・剣） | AI生成（背景除去：BiRefNet） |
+| soyo.webp | ソヨ（★3 風・癒） | AI生成（背景除去：isnet-anime） |
+| hayate.webp | ハヤテ（★3 風・剣） | AI生成（背景除去：BiRefNet） |

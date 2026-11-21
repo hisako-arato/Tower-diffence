@@ -1,6 +1,6 @@
 // オフライン対応用サービスワーカー
 // ファイルを更新したら VERSION を上げると、古いキャッシュが入れ替わる。
-const VERSION = 'v8.1.1';
+const VERSION = 'v8.2.0';
 const CACHE = 'kekkai-' + VERSION;
 const ASSETS = [
   './',
@@ -29,6 +29,9 @@ const ASSETS = [
   './assets/chars/xeno.webp',
   './assets/chars/karin.webp',
   './assets/chars/shigure.webp',
+  './assets/chars/lydia.webp',
+  './assets/chars/soyo.webp',
+  './assets/chars/hayate.webp',
 ];
 
 self.addEventListener('install', e => {
