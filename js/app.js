@@ -20,7 +20,15 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let save = TD.Save.load();
   let battle = null, currentStage = null;
-  const persist = () => TD.Save.store(save);
+  let saveWarned = false;
+  const persist = () => {
+    const ok = TD.Save.store(save);
+    if (!ok && !saveWarned) {
+      saveWarned = true;
+      setTimeout(() => alertBox('このブラウザではデータを保存できません（プライベートブラウズ等）。閉じると最初からになります。通常モードで開くか、ホーム画面に追加したアプリで遊んでください。'), 600);
+    }
+    return ok;
+  };
   const owns = id => save.owned.includes(id);
 
   // ---------- 共通 ----------
@@ -217,12 +225,18 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   const adv = new TD.Adv($('#adv'));
   function playStory(id, cb) {
     if (!TD.STORY[id]) { cb && cb(); return; }
-    adv.play(id, save.playerName || '召喚士', () => {
+    adv.play(id, save.playerName || '', () => {
       save.story[id] = true;
       persist();
       renderHome();
       cb && cb();
-    }, name => { save.playerName = name; persist(); naviSay(TD.NAVI_LINES[0]); });
+    }, name => {
+      // 名前を決めた時点でプロローグは「見た」ことにする（途中で閉じても再度聞かれない）
+      save.playerName = name;
+      if (id === 'prologue') save.story.prologue = true;
+      persist();
+      naviSay(TD.NAVI_LINES[0]);
+    });
   }
   const storyFor = (st, kind) => { const id = `${st.id}-${kind}`; return TD.STORY[id] ? id : null; };
 

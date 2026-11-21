@@ -37,6 +37,9 @@ TD.Save = {
     out.stats = Object.assign({ wins: 0, kills: 0, skills: 0, pulls: 0 }, s.stats);
     out.login = Object.assign({ last: '', day: 0, total: 0 }, s.login);
     out.achieved = out.achieved || {};
+    out.story = out.story || {};
+    // 名前入力までは済んでいる（プロローグを途中で閉じた）場合は、プロローグを見たことにする
+    if (out.playerName && !out.story.prologue) out.story.prologue = true;
     out.events = out.events || {};
     if (out.daily && !out.daily.claimed) out.daily = null;
     out.chars = out.chars || {};

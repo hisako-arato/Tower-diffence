@@ -196,10 +196,11 @@ TD.CHAPTERS = { 1: '第1章 結界のほころび', ev: 'イベントストー�
       });
     }
 
+    // player：プレイヤー名（未設定なら空）。名前が決まっていれば名前入力は出さない
     play(epId, player, onEnd, onName) {
       const ep = TD.STORY[epId];
       if (!ep) { onEnd && onEnd(); return; }
-      this.ep = ep; this.i = -1; this.player = player || '召喚士';
+      this.ep = ep; this.i = -1; this.hasName = !!player; this.player = player || '召喚士';
       this.onEnd = onEnd; this.onName = onName;
       this.slots = { left: null, right: null }; this.lastSlot = 'right';
       this.log = []; this.auto = false; this.mode = 'play'; this.skipAfterName = false;
@@ -285,6 +286,10 @@ TD.CHAPTERS = { 1: '第1章 結界のほころび', ev: 'イベントストー�
     }
 
     askName() {
+      if (this.hasName) { // 名前は設定済み：入力を飛ばして続きへ
+        if (this.skipAfterName) { this.mode = 'play'; this.finish(); } else this.next();
+        return;
+      }
       this.mode = 'input';
       clearInterval(this.typeT);
       const box = this.$('.adv-input'), inp = box.querySelector('input');
@@ -298,6 +303,7 @@ TD.CHAPTERS = { 1: '第1章 結界のほころび', ev: 'イベントストー�
         const v = this.$('.adv-input input').value.trim().replace(/[<>{}]/g, '').slice(0, 10);
         if (!v) { this.$('.adv-input input').focus(); return; }
         this.player = v;
+        this.hasName = true;
         this.onName && this.onName(v);
         this.$('.adv-input').classList.remove('show');
         this.mode = 'play';
@@ -332,7 +338,7 @@ TD.CHAPTERS = { 1: '第1章 結界のほころび', ev: 'イベントストー�
 
     finish() {
       // 名前入力が未完了のままスキップされた場合は入力だけは行う
-      const needName = this.ep.lines.slice(this.i + 1).some(l => l[0] === '@name');
+      const needName = !this.hasName && this.ep.lines.slice(this.i + 1).some(l => l[0] === '@name');
       if (needName && this.mode !== 'input') {
         this.skipAfterName = true;
         this.i = this.ep.lines.findIndex(l => l[0] === '@name') - 1;
