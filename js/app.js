@@ -85,7 +85,11 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const cleared = Object.keys(save.cleared).length;
     $('#home-name').textContent = save.playerName || '召喚士';
     $('#btn-install').hidden = !installPrompt;
-    $('#home-progress').textContent = `第1章 進行度 ${cleared}/${TD.STAGES.length}・英雄 ${save.owned.length}/${Object.keys(TD.CHARS).length}`;
+    const curIdx = TD.STAGES.findIndex(st => !save.cleared[st.id]);
+    const curCh = (TD.STAGES[curIdx] || TD.STAGES[TD.STAGES.length - 1]).chapter;
+    const chStages = TD.STAGES.filter(st => st.chapter === curCh);
+    const chCleared = chStages.filter(st => save.cleared[st.id]).length;
+    $('#home-progress').textContent = `${curCh.split(' ')[0]} 進行度 ${chCleared}/${chStages.length}・英雄 ${save.owned.length}/${Object.keys(TD.CHARS).length}`;
     if (TD.Live.ensureDaily(save)) persist();
     const n = TD.Live.claimableCount(save), badge = $('#mission-badge');
     badge.textContent = n; badge.hidden = !n;
@@ -254,7 +258,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       html += `<button class="story-item${read ? '' : ' locked'}" data-ep="${id}"><span class="si-title">${esc(ep.title)}</span>` +
         `<span class="si-sub">${read ? '▶ 再生' : '🔒 ' + storyUnlockHint(id)}</span></button>`;
     }
-    html += `<div class="story-next">第2章は近日公開予定です</div>`;
+    html += `<div class="story-next">第3章は近日公開予定です</div>`;
     list.innerHTML = html;
     list.querySelectorAll('[data-ep]').forEach(b => b.onclick = () => {
       const id = b.dataset.ep;
@@ -277,12 +281,14 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     updateCurrency();
     TD.Live.ensureDaily(save);
     const list = $('#stage-list');
-    list.innerHTML = `<div class="chapter-title">${TD.STAGES[0].chapter}</div>`;
+    list.innerHTML = '';
+    let lastCh = null;
     TD.STAGES.forEach((st, i) => {
+      if (st.chapter !== lastCh) { lastCh = st.chapter; list.insertAdjacentHTML('beforeend', `<div class="chapter-title">${esc(st.chapter)}</div>`); }
       const open = stageUnlocked(i), best = save.cleared[st.id] || 0;
       const el = document.createElement('button');
       el.className = 'stage-item' + (open ? '' : ' locked') + (st.waves.some(w => TD.ENEMIES[w.e].boss) ? ' boss' : '');
-      el.innerHTML = `<span class="st-id">${st.id}</span><span class="st-name">${st.name}<small>経験の書 ×${TD.stageExp(st)}</small></span>` +
+      el.innerHTML = `<span class="st-id">${st.id}</span><span class="st-name">${st.name}<small>${st.recLv ? `推奨Lv${st.recLv}・` : ''}経験の書 ×${TD.stageExp(st)}</small></span>` +
         `<span class="st-stars">${open ? TD.starsHTML(best, 3) : '🔒'}</span>`;
       const unreadStory = open && [storyFor(st, 'pre'), storyFor(st, 'post')].some(id => id && !save.story[id]);
       if (unreadStory) el.insertAdjacentHTML('beforeend', '<span class="st-story">STORY</span>');
@@ -318,6 +324,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="brief-navi"><span class="mini-navi"></span><p>${esc(st.brief)}</p></div>` +
       `<div class="brief-sec">出現する敵</div><ul class="enemy-list">${enemies}</ul>` +
       `<div class="brief-sec">出撃メンバー</div><div class="brief-party">${party}</div>` +
+      (st.recLv ? (() => { const avg = Math.round(save.party.reduce((a, id) => a + save.chars[id].lv, 0) / save.party.length);
+        return `<div class="brief-rec${avg < st.recLv ? ' low' : ''}">推奨Lv ${st.recLv}<small>（編成の平均 Lv${avg}${avg < st.recLv ? '・育成すると楽になります' : ''}）</small></div>`; })() : '') +
       `<div class="brief-sub">ライフ ${st.lives}・初期マナ ${st.mana}<br>報酬：${rewardText}</div>` +
       `<div class="btn-row"><button class="btn ghost" data-act="party">編成する</button><button class="btn primary" data-act="go">出撃！</button></div>`);
     body.querySelector('[data-act=party]').onclick = () => { closeModal(); show('screen-party'); };

@@ -776,3 +776,8 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .res-reward small.bonus { display: inline; font-size: 11px; color: #ffd08a; margin-left: 4px; }
 .cd-stats span { white-space: nowrap; gap: 4px; }
 .cd-stats b small { font-size: 9px; margin-left: 2px; }
+
+/* ========== 推奨レベル ========== */
+.brief-rec { margin-top: 12px; font-size: 14px; font-weight: 800; color: #7dffa0; }
+.brief-rec small { font-size: 11px; font-weight: 500; color: var(--muted); margin-left: 4px; }
+.brief-rec.low { color: #ff9a7a; }

@@ -111,6 +111,12 @@ window.TD = window.TD || {};
           g.fillStyle = 'rgba(255,255,255,.06)';
           g.fillRect(px + 10, py + 12, 2, 6); g.fillRect(px + 27, py + 22, 2, 6);
         }
+        if (ch === '~') { // 水辺（配置不可）
+          g.fillStyle = (x + y) % 2 ? '#2f6aa8' : '#3474b4';
+          g.fillRect(px, py, T, T);
+          g.strokeStyle = 'rgba(200,235,255,.35)'; g.lineWidth = 1.5;
+          for (const oy of [12, 26]) { g.beginPath(); g.moveTo(px + 6, py + oy); g.quadraticCurveTo(px + 13, py + oy - 4, px + 20, py + oy); g.quadraticCurveTo(px + 27, py + oy + 4, px + 34, py + oy); g.stroke(); }
+        }
         if (ch === 'x') {
           if ((x * 7 + y * 3) % 2) { // 木
             g.fillStyle = '#5b3d22'; g.fillRect(px + 17, py + 22, 6, 12);
@@ -542,7 +548,8 @@ window.TD = window.TD || {};
       const raw = power * m;
       const pc = src.def && src.def.passive && src.def.passive.type === 'pierce' ? src.def.passive : null;
       const edef = e.def.def * (e.defDownT > 0 ? e.defDownMult : 1) * (pc ? 1 - pc.ratio : 1);
-      const d = Math.round(Math.max(raw - edef, raw * 0.15));
+      // 防御は割合で軽減（防御100で半減）。レベルを上げた分がそのまま効くようにする
+      const d = Math.max(1, Math.round(raw * 100 / (100 + Math.max(0, edef))));
       e.hp -= d;
       e.flash = 0.12;
       const color = m > 1 ? '#ffd23f' : m < 1 ? '#a8b0b8' : '#ffffff';
@@ -644,7 +651,7 @@ window.TD = window.TD || {};
         if (e.frozen > 0) { e.frozen -= dt; if (e.frozen <= 0) e.bound = false; continue; }
         if (e.blockedBy && e.blockedBy.removed) e.blockedBy = null;
         // ボス：予兆付きの範囲攻撃
-        if (e.def.aoe && this.units.length) {
+        if (e.def.aoe && this.units.length && (!e.def.aoe.below || e.hp / e.maxHp <= e.def.aoe.below)) {
           e.aoeT = (e.aoeT || 0) + dt;
           if (e.aoeT >= e.def.aoe.every) { e.aoeT = 0; this.castAoe(e); }
         }
@@ -676,7 +683,7 @@ window.TD = window.TD || {};
           else { e.x += dx / d * move; e.y += dy / d * move; move = 0; }
         }
         for (const u of this.units) {
-          if (!u.melee || e.passed.has(u.id)) continue;
+          if (!u.melee || e.def.flying || e.passed.has(u.id)) continue;
           if (dist(e, u) < T * 0.45) {
             if (u.blocking.length < this.blockOf(u)) { u.blocking.push(e); e.blockedBy = u; e.cd = 0.3; }
             else e.passed.add(u.id);
@@ -940,7 +947,8 @@ window.TD = window.TD || {};
 
     drawEnemy(g, e) {
       const el = TD.ELEMENTS[e.def.element], s = e.size, bob = Math.sin(e.walk) * 1.5;
-      const x = e.x, y = e.y + (e.blockedBy || e.frozen > 0 ? 0 : bob);
+      const fly = e.def.flying ? 9 + Math.sin(e.walk * 0.6) * 2 : 0;
+      const x = e.x, y = e.y - fly + (e.blockedBy || e.frozen > 0 ? 0 : bob);
       g.fillStyle = 'rgba(0,0,0,.3)';
       g.beginPath(); g.ellipse(e.x, e.y + s * 0.8, s, s * 0.3, 0, 0, Math.PI * 2); g.fill();
       const body = e.flash > 0 ? '#ffffff' : e.frozen > 0 ? (e.bound ? '#ffc890' : '#bfe8ff') : e.slowT > 0 ? '#c8f5d8' : el.color;
@@ -963,6 +971,29 @@ window.TD = window.TD || {};
           g.beginPath(); g.ellipse(x, y, s, s * 0.85, 0, 0, Math.PI * 2); g.fill(); g.stroke();
           g.fillStyle = '#ffd36b';
           for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(x + i * 5 - 3, y - s * 0.7); g.lineTo(x + i * 5, y - s * 1.3); g.lineTo(x + i * 5 + 3, y - s * 0.7); g.fill(); }
+          break;
+        case 'harpy': { // 翼を羽ばたかせる鳥人
+          const flap = Math.sin(e.walk * 1.6) * 0.5;
+          g.save(); g.translate(x, y);
+          for (const sd of [-1, 1]) {
+            g.save(); g.scale(sd, 1); g.rotate(-0.3 + flap);
+            g.beginPath(); g.moveTo(s * 0.4, 0); g.quadraticCurveTo(s * 1.6, -s * 1.2, s * 2.0, s * 0.2); g.quadraticCurveTo(s * 1.2, -s * 0.1, s * 0.4, s * 0.5); g.closePath(); g.fill(); g.stroke();
+            g.restore();
+          }
+          g.restore();
+          g.beginPath(); g.ellipse(x, y, s * 0.6, s * 0.8, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+          break;
+        }
+        case 'fish':
+          g.beginPath(); g.ellipse(x, y, s, s * 0.75, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+          g.beginPath(); g.moveTo(x - s * 0.3, y - s * 0.7); g.lineTo(x, y - s * 1.4); g.lineTo(x + s * 0.4, y - s * 0.7); g.closePath(); g.fill(); g.stroke();
+          g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.ellipse(x, y + s * 0.3, s * 0.6, s * 0.25, 0, 0, Math.PI * 2); g.fill();
+          break;
+        case 'golem':
+          g.beginPath(); g.roundRect(x - s, y - s, s * 2, s * 1.9, 5); g.fill(); g.stroke();
+          g.fillStyle = 'rgba(255,255,255,.45)';
+          g.beginPath(); g.moveTo(x - s * 0.7, y - s * 0.6); g.lineTo(x - s * 0.2, y - s * 0.9); g.lineTo(x - s * 0.4, y - s * 0.3); g.closePath(); g.fill();
+          g.beginPath(); g.moveTo(x + s * 0.5, y + s * 0.2); g.lineTo(x + s * 0.8, y - s * 0.2); g.lineTo(x + s * 0.7, y + s * 0.5); g.closePath(); g.fill();
           break;
         case 'mage':
           g.beginPath(); g.moveTo(x, y - s * 1.6); g.lineTo(x + s, y + s * 0.8); g.lineTo(x - s, y + s * 0.8); g.closePath(); g.fill(); g.stroke();

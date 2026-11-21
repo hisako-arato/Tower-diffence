@@ -20,6 +20,7 @@ TD.Save = {
       giftReceived: false,
       playerName: '',     // ストーリーで入力するプレイヤー名
       story: {},          // 既読エピソード { prologue: true }
+      stageVer: 2,        // ステージ構成のバージョン（データ移行用）
       daily: null,        // その日のミッション進捗（TD.Live.ensureDaily で生成）
       stats: { wins: 0, kills: 0, skills: 0, pulls: 0 },  // 通算記録
       achieved: {},       // 受け取り済みの通常ミッション
@@ -38,6 +39,13 @@ TD.Save = {
     out.login = Object.assign({ last: '', day: 0, total: 0 }, s.login);
     out.achieved = out.achieved || {};
     out.story = out.story || {};
+    // ステージ構成の変更（旧1-4のボス戦 → 1-5）に合わせてデータを移す
+    if (!(s && s.stageVer >= 2)) {
+      if (out.cleared['1-4']) out.cleared['1-5'] = out.cleared['1-4'];
+      if (out.story['1-4-pre']) { out.story['1-5-pre'] = true; delete out.story['1-4-pre']; }
+      if (out.story['1-4-post']) { out.story['1-5-post'] = true; delete out.story['1-4-post']; }
+      out.stageVer = 2;
+    }
     // 名前入力までは済んでいる（プロローグを途中で閉じた）場合は、プロローグを見たことにする
     if (out.playerName && !out.story.prologue) out.story.prologue = true;
     out.events = out.events || {};
