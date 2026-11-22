@@ -590,7 +590,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     };
     box.innerHTML =
       `<div class="cd-head"><div class="cd-full">${TD.fullArtHTML(id)}</div><div><div class="cd-title">${base.title}</div>` +
-      `<div class="cd-name">${base.name}</div>${TD.starsHTML(base.rarity, 0)} ${TD.elemChip(base.element)}<span class="chip role">${r.name}</span></div></div>` +
+      `<div class="cd-name">${base.name}</div>${TD.starsHTML(base.rarity, 0)} ${TD.elemChip(base.element)}<span class="chip role">${r.name}</span>${base.kind ? `<span class="chip kind-${base.kind}">${TD.KIND_LABEL[base.kind]}</span>` : ''}</div></div>` +
       `<div class="cd-grow"><div class="cd-lv">Lv <b>${prog.lv}</b><small>/${maxLv}</small></div>` +
       `<div class="cd-lb">限界突破 ${TD.lbHTML(prog.lb)}<small>${prog.lb < TD.GROWTH.maxLB ? '同じ英雄の欠片を召喚すると突破' : '欠片がすべて集まりました'}</small></div></div>` +
       (base.profile ? `<div class="cd-profile">${base.profile}</div>` : '') +

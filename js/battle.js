@@ -35,7 +35,10 @@ window.TD = window.TD || {};
 
       this.time = 0;
       this.mana = stage.mana;
-      this.maxLives = this.lives = stage.lives;
+      // 出撃メンバーのユニークスキル（出撃メンバーにいるだけで有効）
+      this.puniq = {};
+      for (const p of party) { const u = p.def.unique; if (u && u.party) this.puniq[u.type] = u; }
+      this.maxLives = this.lives = stage.lives + (this.puniq.lifeUp ? this.puniq.lifeUp.add : 0);
       this.units = [];
       this.enemies = [];
       this.shots = [];
@@ -249,6 +252,8 @@ window.TD = window.TD || {};
         hp: d.hp, maxHp: d.hp, sp: 0, cd: 0.4, blocking: [], buff: null, buffT: 0,
         melee: TD.ROLES[d.role].melee, flash: 0, angle: -Math.PI / 2,
       };
+      if (this.puniq.startSp && d.skill && !card.deployedOnce) u.sp = d.skill.sp / 2;
+      card.deployedOnce = true;
       this.units.push(u);
       card.state = 'deployed';
       card.unit = u;
@@ -274,7 +279,7 @@ window.TD = window.TD || {};
         this.mana = Math.min(99, this.mana + refund);
         this.pop(u.x, u.y - 20, `撤退 +${refund}`, '#9be7ff', { size: 12 });
       } else {
-        card.cd = TD.redeployTime(card.def);
+        card.cd = TD.redeployTime(card.def) * (this.puniq.deathRedeploy ? this.puniq.deathRedeploy.mult : 1);
         this.fx.push({ type: 'burst', x: u.x, y: u.y, t: 0, dur: 0.5, color: '#ff8a8a' });
         this.pop(u.x, u.y - 20, '戦闘不能', '#ff8a8a', { size: 12 });
       }
@@ -282,7 +287,7 @@ window.TD = window.TD || {};
       this.refreshCards(true);
     }
 
-    refundOf(def) { return Math.floor(def.cost * TD.RETREAT.refundRate); }
+    refundOf(def) { return Math.floor(def.cost * (this.puniq.retreatRefund ? this.puniq.retreatRefund.rate : TD.RETREAT.refundRate)); }
     retreatLabel(u) {
       return `撤退（マナ+${this.refundOf(u.def)}・再配置まで${Math.ceil(TD.retreatCooldown(u.def, u.hp / u.maxHp))}秒）`;
     }
@@ -610,7 +615,7 @@ window.TD = window.TD || {};
       u.hp -= d;
       u.flash = 0.12;
       this.pop(u.x, u.y - 20, String(d), '#ff7a7a', { size: 11 });
-      if (e && e.def && e.def.poisonOnHit) {
+      if (e && e.def && e.def.poisonOnHit && !this.puniq.poisonImmune) {
         if (!(u.poisonT > 0)) this.pop(u.x, u.y - 32, '毒', '#c070ff', { size: 11 });
         u.poisonT = e.def.poisonOnHit.dur; u.poisonRatio = e.def.poisonOnHit.ratio;
       }
@@ -827,7 +832,7 @@ window.TD = window.TD || {};
         if (n > bn) { bn = n; best = u; }
       }
       if (!best) return;
-      this.warns.push({ x: best.x, y: best.y, r, t: 0, warn: a.warn, power: e.atk * a.mult, src: e });
+      this.warns.push({ x: best.x, y: best.y, r, t: 0, warn: a.warn, power: e.atk * a.mult * (this.puniq.aoeHalf ? this.puniq.aoeHalf.mult : 1), src: e });
     }
 
     updateWarns(dt) {
