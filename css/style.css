@@ -818,3 +818,32 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 #summon-info small { font-size: 12px; color: var(--muted); display: inline; }
 .rate-table small.frag { display: block; font-size: 10px; color: var(--muted); }
 .sf-card em.new { background: #ff4f7a; }
+
+/* ========== 副官 ========== */
+.home-stage { position: relative; width: 100%; flex: 1; min-height: 0; display: flex; align-items: flex-end; justify-content: center; }
+#adjutant { background: none; border: none; padding: 0; height: 100%; max-height: 360px; width: min(82vw, 360px); display: flex; align-items: flex-end; justify-content: center; animation: float 4s ease-in-out infinite; }
+#adjutant .full-art { width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; }
+#adjutant .full-art svg, #adjutant .full-art img { width: auto; max-width: 100%; height: auto; max-height: 100%; object-fit: contain; }
+#adjutant.poke { animation: poke .4s ease, float 4s ease-in-out .4s infinite; }
+.home-stage #navi { position: absolute; right: 2px; bottom: 6px; width: min(24vw, 96px); z-index: 2; filter: drop-shadow(0 0 8px rgba(140, 220, 255, .6)); }
+.home-stage .navi-name { position: absolute; right: 8px; bottom: -8px; z-index: 2; font-size: 10px; }
+.adj-plate { position: relative; z-index: 3; display: flex; align-items: center; gap: 6px; margin: 4px 0 2px; padding: 5px 14px; border-radius: 999px; background: rgba(10, 8, 22, .75); border: 1px solid var(--gold); font-size: 12px; }
+.adj-plate:empty { display: none; }
+.ap-tag { font-size: 10px; font-weight: 900; padding: 1px 6px; border-radius: 4px; background: var(--gold); color: #3a2400; }
+.ap-title { color: var(--muted); font-size: 11px; }
+.ap-name { font-weight: 900; font-size: 14px; }
+.ap-lv { color: #cfe9ff; font-weight: 700; }
+#party-slots .slot.adj { border-color: var(--gold); background: linear-gradient(180deg, rgba(242, 201, 76, .22), var(--panel) 70%); position: relative; }
+.slot-tag { position: absolute; top: -7px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: 9px; font-weight: 900; padding: 0 6px; border-radius: 4px; background: var(--gold); color: #3a2400; white-space: nowrap; }
+#party-stars { margin-top: 6px; font-size: 12px; color: var(--muted); }
+#party-stars b { color: #fff; font-size: 14px; }
+#party-stars.over b { color: #ff7a6a; }
+#party-stars em { display: block; font-style: normal; color: #ff9a7a; font-size: 11px; }
+.party-btns { margin-top: 0; }
+.party-btns .btn { flex: 1; }
+.adj-now { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--gold); color: var(--gold); font-weight: 800; font-size: 13px; background: rgba(242, 201, 76, .08); min-height: 46px; }
+.adj-now small { font-size: 10px; color: var(--muted); font-weight: 500; }
+.brief-stars { margin-left: 8px; font-size: 11px; color: var(--muted); letter-spacing: 0; }
+.brief-stars.over { color: #ff7a6a; }
+.bp.adj small { color: var(--gold); font-weight: 900; }
+.card.adjutant::before { content: "👑"; position: absolute; top: -9px; right: -5px; font-size: 14px; z-index: 3; filter: drop-shadow(0 1px 1px #000); }

@@ -840,3 +840,10 @@ TD.retreatCooldown = function (def, hpRatio) {
   const r = Math.max(0, Math.min(1, hpRatio));
   return Math.max(TD.RETREAT.minCooldown, TD.redeployTime(def) * (1 - r));
 };
+
+// ========== 副官 ==========
+// 出撃メンバーの1人目は「召喚士の副官」。ステータス補正を受け、ホーム画面に表示される。
+// 副官以外のメンバーは、★の合計が starCap 以下になるようにしか編成できない。
+TD.ADJUTANT = { statMult: 1.2, starCap: 22 };
+TD.partyStars = party => party.slice(1).reduce((a, id) => a + (TD.CHARS[id] ? TD.CHARS[id].rarity : 0), 0);
+TD.partyValid = party => party.length > 0 && TD.partyStars(party) <= TD.ADJUTANT.starCap;

@@ -53,6 +53,8 @@
 
     <div class="navi-area">
       <div id="navi-bubble" class="bubble">おかえりなさい、召喚士さま！</div>
+      <div class="home-stage">
+      <button id="adjutant" aria-label="副官"></button>
       <button id="navi" aria-label="精霊ルミナ">
         <svg viewBox="0 0 200 250" aria-hidden="true">
           <defs>
@@ -79,7 +81,9 @@
           <path d="M92 58 l8 -14 l8 14 l-8 -4 z" fill="#ffe27a"/>
         </svg>
       </button>
-      <div class="navi-name">結界の精霊 ルミナ</div>
+      <div class="navi-name">ルミナ</div>
+      </div>
+      <div class="adj-plate" id="adj-plate"></div>
     </div>
 
     <button id="home-event" class="home-event" hidden></button>
@@ -109,8 +113,9 @@
       <button class="back" data-go="screen-stages">出撃 ›</button>
     </header>
     <div class="party-top">
-      <div class="pt-head"><span class="sec-label">出撃メンバー（最大6人）</span><button class="currency" data-cur="books"><small class="cur-label grow">育成</small><i class="expbook"></i><span class="crystals-val">0</span></button></div>
+      <div class="pt-head"><span class="sec-label">出撃メンバー（副官＋5人）</span><button class="currency" data-cur="books"><small class="cur-label grow">育成</small><i class="expbook"></i><span class="crystals-val">0</span></button></div>
       <div id="party-slots"></div>
+      <div id="party-stars"></div>
       <div id="roster-filter"></div>
     </div>
     <div class="scroll roster-scroll">

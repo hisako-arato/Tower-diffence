@@ -148,7 +148,7 @@ window.TD = window.TD || {};
       wrap.innerHTML = '';
       for (const card of this.cards) {
         const d = card.def, el = document.createElement('button');
-        el.className = `card el-${d.element}${d.skill ? '' : ' passive'}`;
+        el.className = `card el-${d.element}${d.skill ? '' : ' passive'}${d.adjutant ? ' adjutant' : ''}`;
         el.innerHTML =
           `<span class="c-cost">${d.cost}</span>` +
           ((d.traits || []).includes('fastRedeploy') ? `<span class="c-trait" title="高速再配置">⚡</span>` : '') +
@@ -931,6 +931,11 @@ window.TD = window.TD || {};
       g.strokeStyle = '#1b1410'; g.lineWidth = 3.5;
       g.beginPath(); g.arc(u.x, u.y, 15, 0, Math.PI * 2); g.stroke();
       g.strokeStyle = rc; g.lineWidth = 2; g.stroke();
+      if (u.def.adjutant) { // 副官の王冠
+        g.fillStyle = '#ffd23f'; g.strokeStyle = '#7a4a08'; g.lineWidth = 1;
+        g.beginPath(); g.moveTo(u.x - 7, u.y - 15); g.lineTo(u.x - 7, u.y - 21); g.lineTo(u.x - 3.5, u.y - 18); g.lineTo(u.x, u.y - 23);
+        g.lineTo(u.x + 3.5, u.y - 18); g.lineTo(u.x + 7, u.y - 21); g.lineTo(u.x + 7, u.y - 15); g.closePath(); g.fill(); g.stroke();
+      }
       // 向き
       g.fillStyle = '#fff';
       g.beginPath(); g.arc(u.x + Math.cos(u.angle) * 16, u.y + Math.sin(u.angle) * 16, 2.5, 0, Math.PI * 2); g.fill();

@@ -83,6 +83,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   let lineIdx = 0;
   function renderHome() {
     updateCurrency();
+    renderAdjutant();
     const cleared = Object.keys(save.cleared).length;
     $('#home-name').textContent = save.playerName || '召喚士';
     $('#btn-install').hidden = !installPrompt;
@@ -109,6 +110,24 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     b.textContent = text.replace(/\{name\}/g, save.playerName || '召喚士');
     b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
   }
+  // ---------- 副官（ホーム） ----------
+  let adjLine = 0;
+  function renderAdjutant() {
+    const id = save.party[0], box = $('#adjutant'), plate = $('#adj-plate');
+    if (!id) { box.innerHTML = ''; plate.innerHTML = ''; return; }
+    if (box.dataset.id !== id) { box.innerHTML = TD.fullArtHTML(id); box.dataset.id = id; }
+    const d = TD.CHARS[id];
+    plate.innerHTML = `<span class="ap-tag">副官</span><span class="ap-title">${esc(d.title)}</span><span class="ap-name">${esc(d.name)}</span>${TD.starsHTML(d.rarity, 0)}<span class="ap-lv">Lv${save.chars[id].lv}</span>`;
+  }
+  $('#adjutant').addEventListener('click', () => {
+    const id = save.party[0]; if (!id) return;
+    const d = TD.CHARS[id], lines = [d.lines.deploy, d.lines.skill].filter(Boolean);
+    const b = $('#navi-bubble');
+    b.textContent = `${d.name}「${lines[adjLine++ % lines.length]}」`;
+    b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+    const a = $('#adjutant'); a.classList.remove('poke'); void a.offsetWidth; a.classList.add('poke');
+  });
+
   $('#navi').addEventListener('click', () => {
     lineIdx = (lineIdx + 1) % TD.NAVI_LINES.length;
     naviSay(TD.NAVI_LINES[lineIdx]);
@@ -315,7 +334,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       const e = TD.ENEMIES[t];
       return `<li>${TD.elemChip(e.element)}${esc(e.name)}${e.boss ? ' <b class="boss-tag">BOSS</b>' : ''}</li>`;
     }).join('');
-    const party = save.party.map(id => `<span class="bp">${TD.portraitHTML(id)}<small>Lv${save.chars[id].lv}</small></span>`).join('');
+    const party = save.party.map((id, i) => `<span class="bp${i === 0 ? ' adj' : ''}">${TD.portraitHTML(id)}<small>${i === 0 ? '副官' : 'Lv' + save.chars[id].lv}</small></span>`).join('');
     const first = !save.cleared[st.id];
     const rewardText = st.type === 'daily' ? `経験の書 ×${TD.stageExp(st)}（本日あと${TD.Live.runsLeft(save, st)}回）`
       : st.type === 'event' ? `${TD.EVENT.currency} ×${st.eventPoints}・経験の書 ×${TD.stageExp(st)}${first ? `・魔晶石 ×${st.reward}（初回）` : ''}`
@@ -324,13 +343,14 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="brief-head"><span class="st-id">${st.id}</span>${esc(st.name)}</div>` +
       `<div class="brief-navi"><span class="mini-navi"></span><p>${esc(st.brief)}</p></div>` +
       `<div class="brief-sec">出現する敵</div><ul class="enemy-list">${enemies}</ul>` +
-      `<div class="brief-sec">出撃メンバー</div><div class="brief-party">${party}</div>` +
+      `<div class="brief-sec">出撃メンバー<small class="brief-stars${TD.partyValid(save.party) ? '' : ' over'}">副官以外の★ ${TD.partyStars(save.party)} / ${TD.ADJUTANT.starCap}</small></div><div class="brief-party">${party}</div>` +
       (st.recLv ? (() => { const avg = Math.round(save.party.reduce((a, id) => a + save.chars[id].lv, 0) / save.party.length);
         return `<div class="brief-rec${avg < st.recLv ? ' low' : ''}">推奨Lv ${st.recLv}<small>（編成の平均 Lv${avg}${avg < st.recLv ? '・育成すると楽になります' : ''}）</small></div>`; })() : '') +
       `<div class="brief-sub">ライフ ${st.lives}・初期マナ ${st.mana}<br>報酬：${rewardText}</div>` +
       `<div class="btn-row"><button class="btn ghost" data-act="party">編成する</button><button class="btn primary" data-act="go">出撃！</button></div>`);
     body.querySelector('[data-act=party]').onclick = () => { closeModal(); show('screen-party'); };
     body.querySelector('[data-act=go]').onclick = () => {
+      if (!partyOk()) return;
       closeModal();
       const pre = st.type === 'event' && !save.story[TD.EVENT.story] ? TD.EVENT.story : storyFor(st, 'pre');
       if (pre && !save.story[pre]) playStory(pre, () => startBattle(st));
@@ -344,13 +364,25 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     lives: $('#hud-lives'), enemies: $('#hud-enemies'), menu: $('#unit-menu'), cutin: $('#cutin'), toast: $('#battle-toast'),
   };
 
+  function partyOk() {
+    if (TD.partyValid(save.party)) return true;
+    alertBox(`副官以外の★の合計が${TD.partyStars(save.party)}で、上限${TD.ADJUTANT.starCap}を超えています。編成を見直してください`);
+    return false;
+  }
   function startBattle(st) {
     if (battle) battle.destroy();
     currentStage = st;
     show('screen-battle');
     $('#hud-stage').textContent = `${st.id} ${st.name}`;
     $('#btn-speed').textContent = '▶ x1';
-    const party = save.party.map(id => ({ id, def: TD.charStats(id, save.chars[id]) }));
+    const party = save.party.map((id, i) => {
+      const def = TD.charStats(id, save.chars[id]);
+      if (i === 0) { // 副官補正
+        const m = TD.ADJUTANT.statMult;
+        Object.assign(def, { hp: Math.round(def.hp * m), atk: Math.round(def.atk * m), def: Math.round(def.def * m), adjutant: true });
+      }
+      return { id, def };
+    });
     battle = new TD.Battle(st, party, bEls, onBattleEnd);
     TD.currentBattle = battle;
     const banner = $('#battle-banner');
@@ -430,7 +462,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     on('retry', () => {
       leave();
       if (st.type === 'daily' && TD.Live.runsLeft(save, st) <= 0) { show('screen-stages'); alertBox('本日の挑戦回数は終了しました'); }
-      else startBattle(st);
+      else if (partyOk()) startBattle(st);
     });
     on('stages', () => { leave(); show(back); });
   }
@@ -475,11 +507,14 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     slots.innerHTML = '';
     for (let i = 0; i < 6; i++) {
       const id = save.party[i], el = document.createElement('button');
-      el.className = 'slot' + (id ? '' : ' empty') + (id && id === partySel && sheetOpen() ? ' sel' : '');
-      el.innerHTML = id ? `${TD.portraitHTML(id)}<span>Lv${save.chars[id].lv}</span>` : '<span>空き</span>';
+      el.className = 'slot' + (id ? '' : ' empty') + (i === 0 ? ' adj' : '') + (id && id === partySel && sheetOpen() ? ' sel' : '');
+      el.innerHTML = (i === 0 ? '<em class="slot-tag">副官</em>' : '') + (id ? `${TD.portraitHTML(id)}<span>${i === 0 ? '👑 ' : ''}Lv${save.chars[id].lv}</span>` : '<span>空き</span>');
       if (id) el.addEventListener('click', () => openSheet(id));
       slots.appendChild(el);
     }
+    const stars = TD.partyStars(save.party), cap = TD.ADJUTANT.starCap;
+    $('#party-stars').innerHTML = `副官以外の★ <b>${stars}</b> / ${cap}` + (stars > cap ? '<em>上限を超えています。誰かを外すまで出撃できません</em>' : '');
+    $('#party-stars').classList.toggle('over', stars > cap);
     renderFilter();
     const roster = $('#roster'), scroller = $('.roster-scroll'), keepTop = scroller.scrollTop;
     roster.style.minHeight = roster.offsetHeight + 'px'; // 作り直しの間に高さが縮んでスクロール位置が飛ばないようにする
@@ -555,7 +590,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       (base.skill
         ? `<div class="cd-skill"><div class="cd-skill-name">スキル「${base.skill.name}」<small>SP ${base.skill.sp}・タップで発動</small></div><div>${base.skill.desc}</div></div>`
         : `<div class="cd-skill passive"><div class="cd-skill-name">常時スキル「${base.passive.name}」<small>配置中ずっと有効</small></div><div>${base.passive.desc}</div></div>`) +
-      `<button class="btn ${inParty ? 'ghost' : 'primary'}" id="btn-toggle-party">${inParty ? '編成から外す' : '編成に加える'}</button>`;
+      `<div class="btn-row party-btns">` +
+      (save.party[0] === id ? `<div class="adj-now">👑 副官に任命中<small>HP・攻撃・防御 +${Math.round((TD.ADJUTANT.statMult - 1) * 100)}%</small></div>` : `<button class="btn ghost" id="btn-adjutant">👑 副官に任命</button>`) +
+      `<button class="btn ${inParty ? 'ghost' : 'primary'}" id="btn-toggle-party">${inParty ? '編成から外す' : '編成に加える'}</button></div>`;
     box.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => {
       const to = +b.dataset.lv, cost = lvUpCost(prog.lv, to);
       if (cost > save.crystals || to <= prog.lv) return;
@@ -572,11 +609,27 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
         if (save.party.length <= 1) { alertBox('最低1人は編成してください'); return; }
         save.party = save.party.filter(x => x !== id);
       } else {
-        if (save.party.length >= 6) { alertBox('編成は最大6人までです。誰かを外してください'); return; }
-        save.party.push(id);
+        if (save.party.length >= 6) { alertBox('編成は最大6人（副官＋5人）までです。誰かを外してください'); return; }
+        const next = [...save.party, id];
+        if (!TD.partyValid(next)) { alertBox(`副官以外の★の合計が${TD.ADJUTANT.starCap}を超えるため編成できません（編成すると${TD.partyStars(next)}）`); return; }
+        save.party = next;
       }
       persist();
       renderParty();
+    };
+    const adjBtn = $('#btn-adjutant');
+    if (adjBtn) adjBtn.onclick = () => {
+      let next;
+      if (inParty) next = [id, ...save.party.filter(x => x !== id)];
+      else {
+        if (save.party.length >= 6) { alertBox('編成は最大6人（副官＋5人）までです。誰かを外してください'); return; }
+        next = [id, ...save.party];
+      }
+      if (!TD.partyValid(next)) { alertBox(`副官を交代すると、副官以外の★の合計が${TD.partyStars(next)}になり、上限${TD.ADJUTANT.starCap}を超えます。先に誰かを外してください`); return; }
+      save.party = next;
+      persist();
+      renderParty();
+      renderHome();
     };
   }
 
