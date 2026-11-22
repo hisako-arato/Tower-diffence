@@ -862,3 +862,10 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .chip.kind-tech { background: #1a5a6a; border-color: #6adfff; }
 
 .cd-stats span.wide2 { grid-column: span 2; }
+
+.cd-sortie { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: rgba(242, 201, 76, .08); border: 1px solid rgba(242, 201, 76, .4); }
+.cs-title { font-size: 12px; font-weight: 800; color: var(--gold); }
+.cs-title small { font-weight: 500; color: var(--muted); margin-left: 4px; font-size: 10px; }
+.cs-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 4px; font-size: 11px; color: var(--muted); }
+.cs-row b { color: #fff; font-size: 14px; margin-left: 4px; }
+.cs-row small { color: #7dffa0; margin-left: 3px; font-size: 10px; }

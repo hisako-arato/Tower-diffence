@@ -582,6 +582,17 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const pv = base.passive;
     const next = prog.lv < maxLv ? TD.charStats(id, { lv: prog.lv + 1, lb: prog.lb }) : null;
     const up = (k) => next ? `<em>→${next[k]}</em>` : '';
+    // 出撃時の数値（副官の補正とユニークスキルを反映）
+    const sortieHTML = () => {
+      if (!inParty) return '';
+      const f = TD.partyEffects(save.party, d), am = save.party[0] === id ? TD.ADJUTANT.statMult : 1;
+      const v = { hp: Math.round(d.hp * am * (1 + f.hp)), atk: Math.round(d.atk * am * (1 + f.atk)), def: Math.round(d.def * am * (1 + f.def)) };
+      if (v.hp === d.hp && v.atk === d.atk && v.def === d.def) return '';
+      const pct = (a, b) => b === a ? '' : `<small>+${Math.round((b / a - 1) * 100)}%</small>`;
+      const src = [am > 1 ? '副官' : '', f.hp || f.atk || f.def ? 'ユニークスキル' : ''].filter(Boolean).join('・');
+      return `<div class="cd-sortie"><div class="cs-title">出撃時のステータス<small>（${src}の効果込み）</small></div>` +
+        `<div class="cs-row"><span>HP<b>${v.hp}</b>${pct(d.hp, v.hp)}</span><span>${base.role === 'priest' ? '回復' : '攻撃'}<b>${dps(v.atk)}</b>${pct(d.atk, v.atk)}</span><span>防御<b>${v.def}</b>${pct(d.def, v.def)}</span></div></div>`;
+    };
     // 攻撃・回復は1秒あたりの量（攻撃力 ÷ 攻撃間隔）で表示する
     const dps = v => Math.round(v / d.interval);
     // 所持している経験の書で上げられる最大レベル
@@ -600,8 +611,10 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="cd-role">${r.desc}</div>` +
       `<div class="cd-stats"><span>HP<b>${d.hp}${up('hp')}</b></span><span>${base.role === 'priest' ? '回復' : '攻撃'}<b>${dps(d.atk)}${next ? `<em>→${dps(next.atk)}</em>` : ''}</b></span><span>防御<b>${d.def}${up('def')}</b></span>` +
       `<span>コスト<b>${d.cost}</b></span><span>射程<b>${pv && pv.type === 'range' ? `${+(d.range * pv.mult).toFixed(1)}<small>(${d.range}×${pv.mult})</small>` : d.range}</b></span>` +
+      (d.splash ? `<span>範囲<b>${pv && pv.type === 'splash' ? `${+(d.splash * pv.mult).toFixed(2)}マス<small>(${d.splash}×${pv.mult})</small>` : d.splash + 'マス'}</b></span>` : '') +
       (r.melee ? `<span>ブロック<b>${pv && (pv.type === 'blockMult' || pv.blockMult) ? (m => `${Math.floor(d.block * m)}<small>(${d.block}×${m})</small>`)(pv.type === 'blockMult' ? pv.mult : pv.blockMult) : d.block}</b></span>` : '') +
-      `<span class="${r.melee ? 'wide' : 'wide2'}">再配置<b>${Math.round(TD.redeployTime(d))}秒<small>（撤退時 ${TD.RETREAT.minCooldown}〜${Math.round(TD.redeployTime(d))}秒）</small></b></span></div>` +
+      `<span class="${r.melee || d.splash ? 'wide' : 'wide2'}">再配置<b>${Math.round(TD.redeployTime(d))}秒<small>（撤退時 ${TD.RETREAT.minCooldown}〜${Math.round(TD.redeployTime(d))}秒）</small></b></span></div>` +
+      sortieHTML() +
       `<div class="cd-levelup"><div class="cd-own"><i class="expbook"></i> 経験の書 <b>${save.crystals}</b></div>` +
       (prog.lv < maxLv
         ? `<div class="lv-row">${lvBtn('+1', prog.lv + 1)}${lvBtn('+5', prog.lv + 5)}${lvBtn('最大', Math.max(affordable, prog.lv + 1))}</div>`
