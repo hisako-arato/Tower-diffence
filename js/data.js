@@ -1041,4 +1041,4 @@ TD.partyEffectsText = function (party) {
 };
 
 // 2回目以降のクリアでもらえる魔晶石（本編ステージ）。★3でクリアすると多くもらえる
-TD.REPEAT_REWARD = { base: 15, star3: 20 };
+TD.REPEAT_REWARD = { base: 30, star3: 40 };
