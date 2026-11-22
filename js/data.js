@@ -142,7 +142,7 @@ TD.CHARS = {
   },
   akane: {
     name: 'アカネ', title: '異界の剣道少女', rarity: 4, kind: 'tech', element: 'wind', role: 'sword',
-    unique: { name: '異界の剣気', type: 'startSp', party: true, short: '開始時ゲージ半分', desc: '出撃メンバーにいると、味方全員の発動スキルのゲージが半分たまった状態で配置される（各キャラの最初の配置のみ）' },
+    unique: { name: '異界の剣気', type: 'duo', partner: 'shizuku', count: 2, desc: 'シズクと共に編成されている場合、アカネの攻撃は2体に当たるようになる' },
     cost: 8, hp: 1089, atk: 123, def: 40, interval: 0.8, range: 1.6, block: 1, redeploy: 20,
     profile: '召喚の儀のはずみで、異世界の学校から呼ばれてしまった剣道部員。',
     skill: { name: '一閃・疾風', type: 'execute', sp: 15, mult: 6, mana: 6,
@@ -151,7 +151,7 @@ TD.CHARS = {
   },
   shizuku: {
     name: 'シズク', title: '腹ペコ弓道少女', rarity: 4, kind: 'tech', element: 'dark', role: 'archer',
-    unique: { name: '腹ペコの知恵', type: 'retreatRefund', rate: 0.75, party: true, short: '撤退マナ75%', desc: '出撃メンバーにいると、撤退したときに戻るマナが半分から75%になる' },
+    unique: { name: '腹ペコの絆', type: 'duo', partner: 'akane', count: 2, desc: 'アカネと共に編成されている場合、シズクの攻撃は2体に当たるようになる' },
     cost: 8, hp: 678, atk: 68, def: 13, interval: 1.0, range: 3.4, redeploy: 20,
     profile: 'アカネと一緒に異世界から呼ばれた弓道部員。肉まんがあれば戦える。',
     skill: { name: '肉まん配給', type: 'battery', sp: 20, amount: 10,
@@ -1055,9 +1055,9 @@ for (const [id, d] of Object.entries(TD.CHARS)) {
 // ユニークスキルの一覧（編成効果・特性・個別の効果）
 TD.uniquesOf = function (d) {
   const a = [];
-  if (d.partyFx) a.push({ name: d.partyFx.name, desc: d.partyFx.desc, note: '出撃メンバーにいるだけで有効・重ねがけ可' });
+  if (d.partyFx) a.push({ name: d.partyFx.name, desc: d.partyFx.desc, note: '重ねがけ可' });
   for (const k of d.traits || []) if (TD.TRAITS[k]) a.push({ name: TD.TRAITS[k].name, icon: TD.TRAITS[k].icon, desc: TD.TRAITS[k].desc, note: '' });
-  if (d.unique) a.push({ name: d.unique.name, desc: d.unique.desc, note: d.unique.party ? '出撃メンバーにいるだけで有効' : '' });
+  if (d.unique) a.push({ name: d.unique.name, desc: d.unique.desc, note: '' });
   return a;
 };
 

@@ -800,7 +800,11 @@ window.TD = window.TD || {};
         u.cd = d.interval;
         u.angle = Math.atan2(target.y - u.y, target.x - u.x);
         // 疾風二刀・風の双矢：射程内の別の敵にも同時に攻撃
-        const targets = [target], mp = this.pas(u, 'multi');
+        const targets = [target];
+        let mp = this.pas(u, 'multi');
+        // アカネ・シズク：相方と共に編成されていれば2体に攻撃
+        const du = d.unique;
+        if (!mp && du && du.type === 'duo' && this.cards.some(c => c.id === du.partner)) mp = du;
         if (mp) {
           const extra = this.enemies.filter(e => !e.dead && e !== target && dist(e, u) <= range)
             .sort((a, b) => (b.idx * 1000 - dist(b, b.route[Math.min(b.idx, b.route.length - 1)])) - (a.idx * 1000 - dist(a, a.route[Math.min(a.idx, a.route.length - 1)])));
