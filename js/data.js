@@ -72,6 +72,7 @@ TD.CHARS = {
   },
   kai: {
     name: 'カイ', title: '紅蓮の魔導士', rarity: 3, element: 'fire', role: 'mage',
+    partyFx: { name: '紅蓮の加護', type: 'atk', add: 0.15, filter: { element: 'fire' }, desc: '火属性の味方の攻撃+15%' },
     cost: 12, hp: 600, atk: 85, def: 10, interval: 2.0, range: 2.4, splash: 0.8, redeploy: 25,
     skill: { name: '爆炎陣', type: 'explosion', sp: 25, mult: 5, radius: 1.6,
              desc: '射程内の敵を中心に大爆発。攻撃力500%の範囲ダメージ' },
@@ -97,12 +98,14 @@ TD.CHARS = {
   },
   thomas: {
     name: 'トマス', title: '見習い騎士', rarity: 3, element: 'water', role: 'shield',
+    partyFx: { name: '騎士見習いの誓い', type: 'def', add: 0.2, filter: { role: 'shield' }, desc: '盾騎士の防御+20%' },
     cost: 12, hp: 1900, atk: 40, def: 110, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
     passive: { name: '盾撃ち', type: 'multi', count: 2, desc: '攻撃が敵2体に当たる' },
     lines: { deploy: 'ぼ、僕だって騎士です！', skill: 'ここで退いたら騎士じゃない！' },
   },
   lily: {
     name: 'リリィ', title: '泉の巫女', rarity: 3, element: 'water', role: 'priest',
+    partyFx: { name: '泉の祝福', type: 'atk', add: 0.2, filter: { role: 'priest' }, label: '回復量', desc: '僧侶の回復量+20%' },
     cost: 9, hp: 520, atk: 80, def: 5, interval: 1.5, range: 2.6, redeploy: 20,
     passive: { name: '浄化の泉', type: 'healUp', mult: 1.3, cleanse: true, desc: '回復量+30%。回復した味方の毒を消す' },
     lines: { deploy: '泉の加護を、あなたに', skill: '湧き出でよ、癒しの泉' },
@@ -214,6 +217,7 @@ TD.CHARS = {
   // ---------- ★3（初心者の戦力・サポート） ----------
   lux: {
     name: 'ルクス', title: '聖光の見習い狙撃手', rarity: 3, element: 'light', role: 'archer',
+    partyFx: { name: '聖光の照準', type: 'atk', add: 0.15, filter: { role: 'archer' }, desc: '弓兵の攻撃+15%' },
     cost: 8, hp: 560, atk: 60, def: 12, interval: 1.0, range: 3.4, redeploy: 20,
     profile: '敵の守りを崩す見習い狙撃手。硬い敵やボス戦で真価を発揮する。',
     skill: { name: '聖光の刻印', type: 'defDown', sp: 22, dur: 10, mult: 0.5,
@@ -237,6 +241,7 @@ TD.CHARS = {
   },
   bold: {
     name: 'ボルド', title: '風車小屋の番人', rarity: 3, element: 'wind', role: 'shield',
+    partyFx: { name: '風車の恵み', type: 'hp', add: 0.15, filter: { element: 'wind' }, desc: '風属性の味方の最大HP+15%' },
     cost: 11, hp: 1800, atk: 45, def: 100, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
     skill: { name: '向かい風', type: 'gust', sp: 24, push: 1, dur: 8, defMult: 2,
              desc: '足止め中の敵を1マス押し戻し、8秒間防御2倍' },
@@ -260,31 +265,35 @@ TD.CHARS = {
   },
   mint: {
     name: 'ミント', title: '森の見張り番', rarity: 3, element: 'wind', role: 'archer',
+    partyFx: { name: '見張りの合図', type: 'enemySlow', add: 0.05, desc: '敵全体の移動速度-5%' },
     cost: 8, hp: 560, atk: 62, def: 10, interval: 1.0, range: 3.3, redeploy: 20,
     passive: { name: '見張り', type: 'slowAura', mult: 0.85, desc: '射程内の敵の移動速度を常に15%下げる' },
     lines: { deploy: '見張りなら任せて', skill: 'まとめて足止めっ！' },
   },
   kagerou: {
     name: 'カゲロウ', title: '夜回りの忍び', rarity: 3, element: 'dark', role: 'sword',
+    unique: { name: '忍びの毒', type: 'darkPoison', stacks: 1, sub: 'duration', mult: 1.5, desc: '攻撃するたびに敵に毒を1つためる。さらに味方がためた毒の効果時間+50%' },
     cost: 9, hp: 880, atk: 100, def: 30, interval: 0.85, range: 1.6, block: 1, redeploy: 20,
-    passive: { name: '毒の刃', type: 'poisonBlade', stacks: 1, desc: '攻撃するたびに敵に毒を1つためる（最大5つ）' },
+    passive: { name: '隠れ身', type: 'stealth', desc: '遠距離攻撃やボスの範囲攻撃の標的にならない' },
     lines: { deploy: '……御意', skill: '影より出でて、影に消ゆ' },
   },
   glen: {
     name: 'グレン', title: '墓守の大男', rarity: 3, element: 'dark', role: 'shield',
+    unique: { name: '墓守の呪毒', type: 'darkPoison', stacks: 1, sub: 'maxStacks', max: 7, desc: '攻撃するたびに敵に毒を1つためる。さらに毒の最大数が5→7になる' },
     cost: 12, hp: 2000, atk: 45, def: 105, interval: 1.5, range: 1.3, block: 2, redeploy: 25,
     passive: { name: '巨躯', type: 'blockMult', mult: 1.5, desc: 'ブロック数が1.5倍になる（2→3）' },
     lines: { deploy: '……眠りを妨げる者は、通さん', skill: 'ぬうぅん！' },
   },
   luna: {
     name: 'ルナ', title: '月影の狩人', rarity: 3, element: 'dark', role: 'archer',
+    unique: { name: '月下の呪毒', type: 'darkPoison', stacks: 1, sub: 'slow', mult: 0.8, desc: '攻撃するたびに敵に毒を1つためる。さらに毒状態の敵の移動速度-20%' },
     cost: 9, hp: 580, atk: 66, def: 12, interval: 1.0, range: 3.2, redeploy: 20,
     passive: { name: '鈍化の矢', type: 'slowShot', mult: 0.7, dur: 3, desc: '攻撃した敵の移動速度を3秒間30%下げる' },
     lines: { deploy: '月が綺麗な夜ね', skill: '月の光は、外れない' },
   },
   viola: {
     name: 'ヴィオラ', title: '見習い呪術師', rarity: 3, element: 'dark', role: 'mage',
-    unique: { name: '蝕みの呪い', type: 'poisonHunter', mult: 2, desc: '毒状態の敵に与えるダメージが2倍になる' },
+    unique: { name: '蝕みの呪い', type: 'darkPoison', stacks: 1, sub: 'hunter', mult: 2, desc: '攻撃するたびに敵に毒を1つためる（範囲攻撃なら当たった全員）。さらに毒状態の敵に与えるダメージが2倍になる' },
     cost: 11, hp: 560, atk: 80, def: 8, interval: 2.0, range: 2.4, splash: 0.8, redeploy: 25,
     skill: { name: '呪いの霧', type: 'explosion', sp: 25, mult: 3.5, radius: 1.5,
              poison: 3, desc: '射程内の敵を中心に呪いの霧。攻撃力350%の範囲ダメージを与え、当たった敵に毒を3つためる' },
@@ -292,6 +301,7 @@ TD.CHARS = {
   },
   shion: {
     name: 'シオン', title: '港町の水術士', rarity: 3, element: 'water', role: 'mage',
+    partyFx: { name: '潮の魔力', type: 'atk', add: 0.15, filter: { role: 'mage' }, desc: '魔導士の攻撃+15%' },
     cost: 10, hp: 580, atk: 78, def: 10, interval: 1.9, range: 2.4, splash: 0.8, redeploy: 20,
     skill: { name: '水牢', type: 'freeze', sp: 26, mult: 1.5, radius: 1.6, dur: 2,
              desc: '周囲の敵を2秒間凍結し、攻撃力150%のダメージ' },
@@ -299,6 +309,7 @@ TD.CHARS = {
   },
   garo: {
     name: 'ガロ', title: '酒場の用心棒', rarity: 3, element: 'fire', role: 'sword',
+    partyFx: { name: '用心棒の喝', type: 'atk', add: 0.15, filter: { role: 'sword' }, desc: '剣士の攻撃+15%' },
     cost: 10, hp: 1000, atk: 98, def: 40, interval: 1.0, range: 1.6, block: 1, redeploy: 20,
     passive: { name: '酔拳', type: 'evade', chance: 0.2, desc: '敵の攻撃を20%の確率でかわす' },
     lines: { deploy: 'ひっく……喧嘩なら買うぜ', skill: '燃えてきたぁ！' },
@@ -1028,20 +1039,38 @@ TD.partyValid = party => party.length > 0 && TD.partyStars(party) <= TD.ADJUTANT
 // 敵の毒：1つごとに毎秒、最大HPの perStack 分のダメージ。ボスは bossMult 倍。
 TD.POISON = { perStack: 0.01, maxStacks: 5, dur: 5, bossMult: 1 / 3 };
 // ========== ユニークスキル（編成）：出撃メンバーにいるだけで有効・重ねがけ可 ==========
-TD.partyEffects = function (party) {
-  const fx = { atk: 0, def: 0, hp: 0, mana: 0, exp: 0, stones: 0 };
-  for (const id of party) { const p = TD.CHARS[id] && TD.CHARS[id].partyFx; if (p) fx[p.type] += p.add; }
+// filter（属性・職業）つきの効果は、当てはまる味方にだけ効く
+TD.fxMatch = (f, def) => !f || ((!f.element || f.element === def.element) && (!f.role || f.role === def.role));
+TD.partyEffects = function (party, def) {
+  const fx = { atk: 0, def: 0, hp: 0, mana: 0, exp: 0, stones: 0, enemySlow: 0 };
+  for (const id of party) {
+    const p = TD.CHARS[id] && TD.CHARS[id].partyFx;
+    if (!p) continue;
+    if (p.filter && !(def && TD.fxMatch(p.filter, def))) continue; // 対象がしぼられた効果は、def を渡したときだけ数える
+    fx[p.type] += p.add;
+  }
   return fx;
 };
 TD.partyEffectsText = function (party) {
-  const fx = TD.partyEffects(party), a = [];
-  if (fx.atk) a.push(`攻撃+${Math.round(fx.atk * 100)}%`);
-  if (fx.def) a.push(`防御+${Math.round(fx.def * 100)}%`);
-  if (fx.hp) a.push(`最大HP+${Math.round(fx.hp * 100)}%`);
-  if (fx.mana) a.push(`開始マナ+${fx.mana}`);
-  if (fx.exp) a.push(`経験の書+${Math.round(fx.exp * 100)}%`);
-  if (fx.stones) a.push(`魔晶石+${Math.round(fx.stones * 100)}%`);
+  const a = [], names = { atk: '攻撃', def: '防御', hp: '最大HP' };
+  const sum = {};
+  for (const id of party) {
+    const p = TD.CHARS[id] && TD.CHARS[id].partyFx; if (!p) continue;
+    const who = p.filter ? (p.filter.element ? TD.ELEMENTS[p.filter.element].name + '属性' : TD.ROLES[p.filter.role].name) : '';
+    const key = who + '|' + p.type + '|' + (p.label || '');
+    sum[key] = (sum[key] || 0) + p.add;
+  }
+  for (const [key, v] of Object.entries(sum)) {
+    const [who, type, label] = key.split('|');
+    if (type === 'mana') a.push(`開始マナ+${v}`);
+    else if (type === 'exp') a.push(`経験の書+${Math.round(v * 100)}%`);
+    else if (type === 'stones') a.push(`魔晶石+${Math.round(v * 100)}%`);
+    else if (type === 'enemySlow') a.push(`敵の移動速度-${Math.round(v * 100)}%`);
+    else a.push(`${who ? who + 'の' : ''}${label || names[type]}+${Math.round(v * 100)}%`);
+  }
   for (const id of party) { const u = TD.CHARS[id] && TD.CHARS[id].unique; if (u && u.party) a.push(u.short); }
+  const dark = party.filter(id => TD.CHARS[id] && TD.CHARS[id].unique && TD.CHARS[id].unique.type === 'darkPoison');
+  if (dark.length) a.push(`毒（${dark.map(id => TD.CHARS[id].name).join('・')}）`);
   return a.join('・');
 };
 

@@ -388,9 +388,10 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     // 編成効果（出撃メンバーにいるだけで有効・重ねがけ可）
     const fx = TD.partyEffects(save.party);
     for (const p of party) {
-      p.def.hp = Math.round(p.def.hp * (1 + fx.hp));
-      p.def.atk = Math.round(p.def.atk * (1 + fx.atk));
-      p.def.def = Math.round(p.def.def * (1 + fx.def));
+      const f = TD.partyEffects(save.party, p.def); // 属性・職業でしぼった効果も含めて計算
+      p.def.hp = Math.round(p.def.hp * (1 + f.hp));
+      p.def.atk = Math.round(p.def.atk * (1 + f.atk));
+      p.def.def = Math.round(p.def.def * (1 + f.def));
     }
     battle = new TD.Battle(st, party, bEls, onBattleEnd);
     if (fx.mana) battle.mana = Math.min(99, battle.mana + fx.mana);

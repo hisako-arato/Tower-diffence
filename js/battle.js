@@ -38,6 +38,17 @@ window.TD = window.TD || {};
       // 出撃メンバーのユニークスキル（出撃メンバーにいるだけで有効）
       this.puniq = {};
       for (const p of party) { const u = p.def.unique; if (u && u.party) this.puniq[u.type] = u; }
+      // 闇★3の毒：全体効果
+      const P = TD.POISON;
+      this.poisonMax = P.maxStacks; this.poisonDur = P.dur; this.poisonSlow = 1;
+      for (const p of party) {
+        const u = p.def.unique; if (!u || u.type !== 'darkPoison') continue;
+        if (u.sub === 'duration') this.poisonDur = P.dur * u.mult;
+        if (u.sub === 'maxStacks') this.poisonMax = Math.max(this.poisonMax, u.max);
+        if (u.sub === 'slow') this.poisonSlow = Math.min(this.poisonSlow, u.mult);
+      }
+      // 敵全体の移動速度ダウン（重ねがけ）
+      this.enemySlowAll = Math.max(0.3, 1 - TD.partyEffects(party.map(p => p.id)).enemySlow);
       this.maxLives = this.lives = stage.lives + (this.puniq.lifeUp ? this.puniq.lifeUp.add : 0);
       this.units = [];
       this.enemies = [];
@@ -569,7 +580,8 @@ window.TD = window.TD || {};
       const m = TD.elemMult(src.def.element, e.def.element);
       let crit = false;
       // ヴィオラ「蝕みの呪い」：毒状態の敵に与えるダメージが倍
-      if (src.def && src.def.unique && src.def.unique.type === 'poisonHunter' && e.poisonT > 0) power *= src.def.unique.mult;
+      const du = src.def && src.def.unique && src.def.unique.type === 'darkPoison' ? src.def.unique : null;
+      if (du && du.sub === 'hunter' && e.poisonT > 0) power *= du.mult;
       const cp = src.def && src.def.passive && src.def.passive.type === 'crit' ? src.def.passive : null;
       if (cp && Math.random() < cp.chance) { power *= cp.mult; crit = true; }
       const raw = power * m;
@@ -582,6 +594,7 @@ window.TD = window.TD || {};
       const color = m > 1 ? '#ffd23f' : m < 1 ? '#a8b0b8' : '#ffffff';
       this.pop(e.x + (Math.random() * 10 - 5), e.y - e.size - 6, String(d), crit ? '#ff8a3a' : color, { size: crit || m > 1 ? 15 : 12, weak: m > 1 });
       if (crit) this.pop(e.x, e.y - e.size - 20, 'CRITICAL', '#ff8a3a', { size: 9 });
+      if (du && !e.dead) this.addPoison(e, du.stacks);
       this.checkKill(e);
     }
 
@@ -597,9 +610,8 @@ window.TD = window.TD || {};
     // 毒をためる
     addPoison(e, n) {
       if (e.dead) return;
-      const P = TD.POISON;
-      e.poison = Math.min(P.maxStacks, (e.poison || 0) + n);
-      e.poisonT = P.dur;
+      e.poison = Math.min(this.poisonMax || TD.POISON.maxStacks, (e.poison || 0) + n);
+      e.poisonT = this.poisonDur || TD.POISON.dur;
     }
 
     hurt(e, u, power) {
@@ -733,7 +745,8 @@ window.TD = window.TD || {};
         if (e.slowT > 0) e.slowT -= dt;
         let slowAura = 1;
         for (const u of this.units) { const p = this.pas(u, 'slowAura'); if (p && dist(e, u) <= this.rangeOf(u) * T) slowAura = Math.min(slowAura, p.mult); }
-        let move = e.def.speed * T * dt * (e.slowT > 0 ? 0.5 : 1) * slowAura * (e.slowShotT > 0 ? e.slowShotMult : 1);
+        let move = e.def.speed * T * dt * (e.slowT > 0 ? 0.5 : 1) * slowAura * (e.slowShotT > 0 ? e.slowShotMult : 1)
+          * (e.poisonT > 0 ? this.poisonSlow : 1) * this.enemySlowAll;
         while (move > 0 && e.idx < e.route.length) {
           const tgt = e.route[e.idx], dx = tgt.x - e.x, dy = tgt.y - e.y, d = Math.hypot(dx, dy);
           if (d <= move) { e.x = tgt.x; e.y = tgt.y; e.idx++; move -= d; }
@@ -813,7 +826,6 @@ window.TD = window.TD || {};
         for (const tg of targets) {
           if (u.melee) {
             this.hit(u, tg, this.atkOf(u));
-            const pb = this.pas(u, 'poisonBlade'); if (pb) this.addPoison(tg, pb.stacks);
             this.fx.push({ type: 'slash', x: tg.x, y: tg.y, t: 0, dur: 0.2, color: TD.ELEMENTS[d.element].color, a: Math.atan2(tg.y - u.y, tg.x - u.x) });
           } else {
             this.shots.push({ x: u.x, y: u.y, target: tg, power: this.atkOf(u), src: u, splash: this.splashOf(u), speed: d.role === 'archer' ? 520 : 330,
