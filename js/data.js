@@ -317,12 +317,11 @@ TD.charStats = function (id, prog) {
 TD.GACHA = {
   single: 30,          // 魔晶石
   ten: 300,
-  pity: 100,           // この回数以内に★5が出なければ確定
-  rates: { 5: 0.03, 4: 0.17, 3: 0.80 },
+  rates: { 5: 0.03, 4: 0.17, 3: 0.80 },   // 英雄の欠片の呼び寄せやすさ（欠片が尽きた★は除いて分け直す）
   starterGift: 900,    // はじめての召喚士への贈り物
   banners: [
     {
-      id: 'standard', name: '英雄召喚', pickup: [], desc: '大陸の英雄たちが召喚に応じる、常設の召喚。', element: 'light',
+      id: 'standard', name: '英雄召喚の儀', pickup: [], desc: '大陸に散った英雄たちの魂の欠片を、召喚陣に呼び寄せる。', element: 'light',
     },
   ],
 };

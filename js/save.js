@@ -15,7 +15,6 @@ TD.Save = {
       chars: {            // キャラごとの育成状態 { lv, lb(限界突破) }
         lydia: { lv: 1, lb: 0 }, fin: { lv: 1, lb: 0 }, gald: { lv: 1, lb: 0 }, mia: { lv: 1, lb: 0 }, kai: { lv: 1, lb: 0 },
       },
-      pity: 0,            // 前回の★5から数えた召喚回数
       totalPulls: 0,
       giftReceived: false,
       playerName: '',     // ストーリーで入力するプレイヤー名

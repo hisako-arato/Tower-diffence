@@ -539,7 +539,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="cd-head"><div class="cd-full">${TD.fullArtHTML(id)}</div><div><div class="cd-title">${base.title}</div>` +
       `<div class="cd-name">${base.name}</div>${TD.starsHTML(base.rarity, 0)} ${TD.elemChip(base.element)}<span class="chip role">${r.name}</span></div></div>` +
       `<div class="cd-grow"><div class="cd-lv">Lv <b>${prog.lv}</b><small>/${maxLv}</small></div>` +
-      `<div class="cd-lb">限界突破 ${TD.lbHTML(prog.lb)}<small>${prog.lb < TD.GROWTH.maxLB ? '同じキャラを召喚すると突破' : '最大'}</small></div></div>` +
+      `<div class="cd-lb">限界突破 ${TD.lbHTML(prog.lb)}<small>${prog.lb < TD.GROWTH.maxLB ? '同じ英雄の欠片を召喚すると突破' : '欠片がすべて集まりました'}</small></div></div>` +
       (base.profile ? `<div class="cd-profile">${base.profile}</div>` : '') +
       `<div class="cd-role">${r.desc}</div>` +
       ((base.traits || []).length ? `<div class="cd-traits">${base.traits.filter(k => TD.TRAITS[k]).map(k => `<div class="trait"><b>${TD.TRAITS[k].icon} ${TD.TRAITS[k].name}</b><span>${TD.TRAITS[k].desc}</span></div>`).join('')}</div>` : '') +
@@ -596,32 +596,43 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="bn-name">${esc(bn.name)}</div>` +
       `<div class="bn-desc">${esc(bn.desc)}</div>` +
       (bn.pickup.length ? `<div class="bn-pick">${bn.pickup.map(id => `PICK UP ★5 ${TD.CHARS[id].title} ${TD.CHARS[id].name}`).join('')}</div>` : '');
-    const left = TD.GACHA.pity - save.pity;
-    $('#summon-info').innerHTML = `★5確定まで あと <b>${left}</b> 回<span>10回召喚は★4以上1体確定</span>`;
+    const left = TD.Gacha.fragmentsLeft(save), total = TD.Gacha.fragmentsLeft({ owned: [], chars: {} });
     const one = $('#btn-pull1'), ten = $('#btn-pull10');
+    if (left <= 0) {
+      $('#summon-info').innerHTML = `<b>すべての英雄の欠片が集まりました</b><span>召喚陣は静かに眠っています。新たな英雄の訪れを待ちましょう</span>`;
+    } else {
+      $('#summon-info').innerHTML = `まだ眠る英雄の欠片 <b>${left}</b><small> / ${total}</small><span>10回召喚では、★4以上の英雄の欠片が必ず1つ呼び寄せられます</span>`;
+    }
     one.innerHTML = `1回召喚<small><i class="gem"></i>${TD.GACHA.single}</small>`;
-    ten.innerHTML = `10回召喚<small><i class="gem"></i>${TD.GACHA.ten}</small>`;
-    one.disabled = save.stones < TD.GACHA.single;
-    ten.disabled = save.stones < TD.GACHA.ten;
+    ten.innerHTML = left > 0 && left < 10 ? `10回召喚<small>欠片が足りません</small>` : `10回召喚<small><i class="gem"></i>${TD.GACHA.ten}</small>`;
+    one.disabled = !TD.Gacha.canPull(save, 1).ok;
+    ten.disabled = !TD.Gacha.canPull(save, 10).ok;
   }
   $('#btn-pull1').addEventListener('click', () => doPull(1));
   $('#btn-pull10').addEventListener('click', () => doPull(10));
   $('#btn-rates').addEventListener('click', () => {
     const bn = TD.GACHA.banners[bannerIdx], rows = TD.Gacha.rateTable(bn, save);
     const maxedNames = Object.keys(TD.CHARS).filter(id => TD.Gacha.maxed(save, id)).map(id => TD.CHARS[id].name);
-    const sum = r => (TD.GACHA.rates[r] * 100).toFixed(0) + '%';
+    const rr = TD.Gacha.rarityRates(save);
+    const sum = r => rr[r] ? (rr[r] * 100).toFixed(1).replace(/\.0$/, '') + '%' : 'なし';
     modal(
-      `<div class="pause-title">提供割合</div><div class="small" style="text-align:center">${esc(bn.name)}</div>` +
+      `<div class="pause-title">召喚の理</div><div class="small" style="text-align:center">英雄の欠片の呼び寄せやすさ</div>` +
       `<div class="rate-sum"><span>★5 ${sum(5)}</span><span>★4 ${sum(4)}</span><span>★3 ${sum(3)}</span></div>` +
-      `<table class="rate-table">${rows.map(r => `<tr class="${r.pickup ? 'pick' : ''}"><td>${TD.starsHTML(r.rarity, 0)}</td><td>${TD.CHARS[r.id].name}${r.pickup ? ' <b>PICK UP</b>' : ''}</td><td>${(r.rate * 100).toFixed(3)}%</td></tr>`).join('')}</table>` +
-      `<p class="small">・10回召喚では★4以上が1体以上確定します。<br>・${TD.GACHA.pity}回以内に★5が出なかった場合、${TD.GACHA.pity}回目は★5確定です。<br>・限界突破が最大（${TD.GROWTH.maxLB}回）になったキャラは排出されなくなり、そのレアリティの他のキャラの確率が上がります。${maxedNames.length ? `<br>　現在の対象外：${maxedNames.map(esc).join('、')}` : ''}<br>・あるレアリティのキャラが全員限界突破済みの場合、そのレアリティが出たときは魔晶石に変換されます（★3:${TD.GROWTH.dupStones[3]} / ★4:${TD.GROWTH.dupStones[4]} / ★5:${TD.GROWTH.dupStones[5]}）。<br>・魔晶石はゲーム内で入手できるアイテムです。現実のお金は使いません。</p>` +
+      (rows.length ? `<table class="rate-table">${rows.map(r => `<tr><td>${TD.starsHTML(r.rarity, 0)}</td><td>${TD.CHARS[r.id].name}<small class="frag">残り欠片 ${TD.Gacha.fragmentsLeftOf(save, r.id)}</small></td><td>${(r.rate * 100).toFixed(2)}%</td></tr>`).join('')}</table>` : `<p class="small" style="text-align:center">すべての英雄の欠片が集まりました。</p>`) +
+      `<p class="small">・召喚陣は、大陸に散った<b>英雄の魂の欠片</b>を呼び寄せます。<br>・はじめての欠片はその英雄の姿となって仲間になり、2つ目からは英雄の力を高めます（限界突破・最大${TD.GROWTH.maxLB}回）。<br>・欠片がすべて集まった英雄は、もう召喚陣に現れません。同じ★の他の英雄が現れやすくなります。${maxedNames.length ? `<br>　欠片が集まりきった英雄：${maxedNames.map(esc).join('、')}` : ''}<br>・ある★の英雄の欠片がすべて集まると、その★はもう現れず、残りの★で呼び寄せやすさを分け合います。<br>・10回召喚では、★4以上の欠片が残っていれば、必ず1つ含まれます。<br>・すべての欠片が集まると、召喚はできなくなります。<br>・魔晶石はゲーム内で入手できるアイテムです。現実のお金は使いません。</p>` +
       `<div class="btn-row"><button class="btn primary" onclick="document.getElementById('modal').classList.remove('show')">閉じる</button></div>`);
   });
 
   function doPull(n) {
     const bn = TD.GACHA.banners[bannerIdx];
+    const chk = TD.Gacha.canPull(save, n);
+    if (!chk.ok) {
+      alertBox(chk.reason === 'complete' ? 'すべての英雄の欠片が集まっています。もう召喚はできません'
+        : chk.reason === 'few' ? `まだ眠る英雄の欠片が${TD.Gacha.fragmentsLeft(save)}つしかないため、10回召喚はできません`
+        : '魔晶石が足りません。ステージやミッションで集めましょう');
+      return;
+    }
     const results = TD.Gacha.pull(save, bn, n);
-    if (!results) { alertBox('魔晶石が足りません。ステージやミッションで集めましょう'); return; }
     TD.Live.track(save, 'pulls', n);
     persist();
     playSummon(results);
@@ -645,7 +656,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       box.innerHTML = results.map((r, i) => {
         if (!r.id) return `<div class="sf-card r${r.rarity}" style="animation-delay:${results.length === 1 ? 0 : i * 0.12}s"><i class="gem big"></i><em class="conv">魔晶石+${r.converted}</em><div class="sf-name">魔晶石</div>${TD.starsHTML(r.rarity, 0)}</div>`;
         const d = TD.CHARS[r.id];
-        const tag = r.isNew ? '<em class="new">NEW</em>' : r.limitBreak ? `<em class="lbup">限界突破 ${r.limitBreak}</em>` : `<em class="conv">魔晶石+${r.converted}</em>`;
+        const tag = r.isNew ? '<em class="new">新たな英雄</em>' : r.limitBreak ? `<em class="lbup">限界突破${r.limitBreak}</em>` : `<em class="conv">魔晶石+${r.converted}</em>`;
         return `<div class="sf-card r${r.rarity}" style="animation-delay:${results.length === 1 ? 0 : i * 0.12}s">` +
           `${results.length === 1 ? TD.fullArtHTML(r.id) : TD.portraitHTML(r.id, true)}${tag}<div class="sf-name">${d.name}</div>${TD.starsHTML(r.rarity, 0)}` +
           (results.length === 1 ? `<div class="sf-title">${d.title}</div><div class="sf-line">「${d.lines.deploy}」</div>` : '') + `</div>`;

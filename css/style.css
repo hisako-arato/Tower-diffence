@@ -813,3 +813,8 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .sheet-pos { flex: 1; text-align: center; font-size: 12px; color: var(--muted); }
 .sheet-close { padding: 8px 14px; border-radius: 10px; font-weight: 800; font-size: 13px; background: rgba(255, 255, 255, .08); border: 1px solid var(--line); min-height: 38px; }
 .char-sheet #char-detail { margin: 0; }
+
+/* ========== 召喚の儀 ========== */
+#summon-info small { font-size: 12px; color: var(--muted); display: inline; }
+.rate-table small.frag { display: block; font-size: 10px; color: var(--muted); }
+.sf-card em.new { background: #ff4f7a; }
