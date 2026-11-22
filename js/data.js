@@ -58,7 +58,7 @@ TD.CHARS = {
   },
   nox: {
     name: 'ノクス', title: '影の剣士', rarity: 4, kind: 'power', element: 'dark', role: 'sword',
-    cost: 11, hp: 1507, atk: 174, def: 60, interval: 0.8, range: 1.6, block: 1, redeploy: 25,
+    cost: 11, hp: 1507, atk: 150, def: 60, interval: 0.8, range: 1.6, block: 1, redeploy: 25,
     passive: { name: '影の刃', type: 'crit', chance: 0.25, mult: 2, desc: '攻撃の25%が2倍ダメージ（クリティカル）になる' },
     lines: { deploy: '……斬るだけだ', skill: '影に沈め。影縫い' },
   },
@@ -173,7 +173,7 @@ TD.CHARS = {
     name: 'セイラ', title: '蒼波の剣聖', rarity: 5, element: 'water', role: 'sword',
     cost: 15, hp: 2410, atk: 177, def: 100, interval: 0.95, range: 1.6, block: 2, redeploy: 30,
     profile: '水の都の剣術道場を継ぐ剣聖。受けた刃をそのまま返す「水鏡」の使い手。',
-    passive: { name: '常時水鏡', type: 'reflect', ratio: 0.5, defMult: 1.2, desc: '受けたダメージの50%を常に相手に返す。防御+20%' },
+    passive: { name: '常時水鏡', type: 'reflect', ratio: 0.5, defMult: 1.2, blockMult: 1.5, desc: '受けたダメージの50%を常に相手に返す。防御+20%。ブロック数1.5倍' },
     lines: { deploy: '参ります。……お覚悟を', skill: '水鏡に映るは、あなた自身の刃' },
   },
   xeno: {
@@ -322,6 +322,7 @@ TD.GROWTH = {
   lvPerLB: 10,        // 限界突破1回ごとのレベル上限アップ
   maxLB: 4,           // 限界突破の最大回数
   statPerLv: 0.02,    // 1レベルごとのHP/攻撃/防御の上昇率
+  statPerLvByRarity: { 5: 0.025 },  // ★5は育てるほど大きく伸びる
   statPerLB: 0.05,    // 限界突破1回ごとの上昇率
   expCost: lv => 40 + lv * 15,                  // Lv → Lv+1 に必要な経験の書
   dupStones: { 3: 5, 4: 20, 5: 60 },            // 限界突破上限を超えた重複の変換量
@@ -330,7 +331,8 @@ TD.maxLv = lb => TD.GROWTH.baseMaxLv + TD.GROWTH.lvPerLB * lb;
 // 育成状態を反映したキャラ定義を返す
 TD.charStats = function (id, prog) {
   const d = TD.CHARS[id], p = prog || { lv: 1, lb: 0 }, G = TD.GROWTH;
-  const m = 1 + (p.lv - 1) * G.statPerLv + p.lb * G.statPerLB;
+  const perLv = (G.statPerLvByRarity && G.statPerLvByRarity[d.rarity]) || G.statPerLv;
+  const m = 1 + (p.lv - 1) * perLv + p.lb * G.statPerLB;
   return Object.assign({}, d, { hp: Math.round(d.hp * m), atk: Math.round(d.atk * m), def: Math.round(d.def * m), lv: p.lv, lb: p.lb });
 };
 

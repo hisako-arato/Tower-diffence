@@ -565,8 +565,9 @@ window.TD = window.TD || {};
       return null;
     }
     blockOf(u) {
-      const bm = this.pas(u, 'blockMult');
-      return Math.floor((u.def.block || 0) * (bm ? bm.mult : 1)) + (u.buff && u.buff.type === 'guard' && !u.buff.noBlock ? 2 : 0);
+      const pv = u.def.passive;
+      const bmul = pv ? (pv.type === 'blockMult' ? pv.mult : pv.blockMult || 1) : 1;
+      return Math.floor((u.def.block || 0) * bmul) + (u.buff && u.buff.type === 'guard' && !u.buff.noBlock ? 2 : 0);
     }
     rateOf(u) {
       let r = u.buff && u.buff.rate ? u.buff.rate : 1;

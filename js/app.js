@@ -598,7 +598,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="cd-role">${r.desc}</div>` +
       `<div class="cd-stats"><span>HP<b>${d.hp}${up('hp')}</b></span><span>${base.role === 'priest' ? '回復' : '攻撃'}<b>${d.atk}${up('atk')}</b></span><span>防御<b>${d.def}${up('def')}</b></span>` +
       `<span>コスト<b>${d.cost}</b></span><span>射程<b>${pv && pv.type === 'range' ? `${+(d.range * pv.mult).toFixed(1)}<small>(${d.range}×${pv.mult})</small>` : d.range}</b></span>` +
-      `<span>${r.melee ? 'ブロック' : '配置先'}<b>${!r.melee ? '草地' : pv && pv.type === 'blockMult' ? `${Math.floor(d.block * pv.mult)}<small>(${d.block}×${pv.mult})</small>` : d.block}</b></span>` +
+      `<span>${r.melee ? 'ブロック' : '配置先'}<b>${!r.melee ? '草地' : pv && (pv.type === 'blockMult' || pv.blockMult) ? (m => `${Math.floor(d.block * m)}<small>(${d.block}×${m})</small>`)(pv.type === 'blockMult' ? pv.mult : pv.blockMult) : d.block}</b></span>` +
       `<span class="wide">再配置<b>${Math.round(TD.redeployTime(d))}秒<small>（撤退時 ${TD.RETREAT.minCooldown}〜${Math.round(TD.redeployTime(d))}秒）</small></b></span></div>` +
       `<div class="cd-levelup"><div class="cd-own"><i class="expbook"></i> 経験の書 <b>${save.crystals}</b></div>` +
       (prog.lv < maxLv
