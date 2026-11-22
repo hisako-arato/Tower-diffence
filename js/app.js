@@ -278,7 +278,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       html += `<button class="story-item${read ? '' : ' locked'}" data-ep="${id}"><span class="si-title">${esc(ep.title)}</span>` +
         `<span class="si-sub">${read ? '▶ 再生' : '🔒 ' + storyUnlockHint(id)}</span></button>`;
     }
-    html += `<div class="story-next">第3章は近日公開予定です</div>`;
+    html += `<div class="story-next">第4章は近日公開予定です</div>`;
     list.innerHTML = html;
     list.querySelectorAll('[data-ep]').forEach(b => b.onclick = () => {
       const id = b.dataset.ep;
@@ -342,6 +342,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const body = modal(
       `<div class="brief-head"><span class="st-id">${st.id}</span>${esc(st.name)}</div>` +
       `<div class="brief-navi"><span class="mini-navi"></span><p>${esc(st.brief)}</p></div>` +
+      (st.map.join('').split('G').length - 1 >= 2 ? `<div class="brief-goals">⚠ 守る拠点が2つあります（どちらに届いてもライフが減ります）</div>` : '') +
       `<div class="brief-sec">出現する敵</div><ul class="enemy-list">${enemies}</ul>` +
       `<div class="brief-sec">出撃メンバー<small class="brief-stars${TD.partyValid(save.party) ? '' : ' over'}">副官以外の★ ${TD.partyStars(save.party)} / ${TD.ADJUTANT.starCap}</small></div><div class="brief-party">${party}</div>` +
       (TD.partyEffectsText(save.party) ? `<div class="brief-fx">編成効果：${TD.partyEffectsText(save.party)}</div>` : '') +

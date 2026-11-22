@@ -15,6 +15,10 @@ TD.SPEAKERS = {
   celes:   { char: 'celes' },
   shigure: { char: 'shigure' },
   leviath: { name: 'リヴァイア', enemy: true },
+  glacies: { name: 'グラキエス', enemy: true },
+  zephyr:  { char: 'zephyr' },
+  kagura:  { char: 'kagura' },
+  scout:   { name: '雪原の斥候', stand: false },
   villager: { name: 'アクアリアの住人', stand: false },
   varg:    { name: 'ヴァルグ', enemy: true },
   unknown: { name: '？？？', enemy: true },
@@ -207,6 +211,60 @@ TD.STORY['2-5-post'] = {
   ],
 };
 
+// ===================== 第3章 白銀の結界石 =====================
+TD.STORY['3-1-pre'] = {
+  title: '3-1 北の雪原へ', chapter: 3,
+  lines: [
+    [null, 'アクアリアを発った一行は、北の雪原へと足を踏み入れた。吐く息が白く凍る。', { bg: 'shrine' }],
+    ['celes', '……ここから先が、白銀の雪原。二つ目の結界石は、この先の古城に眠っているわ。'],
+    ['scout', '召喚士様！ 雪原の南に、二つの村があります。魔物の群れが、両方へ向かっています！', { fx: 'shake' }],
+    ['lumina', '二つの村を同時に……！ {name}さま、守るべき場所が二つあります。'],
+    ['lydia', '戦力を分けるしかないわね。どちらも見捨てはしない。'],
+  ],
+};
+TD.STORY['3-1-post'] = {
+  title: '3-1 その後　嵐を纏う射手', chapter: 3,
+  lines: [
+    ['zephyr', 'ヒュウ、両方守りきるとはね。噂の召喚士ってのは、伊達じゃないらしい。', { bg: 'shrine' }],
+    ['lumina', 'あなたは……風の射手、ゼファーさん？'],
+    ['zephyr', 'この雪原の風が、ずっと泣いてる。古城に居座った災厄のせいさ。'],
+    ['zephyr', '借りを返しに行くなら、俺も混ぜてくれよ。弓の腕なら、誰にも負けない。'],
+  ],
+};
+TD.STORY['3-3-pre'] = {
+  title: '3-3 氷霊の吹雪', chapter: 3,
+  lines: [
+    [null, '吹雪が強まり、視界が白く閉ざされていく。', { bg: 'dark' }],
+    ['lumina', '吹雪の中に……何かいます！ 空を飛ぶ、氷の霊……！'],
+    ['kagura', '……災厄の冷気が、死者の魂を凍らせて操っているのです。'],
+    ['lydia', 'カグラ！ あなたまで来てくれたの？'],
+    ['kagura', '星が告げていました。白銀の災厄が目覚める、と。……鎖で縛れるものなら、何でも縛りましょう。'],
+  ],
+};
+TD.STORY['3-5-pre'] = {
+  title: '3-5 凍嵐の玉座', chapter: 3,
+  lines: [
+    [null, '雪原の果ての古城。凍りついた玉座に、嵐そのもののような影が座していた。', { bg: 'dark' }],
+    ['glacies', '……来たか、召喚士。ヴァルグもリヴァイアも、貴様に討たれたと聞く。', { fx: 'shake' }],
+    ['glacies', 'だが我は違う。この嵐で、貴様の守るものを――二つ同時に凍てつかせてくれよう。'],
+    ['zephyr', '風を汚すんじゃねえよ。……{name}、あいつは風の化身だ。火で焼き払っちまえ！'],
+    ['lumina', '村へ続く二つの道を、どちらも守りきってください！ {name}さま！'],
+  ],
+};
+TD.STORY['3-5-post'] = {
+  title: '3-5 その後　残る災厄', chapter: 3,
+  lines: [
+    ['glacies', 'バカな……この嵐が……止むなど……！', { bg: 'dark', fx: 'flash' }],
+    ['glacies', '思い上がるな……残る災厄は四つ……最も古き者が……もう、目覚めている……', { fx: 'shake' }],
+    [null, '嵐がやみ、雲間から光が差し込む。古城の奥で、結界石が白く輝きはじめた。', { bg: 'shrine' }],
+    ['lumina', '結界石が清められました……！ これで二つ目です、{name}さま！'],
+    ['celes', '……最も古き者。嫌な響きね。'],
+    ['lydia', 'どんな相手でも、みんなで守り抜くだけよ。そうでしょう、{name}？'],
+    [null, '――第3章「白銀の結界石」 完', { bg: 'void' }],
+    [null, '第4章へ続く'],
+  ],
+};
+
 TD.STORY['event-starfest'] = {
   title: 'イベント　星降る夜の魔導祭', chapter: 'ev',
   lines: [
@@ -222,8 +280,9 @@ TD.STORY['event-starfest'] = {
   ],
 };
 TD.STORY_ORDER = ['prologue', '1-1-post', '1-2-pre', '1-2-post', '1-3-pre', '1-3-post', '1-4-pre', '1-5-pre', '1-5-post',
-  '2-1-pre', '2-1-post', '2-3-pre', '2-5-pre', '2-5-post', 'event-starfest'];
-TD.CHAPTERS = { 1: '第1章 結界のほころび', 2: '第2章 蒼の結界石', ev: 'イベントストーリー' };
+  '2-1-pre', '2-1-post', '2-3-pre', '2-5-pre', '2-5-post',
+  '3-1-pre', '3-1-post', '3-3-pre', '3-5-pre', '3-5-post', 'event-starfest'];
+TD.CHAPTERS = { 1: '第1章 結界のほころび', 2: '第2章 蒼の結界石', 3: '第3章 白銀の結界石', ev: 'イベントストーリー' };
 
 // ---------- ADVプレイヤー ----------
 (function () {

@@ -13,18 +13,21 @@ window.TD = window.TD || {};
       this.onEnd = onEnd;
       this.grid = stage.map.map(r => r.split(''));
 
-      const spawns = [];
-      let goal = null;
+      // 防衛地点（G）は最大2つ。敵は wave.g で指定した地点、指定がなければ一番近い地点を目指す
+      const spawns = [], goals = [];
       this.grid.forEach((row, y) => row.forEach((c, x) => {
         if (c === 'S') spawns.push([x, y]);
-        if (c === 'G') goal = [x, y];
+        if (c === 'G') goals.push([x, y]);
       }));
-      this.goal = goal;
-      this.routes = spawns.map(s => this.findRoute(s, goal));
+      this.spawns = spawns;
+      this.goals = goals;
+      this.goal = goals[0];
+      this.routeCache = {};
+      this.routes = spawns.map((sp, i) => this.routeFor(i));
 
       this.events = [];
       for (const w of stage.waves)
-        for (let i = 0; i < w.n; i++) this.events.push({ t: w.t + i * w.gap, e: w.e, s: w.s || 0 });
+        for (let i = 0; i < w.n; i++) this.events.push({ t: w.t + i * w.gap, e: w.e, s: w.s || 0, g: w.g });
       this.events.sort((a, b) => a.t - b.t);
       this.evIdx = 0;
       this.totalEnemies = this.events.length;
@@ -71,6 +74,21 @@ window.TD = window.TD || {};
     }
 
     // ---------- 準備 ----------
+    // 出現地点 si から防衛地点 gi（省略時は最も近い地点）までの道
+    routeFor(si, gi) {
+      const key = si + ':' + (gi == null ? '*' : gi);
+      if (this.routeCache[key]) return this.routeCache[key];
+      const s = this.spawns[Math.min(si, this.spawns.length - 1)];
+      let best = null;
+      const cands = gi == null ? this.goals : [this.goals[Math.min(gi, this.goals.length - 1)]];
+      for (const g of cands) {
+        const r = this.findRoute(s, g);
+        if (r.length && r[0].x === s[0] * T + T / 2 && r[0].y === s[1] * T + T / 2 && (!best || r.length < best.length)) best = r;
+      }
+      if (!best && gi != null) return (this.routeCache[key] = this.routeFor(si)); // 指定地点に届かない場合は一番近い地点へ
+      return (this.routeCache[key] = best || this.findRoute(s, this.goals[0]));
+    }
+
     findRoute(s, g) {
       const key = (x, y) => x + ',' + y;
       const prev = { [key(s[0], s[1])]: null };
@@ -101,12 +119,12 @@ window.TD = window.TD || {};
       for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
         const ch = this.grid[y][x], px = x * T, py = y * T;
         if (PATH.includes(ch)) {
-          g.fillStyle = (x + y) % 2 ? '#8a7560' : '#93806a';
+          g.fillStyle = this.stage.theme === 'snow' ? ((x + y) % 2 ? '#9aa6b8' : '#a4b0c2') : (x + y) % 2 ? '#8a7560' : '#93806a';
           g.fillRect(px, py, T, T);
           g.fillStyle = 'rgba(0,0,0,.12)';
           g.fillRect(px + 6, py + 8, 7, 4); g.fillRect(px + 24, py + 26, 9, 4);
         } else {
-          g.fillStyle = (x + y) % 2 ? '#3f6b3a' : '#447340';
+          g.fillStyle = this.stage.theme === 'snow' ? ((x + y) % 2 ? '#d8e2ec' : '#e2eaf3') : (x + y) % 2 ? '#3f6b3a' : '#447340';
           g.fillRect(px, py, T, T);
           g.fillStyle = 'rgba(255,255,255,.06)';
           g.fillRect(px + 10, py + 12, 2, 6); g.fillRect(px + 27, py + 22, 2, 6);
@@ -631,7 +649,7 @@ window.TD = window.TD || {};
 
       while (this.evIdx < this.events.length && this.events[this.evIdx].t <= this.time) {
         const ev = this.events[this.evIdx++];
-        this.spawn(ev.e, ev.s);
+        this.spawn(ev.e, ev.s, ev.g);
       }
 
       this.updateEnemies(dt);
@@ -649,8 +667,8 @@ window.TD = window.TD || {};
       else if (this.evIdx >= this.events.length && !this.enemies.length) this.finish(true);
     }
 
-    spawn(type, s) {
-      const def = TD.ENEMIES[type], route = this.routes[Math.min(s, this.routes.length - 1)];
+    spawn(type, s, g) {
+      const def = TD.ENEMIES[type], route = this.routeFor(s || 0, g);
       const hp = Math.round(def.hp * this.stage.hpScale);
       const e = {
         def, route, idx: 1, x: route[0].x, y: route[0].y, hp, maxHp: hp, atk: def.atk * this.stage.hpScale,
@@ -1036,6 +1054,13 @@ window.TD = window.TD || {};
           }
           g.restore();
           g.beginPath(); g.ellipse(x, y, s * 0.6, s * 0.8, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+          break;
+        }
+        case 'ghost': { // 氷霊：すそが揺れる幽霊
+          g.globalAlpha = 0.85;
+          g.beginPath(); g.arc(x, y - s * 0.2, s * 0.9, Math.PI, 0);
+          for (let i = 0; i <= 4; i++) g.lineTo(x + s * 0.9 - i * s * 0.45, y + s * 0.8 + (i % 2 ? -s * 0.3 : 0) + Math.sin(e.walk + i) * 1.5);
+          g.closePath(); g.fill(); g.stroke(); g.globalAlpha = 1;
           break;
         }
         case 'fish':

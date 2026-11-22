@@ -855,3 +855,5 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .char-card.in-party .cc-fx { top: 20px; }
 .ps-fx { display: block; font-size: 11px; color: #8affb0; margin-top: 2px; }
 .brief-fx { margin-top: 8px; font-size: 12px; color: #8affb0; }
+
+.brief-goals { margin: -4px 0 8px; padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 800; color: #ffd08a; background: rgba(255, 180, 80, .1); border: 1px solid rgba(255, 180, 80, .4); }
