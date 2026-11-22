@@ -51,6 +51,7 @@ TD.CHARS = {
   },
   gald: {
     name: 'ガルド', title: '鉄壁の守護者', rarity: 3, element: 'light', role: 'shield',
+    partyFx: { name: '守備隊の構え', type: 'def', add: 0.15, desc: '味方全員の防御+15%' },
     cost: 15, hp: 2600, atk: 50, def: 140, interval: 1.4, range: 1.3, block: 3, redeploy: 30,
     passive: { name: '隊長の号令', type: 'adjAtk', mult: 1.2, desc: '隣接するマスの味方の攻撃力+20%' },
     lines: { deploy: 'ここは一歩も通さん', skill: '我が盾は砕けぬ！不動の誓い！' },
@@ -63,6 +64,7 @@ TD.CHARS = {
   },
   mia: {
     name: 'ミア', title: '見習い僧侶', rarity: 3, element: 'light', role: 'priest',
+    partyFx: { name: '見習いの祈り', type: 'hp', add: 0.1, desc: '味方全員の最大HP+10%' },
     cost: 9, hp: 550, atk: 85, def: 5, interval: 1.6, range: 2.6, redeploy: 20,
     skill: { name: '祝福の祈り', type: 'healAll', sp: 30, ratio: 0.4,
              desc: '全ての味方のHPを最大HPの40%回復' },
@@ -96,19 +98,21 @@ TD.CHARS = {
   thomas: {
     name: 'トマス', title: '見習い騎士', rarity: 3, element: 'water', role: 'shield',
     cost: 12, hp: 1900, atk: 40, def: 110, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
-    passive: { name: '根性', type: 'lastStand', threshold: 0.3, defMult: 2, desc: 'HPが30%以下になると防御2倍' },
+    passive: { name: '盾撃ち', type: 'multi', count: 2, desc: '攻撃が敵2体に当たる' },
     lines: { deploy: 'ぼ、僕だって騎士です！', skill: 'ここで退いたら騎士じゃない！' },
   },
   lily: {
     name: 'リリィ', title: '泉の巫女', rarity: 3, element: 'water', role: 'priest',
     cost: 9, hp: 520, atk: 80, def: 5, interval: 1.5, range: 2.6, redeploy: 20,
-    passive: { name: '泉の加護', type: 'healUp', mult: 1.3, desc: '回復量+30%' },
+    passive: { name: '浄化の泉', type: 'healUp', mult: 1.3, cleanse: true, desc: '回復量+30%。回復した味方の毒を消す' },
     lines: { deploy: '泉の加護を、あなたに', skill: '湧き出でよ、癒しの泉' },
   },
   popo: {
     name: 'ポポ', title: 'ドワーフの石弓兵', rarity: 3, element: 'fire', role: 'archer',
+    partyFx: { name: '宝探し', type: 'exp', add: 0.3, desc: 'クリア時の経験の書+30%' },
     cost: 9, hp: 620, atk: 66, def: 20, interval: 1.0, range: 3.2, redeploy: 20,
-    passive: { name: '宝探し', type: 'expBonus', mult: 1.3, desc: '出撃メンバーにいると、クリア時の経験の書+30%（配置しなくても有効）' },
+    skill: { name: '連装石弓', type: 'rapid', sp: 25, rate: 2.5, dur: 8,
+             desc: '8秒間、攻撃速度が2.5倍になる' },
     lines: { deploy: 'ドワーフの石弓をなめるなよ！', skill: '全弾装填、撃てーっ！' },
   },
 
@@ -216,6 +220,7 @@ TD.CHARS = {
   },
   pico: {
     name: 'ピコ', title: '見習い光術士', rarity: 3, element: 'light', role: 'mage',
+    partyFx: { name: '光の導き', type: 'mana', add: 4, desc: 'バトル開始時のマナ+4' },
     cost: 10, hp: 540, atk: 75, def: 8, interval: 1.9, range: 2.4, splash: 0.8, redeploy: 20,
     skill: { name: '閃光弾', type: 'flash', sp: 22, radius: 1.6, stun: 2, mult: 2,
              desc: '周囲の敵を2秒間気絶させ、攻撃力200%のダメージ' },
@@ -223,6 +228,7 @@ TD.CHARS = {
   },
   emil: {
     name: 'エミル', title: '王都の新米衛兵', rarity: 3, element: 'light', role: 'sword',
+    partyFx: { name: '衛兵の鼓舞', type: 'atk', add: 0.1, desc: '味方全員の攻撃+10%' },
     cost: 9, hp: 950, atk: 95, def: 40, interval: 0.95, range: 1.6, block: 1, redeploy: 20,
     passive: { name: '衛兵の誇り', type: 'pride', threshold: 0.5, mult: 1.3, desc: 'HPが半分以上の間、攻撃力+30%' },
     lines: { deploy: '衛兵エミル、ただいま参上！', skill: 'ここが踏ん張りどころ！' },
@@ -258,7 +264,7 @@ TD.CHARS = {
   kagerou: {
     name: 'カゲロウ', title: '夜回りの忍び', rarity: 3, element: 'dark', role: 'sword',
     cost: 9, hp: 880, atk: 100, def: 30, interval: 0.85, range: 1.6, block: 1, redeploy: 20,
-    passive: { name: '隠れ身', type: 'stealth', desc: '遠距離攻撃やボスの範囲攻撃の標的にならない' },
+    passive: { name: '毒の刃', type: 'poisonBlade', stacks: 1, desc: '攻撃するたびに敵に毒を1つためる（最大5つ）' },
     lines: { deploy: '……御意', skill: '影より出でて、影に消ゆ' },
   },
   glen: {
@@ -270,7 +276,7 @@ TD.CHARS = {
   luna: {
     name: 'ルナ', title: '月影の狩人', rarity: 3, element: 'dark', role: 'archer',
     cost: 9, hp: 580, atk: 66, def: 12, interval: 1.0, range: 3.2, redeploy: 20,
-    passive: { name: '月影', type: 'pierce', ratio: 0.3, desc: '攻撃が敵の防御を30%無視する' },
+    passive: { name: '鈍化の矢', type: 'slowShot', mult: 0.7, dur: 3, desc: '攻撃した敵の移動速度を3秒間30%下げる' },
     lines: { deploy: '月が綺麗な夜ね', skill: '月の光は、外れない' },
   },
   viola: {
@@ -278,6 +284,7 @@ TD.CHARS = {
     cost: 11, hp: 560, atk: 80, def: 8, interval: 2.0, range: 2.4, splash: 0.8, redeploy: 25,
     skill: { name: '呪いの霧', type: 'explosion', sp: 25, mult: 3.5, radius: 1.5,
              desc: '射程内の敵を中心に呪いの霧。攻撃力350%の範囲ダメージ' },
+    passive: { name: '呪毒の霧', type: 'poisonSplash', stacks: 2, desc: '範囲攻撃が当たった敵すべてに毒を2つためる' },
     lines: { deploy: 'うふふ、呪っちゃおっかな～', skill: 'のろのろ～、のろわれろ～！' },
   },
   shion: {
@@ -341,6 +348,8 @@ TD.ENEMIES = {
   goblinArcher: { name: 'ゴブリン弓兵', element: 'wind', hp: 300, atk: 55, def: 5, speed: 0.55, interval: 2.0, size: 11, shape: 'goblin', ranged: 2.4 },
   darkMage:     { name: '闇の魔導兵', element: 'dark', hp: 420, atk: 80, def: 10, speed: 0.45, interval: 2.6, size: 12, shape: 'mage', ranged: 2.6 },
   // ---------- 第2章 ----------
+  // 毒沼のスライム：攻撃した味方を毒にする（毎秒最大HPの2%、6秒）
+  bogSlime: { name: '毒沼のスライム', element: 'dark', hp: 420, atk: 50, def: 5, speed: 0.55, interval: 1.4, size: 12, shape: 'slime', poisonOnHit: { ratio: 0.02, dur: 6 } },
   // 飛行する敵：剣・盾で足止めできず、近くのキャラを攻撃しながら飛んでいく
   harpy:    { name: 'ハーピー',     element: 'wind',  hp: 280,  atk: 45,  def: 5,   speed: 0.85, interval: 1.5, size: 11, shape: 'harpy', flying: true, ranged: 1.4 },
   merman:   { name: '半魚人',       element: 'water', hp: 650,  atk: 85,  def: 30,  speed: 0.55, interval: 1.4, size: 13, shape: 'fish' },
@@ -525,6 +534,7 @@ TD.STAGES = [
       { t: 3, e: 'slime', n: 5, gap: 1.8 },
       { t: 14, e: 'merman', n: 3, gap: 3 },
       { t: 26, e: 'wolf', n: 6, gap: 1.2 },
+      { t: 32, e: 'bogSlime', n: 3, gap: 2 },
       { t: 38, e: 'merman', n: 4, gap: 2.2 },
       { t: 50, e: 'goblinArcher', n: 2, gap: 3 },
       { t: 56, e: 'slime', n: 6, gap: 1.2 },
@@ -613,6 +623,7 @@ TD.STAGES = [
       { t: 22, e: 'tideMage', n: 2, gap: 3 },
       { t: 28, e: 'iceGolem', n: 1, gap: 0 },
       { t: 34, e: 'merman', n: 5, gap: 1.6 },
+      { t: 40, e: 'bogSlime', n: 4, gap: 1.5 },
       { t: 44, e: 'harpy', n: 6, gap: 1.2 },
       { t: 54, e: 'iceGolem', n: 1, gap: 0 },
       { t: 58, e: 'goblinArcher', n: 3, gap: 2 },
@@ -847,3 +858,22 @@ TD.retreatCooldown = function (def, hpRatio) {
 TD.ADJUTANT = { statMult: 1.2, starCap: 22 };
 TD.partyStars = party => party.slice(1).reduce((a, id) => a + (TD.CHARS[id] ? TD.CHARS[id].rarity : 0), 0);
 TD.partyValid = party => party.length > 0 && TD.partyStars(party) <= TD.ADJUTANT.starCap;
+
+// ========== 状態異常：毒 ==========
+// 敵の毒：1つごとに毎秒、最大HPの perStack 分のダメージ。ボスは bossMult 倍。
+TD.POISON = { perStack: 0.01, maxStacks: 5, dur: 5, bossMult: 1 / 3 };
+// ========== 編成効果（出撃メンバーにいるだけで有効・重ねがけ可） ==========
+TD.partyEffects = function (party) {
+  const fx = { atk: 0, def: 0, hp: 0, mana: 0, exp: 0 };
+  for (const id of party) { const p = TD.CHARS[id] && TD.CHARS[id].partyFx; if (p) fx[p.type] += p.add; }
+  return fx;
+};
+TD.partyEffectsText = function (party) {
+  const fx = TD.partyEffects(party), a = [];
+  if (fx.atk) a.push(`攻撃+${Math.round(fx.atk * 100)}%`);
+  if (fx.def) a.push(`防御+${Math.round(fx.def * 100)}%`);
+  if (fx.hp) a.push(`最大HP+${Math.round(fx.hp * 100)}%`);
+  if (fx.mana) a.push(`開始マナ+${fx.mana}`);
+  if (fx.exp) a.push(`経験の書+${Math.round(fx.exp * 100)}%`);
+  return a.join('・');
+};

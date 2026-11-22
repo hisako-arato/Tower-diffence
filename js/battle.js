@@ -276,9 +276,8 @@ window.TD = window.TD || {};
       m.innerHTML =
         `<div class="um-name">${d.name}<small>${TD.ELEMENTS[d.element].name}・${TD.ROLES[d.role].name}</small></div>` +
         `<div class="um-hp">HP ${Math.ceil(u.hp)} / ${u.maxHp}</div>` +
-        (d.skill
-          ? `<button class="um-skill" ${ready ? '' : 'disabled'}>スキル「${d.skill.name}」${ready ? '' : ` (${Math.floor(u.sp)}/${d.skill.sp})`}</button>`
-          : `<div class="um-passive"><b>常時スキル「${d.passive.name}」</b>${d.passive.desc}</div>`) +
+        (d.passive ? `<div class="um-passive"><b>常時スキル「${d.passive.name}」</b>${d.passive.desc}</div>` : '') +
+        (d.skill ? `<button class="um-skill" ${ready ? '' : 'disabled'}>スキル「${d.skill.name}」${ready ? '' : ` (${Math.floor(u.sp)}/${d.skill.sp})`}</button>` : '') +
         `<button class="um-retreat">${this.retreatLabel(u)}</button>`;
       const skb = m.querySelector('.um-skill');
       if (skb) skb.onclick = () => { this.activateSkill(u); this.hideMenu(); };
@@ -560,12 +559,24 @@ window.TD = window.TD || {};
       const color = m > 1 ? '#ffd23f' : m < 1 ? '#a8b0b8' : '#ffffff';
       this.pop(e.x + (Math.random() * 10 - 5), e.y - e.size - 6, String(d), crit ? '#ff8a3a' : color, { size: crit || m > 1 ? 15 : 12, weak: m > 1 });
       if (crit) this.pop(e.x, e.y - e.size - 20, 'CRITICAL', '#ff8a3a', { size: 9 });
-      if (e.hp <= 0) {
+      this.checkKill(e);
+    }
+
+    checkKill(e) {
+      if (e.hp <= 0 && !e.dead) {
         e.dead = true;
         this.killed++;
         this.fx.push({ type: 'burst', x: e.x, y: e.y, t: 0, dur: 0.45, color: TD.ELEMENTS[e.def.element].color, big: e.def.boss });
         if (e.def.boss) this.fx.push({ type: 'flash', t: 0, dur: 0.8, color: 'rgba(255,255,255,' });
       }
+    }
+
+    // 毒をためる
+    addPoison(e, n) {
+      if (e.dead) return;
+      const P = TD.POISON;
+      e.poison = Math.min(P.maxStacks, (e.poison || 0) + n);
+      e.poisonT = P.dur;
     }
 
     hurt(e, u, power) {
@@ -580,6 +591,10 @@ window.TD = window.TD || {};
       u.hp -= d;
       u.flash = 0.12;
       this.pop(u.x, u.y - 20, String(d), '#ff7a7a', { size: 11 });
+      if (e && e.def && e.def.poisonOnHit) {
+        if (!(u.poisonT > 0)) this.pop(u.x, u.y - 32, '毒', '#c070ff', { size: 11 });
+        u.poisonT = e.def.poisonOnHit.dur; u.poisonRatio = e.def.poisonOnHit.ratio;
+      }
       // 水鏡の構え：受けたダメージを攻撃してきた敵に返す
       const rp = this.pas(u, 'reflect');
       if (((u.buff && u.buff.type === 'reflect') || rp) && e && !e.dead && e.hp != null) {
@@ -653,6 +668,19 @@ window.TD = window.TD || {};
         if (e.dead) continue;
         e.flash = Math.max(0, e.flash - dt);
         if (e.defDownT > 0) e.defDownT -= dt;
+        if (e.slowShotT > 0) e.slowShotT -= dt;
+        if (e.poisonT > 0) {
+          e.poisonT -= dt;
+          const P = TD.POISON, dmg = e.maxHp * P.perStack * e.poison * dt * (e.def.boss ? P.bossMult : 1);
+          e.hp -= dmg; e.poisonAcc = (e.poisonAcc || 0) + dmg;
+          if (e.poisonAcc >= 1 && (e.poisonPopT = (e.poisonPopT || 0) - dt) <= 0) {
+            this.pop(e.x + 6, e.y - e.size - 4, String(Math.round(e.poisonAcc)), '#b070ff', { size: 10 });
+            e.poisonAcc = 0; e.poisonPopT = 1;
+          }
+          if (e.poisonT <= 0) e.poison = 0;
+          this.checkKill(e);
+          if (e.dead) continue;
+        }
         if (e.frozen > 0) { e.frozen -= dt; if (e.frozen <= 0) e.bound = false; continue; }
         if (e.blockedBy && e.blockedBy.removed) e.blockedBy = null;
         // ボス：予兆付きの範囲攻撃
@@ -681,7 +709,7 @@ window.TD = window.TD || {};
         if (e.slowT > 0) e.slowT -= dt;
         let slowAura = 1;
         for (const u of this.units) { const p = this.pas(u, 'slowAura'); if (p && dist(e, u) <= this.rangeOf(u) * T) slowAura = Math.min(slowAura, p.mult); }
-        let move = e.def.speed * T * dt * (e.slowT > 0 ? 0.5 : 1) * slowAura;
+        let move = e.def.speed * T * dt * (e.slowT > 0 ? 0.5 : 1) * slowAura * (e.slowShotT > 0 ? e.slowShotMult : 1);
         while (move > 0 && e.idx < e.route.length) {
           const tgt = e.route[e.idx], dx = tgt.x - e.x, dy = tgt.y - e.y, d = Math.hypot(dx, dy);
           if (d <= move) { e.x = tgt.x; e.y = tgt.y; e.idx++; move -= d; }
@@ -708,6 +736,11 @@ window.TD = window.TD || {};
         if (u.removed) continue;
         u.flash = Math.max(0, u.flash - dt);
         u.blocking = u.blocking.filter(e => !e.dead && e.blockedBy === u);
+        if (u.poisonT > 0) {
+          u.poisonT -= dt;
+          u.hp -= u.maxHp * u.poisonRatio * dt;
+          if (u.hp <= 0) { this.removeUnit(u, false); continue; }
+        }
         if (u.atkUpT > 0) u.atkUpT -= dt;
         if (u.hasteT > 0) u.hasteT -= dt;
         if (u.shieldT > 0) u.shieldT -= dt;
@@ -752,6 +785,7 @@ window.TD = window.TD || {};
         for (const tg of targets) {
           if (u.melee) {
             this.hit(u, tg, this.atkOf(u));
+            const pb = this.pas(u, 'poisonBlade'); if (pb) this.addPoison(tg, pb.stacks);
             this.fx.push({ type: 'slash', x: tg.x, y: tg.y, t: 0, dur: 0.2, color: TD.ELEMENTS[d.element].color, a: Math.atan2(tg.y - u.y, tg.x - u.x) });
           } else {
             this.shots.push({ x: u.x, y: u.y, target: tg, power: this.atkOf(u), src: u, splash: this.splashOf(u), speed: d.role === 'archer' ? 520 : 330,
@@ -803,11 +837,18 @@ window.TD = window.TD || {};
             this.hurt(s.src, t);
           } else if (s.heal) {
             t.hp = Math.min(t.maxHp, t.hp + s.power);
+            const hu = this.pas(s.src, 'healUp');
+            if (hu && hu.cleanse && t.poisonT > 0) { t.poisonT = 0; this.pop(t.x, t.y - 32, '浄化', '#9dffb8', { size: 11 }); }
             this.pop(t.x, t.y - 18, '+' + Math.round(s.power), '#7dffa0', { size: 11 });
           } else if (s.splash) {
-            for (const e of this.enemies) if (!e.dead && dist(e, t) <= s.splash * T) this.hit(s.src, e, s.power);
+            const ps = s.src.def && s.src.def.passive && s.src.def.passive.type === 'poisonSplash' ? s.src.def.passive : null;
+            for (const e of this.enemies) if (!e.dead && dist(e, t) <= s.splash * T) { this.hit(s.src, e, s.power); if (ps) this.addPoison(e, ps.stacks); }
             this.fx.push({ type: 'ring', x: t.x, y: t.y, r0: 4, r1: s.splash * T, t: 0, dur: 0.3, color: s.color });
-          } else this.hit(s.src, t, s.power);
+          } else {
+            this.hit(s.src, t, s.power);
+            const sl = s.src.def && s.src.def.passive && s.src.def.passive.type === 'slowShot' ? s.src.def.passive : null;
+            if (sl && !t.dead) { t.slowShotT = sl.dur; t.slowShotMult = sl.mult; }
+          }
         } else { s.x += dx / d * m; s.y += dy / d * m; }
       }
       this.shots = this.shots.filter(s => !s.done);
@@ -897,6 +938,9 @@ window.TD = window.TD || {};
         g.beginPath(); g.arc(u.x, u.y, 19, 0, Math.PI * 2); g.stroke();
         if (u.buff.type === 'taunt') { g.setLineDash([4, 6]); g.beginPath(); g.arc(u.x, u.y, u.buff.radius * T, 0, Math.PI * 2); g.stroke(); g.setLineDash([]); }
         g.globalAlpha = 1;
+      }
+      if (u.poisonT > 0) { // 毒状態
+        g.fillStyle = 'rgba(176,96,255,.35)'; g.beginPath(); g.arc(u.x, u.y, 16, 0, Math.PI * 2); g.fill();
       }
       if (u.shieldT > 0) { // 被ダメージ軽減の泡
         g.fillStyle = 'rgba(122,216,255,.18)'; g.strokeStyle = 'rgba(160,230,255,.7)'; g.lineWidth = 1.5;
@@ -1027,6 +1071,11 @@ window.TD = window.TD || {};
           break;
         }
       }
+      if (e.poisonT > 0) { // 毒（つぶの数＝たまった数）
+        g.fillStyle = '#b060ff';
+        for (let i = 0; i < e.poison; i++) { g.beginPath(); g.arc(x - s + i * 5, e.y - s - 14, 2, 0, Math.PI * 2); g.fill(); }
+      }
+      if (e.slowShotT > 0) { g.strokeStyle = 'rgba(160,220,255,.8)'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, s + 2, 0.3, 1.3); g.stroke(); }
       if (e.defDownT > 0) { // 防御ダウン中
         g.strokeStyle = '#ffe066'; g.lineWidth = 1.5; g.setLineDash([3, 3]);
         g.beginPath(); g.arc(x, y, s + 4, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
