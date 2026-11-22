@@ -1039,3 +1039,6 @@ TD.partyEffectsText = function (party) {
   if (fx.exp) a.push(`経験の書+${Math.round(fx.exp * 100)}%`);
   return a.join('・');
 };
+
+// 2回目以降のクリアでもらえる魔晶石（本編ステージ）。★3でクリアすると多くもらえる
+TD.REPEAT_REWARD = { base: 15, star3: 20 };

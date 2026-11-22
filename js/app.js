@@ -338,7 +338,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const first = !save.cleared[st.id];
     const rewardText = st.type === 'daily' ? `経験の書 ×${TD.stageExp(st)}（本日あと${TD.Live.runsLeft(save, st)}回）`
       : st.type === 'event' ? `${TD.EVENT.currency} ×${st.eventPoints}・経験の書 ×${TD.stageExp(st)}${first ? `・魔晶石 ×${st.reward}（初回）` : ''}`
-      : `経験の書 ×${TD.stageExp(st)}・魔晶石 ×${first ? st.reward + '（初回）' : 5}`;
+      : `経験の書 ×${TD.stageExp(st)}・魔晶石 ×${first ? st.reward + '（初回）' : `${TD.REPEAT_REWARD.base}（★3なら${TD.REPEAT_REWARD.star3}）`}`;
     const body = modal(
       `<div class="brief-head"><span class="st-id">${st.id}</span>${esc(st.name)}</div>` +
       `<div class="brief-navi"><span class="mini-navi"></span><p>${esc(st.brief)}</p></div>` +
@@ -432,7 +432,10 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       TD.Live.track(save, 'wins');
       const prev = save.cleared[st.id] || 0;
       if (!prev && st.reward) { stones += st.reward; notes.push(`初回クリア ×${st.reward}`); }
-      else if (!st.type) { stones += 5; notes.push('クリア報酬 ×5'); }
+      else if (!st.type) {
+        const rr = r.stars === 3 ? TD.REPEAT_REWARD.star3 : TD.REPEAT_REWARD.base;
+        stones += rr; notes.push(`クリア報酬 ×${rr}${r.stars === 3 ? '（★3）' : ''}`);
+      }
       if (st.type === 'daily') { save.daily.runs[st.id] = (save.daily.runs[st.id] || 0) + 1; TD.Live.track(save, 'caves'); }
       if (st.type === 'event') { evPts = st.eventPoints; TD.Live.eventState(save).pts += evPts; }
       if (r.stars === 3 && prev < 3) { stones += 20; notes.push('★3達成 ×20'); }
