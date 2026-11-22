@@ -563,6 +563,8 @@ window.TD = window.TD || {};
       if (e.dead) return;
       const m = TD.elemMult(src.def.element, e.def.element);
       let crit = false;
+      // ヴィオラ「蝕みの呪い」：毒状態の敵に与えるダメージが倍
+      if (src.def && src.def.unique && src.def.unique.type === 'poisonHunter' && e.poisonT > 0) power *= src.def.unique.mult;
       const cp = src.def && src.def.passive && src.def.passive.type === 'crit' ? src.def.passive : null;
       if (cp && Math.random() < cp.chance) { power *= cp.mult; crit = true; }
       const raw = power * m;

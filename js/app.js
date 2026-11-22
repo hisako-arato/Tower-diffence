@@ -441,6 +441,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       if (r.stars === 3 && prev < 3) { stones += 20; notes.push('★3達成 ×20'); }
       save.cleared[st.id] = Math.max(prev, r.stars);
     }
+    // ユニークスキル：クリア時の魔晶石が増える（重ねがけ可）
+    const stoneFx = TD.partyEffects(save.party).stones;
+    if (stones && stoneFx) { const add = Math.round(stones * stoneFx); stones += add; notes.push(`ユニークスキル +${add}`); }
     save.stones += stones;
     save.crystals += exp;
     persist();

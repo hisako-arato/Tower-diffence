@@ -251,6 +251,7 @@ TD.CHARS = {
   },
   hayate: {
     name: 'ハヤテ', title: '疾風の飛脚', rarity: 3, element: 'wind', role: 'sword',
+    partyFx: { name: '疾風の運び屋', type: 'stones', add: 0.5, desc: 'クリア時にもらえる魔晶石+50%' },
     cost: 8, hp: 850, atk: 80, def: 30, interval: 0.7, range: 1.6, block: 1, redeploy: 20,
     passive: { name: '疾風二刀', type: 'multi', count: 2, desc: '攻撃が敵2体に当たる' },
     lines: { deploy: '速達だよ！ ……あれ、戦い？', skill: '足には自信があるんだ！' },
@@ -281,6 +282,7 @@ TD.CHARS = {
   },
   viola: {
     name: 'ヴィオラ', title: '見習い呪術師', rarity: 3, element: 'dark', role: 'mage',
+    unique: { name: '蝕みの呪い', type: 'poisonHunter', mult: 2, desc: '毒状態の敵に与えるダメージが2倍になる' },
     cost: 11, hp: 560, atk: 80, def: 8, interval: 2.0, range: 2.4, splash: 0.8, redeploy: 25,
     skill: { name: '呪いの霧', type: 'explosion', sp: 25, mult: 3.5, radius: 1.5,
              poison: 3, desc: '射程内の敵を中心に呪いの霧。攻撃力350%の範囲ダメージを与え、当たった敵に毒を3つためる' },
@@ -1025,7 +1027,7 @@ TD.partyValid = party => party.length > 0 && TD.partyStars(party) <= TD.ADJUTANT
 TD.POISON = { perStack: 0.01, maxStacks: 5, dur: 5, bossMult: 1 / 3 };
 // ========== ユニークスキル（編成）：出撃メンバーにいるだけで有効・重ねがけ可 ==========
 TD.partyEffects = function (party) {
-  const fx = { atk: 0, def: 0, hp: 0, mana: 0, exp: 0 };
+  const fx = { atk: 0, def: 0, hp: 0, mana: 0, exp: 0, stones: 0 };
   for (const id of party) { const p = TD.CHARS[id] && TD.CHARS[id].partyFx; if (p) fx[p.type] += p.add; }
   return fx;
 };
@@ -1036,6 +1038,7 @@ TD.partyEffectsText = function (party) {
   if (fx.hp) a.push(`最大HP+${Math.round(fx.hp * 100)}%`);
   if (fx.mana) a.push(`開始マナ+${fx.mana}`);
   if (fx.exp) a.push(`経験の書+${Math.round(fx.exp * 100)}%`);
+  if (fx.stones) a.push(`魔晶石+${Math.round(fx.stones * 100)}%`);
   return a.join('・');
 };
 
