@@ -31,7 +31,7 @@ TD.ROLES = {
 TD.CHARS = {
   lydia: {
     name: 'リディア', title: '聖剣の騎士姫', rarity: 5, element: 'light', role: 'sword',
-    cost: 14, hp: 1680, atk: 136, def: 63, interval: 1.0, range: 1.6, block: 2, redeploy: 30,
+    cost: 14, hp: 2268, atk: 184, def: 85, interval: 1.0, range: 1.6, block: 2, redeploy: 30,
     skill: { name: '天穹断', type: 'allStrike', sp: 30, mult: 4,
              desc: 'フィールド上の全ての敵に攻撃力400%の光属性ダメージ' },
     lines: { deploy: '聖剣の名にかけて！', skill: '天よ、裂けよ――天穹断！' },
@@ -119,7 +119,7 @@ TD.CHARS = {
   // ---------- 追加キャラ（AI生成イラスト） ----------
   meltia: {
     name: 'メルティア', title: '魔界の恋姫', rarity: 5, element: 'dark', role: 'priest',
-    cost: 13, hp: 840, atk: 116, def: 21, interval: 1.5, range: 2.8, redeploy: 30,
+    cost: 13, hp: 1134, atk: 157, def: 28, interval: 1.5, range: 2.8, redeploy: 30,
     profile: '魔界から家出してきたお姫さま。退屈しのぎに人間の味方をしているらしい。',
     skill: { name: '魔王の慈愛', type: 'drainHeal', sp: 32, ratio: 0.5, mult: 1.5,
              desc: '敵全体に攻撃力150%の闇ダメージを与え、味方全員のHPを最大HPの50%回復' },
@@ -127,14 +127,14 @@ TD.CHARS = {
   },
   kagura: {
     name: 'カグラ', title: '紅鎖の星姫', rarity: 5, element: 'fire', role: 'shield',
-    cost: 17, hp: 3150, atk: 94, def: 168, interval: 1.3, range: 1.3, block: 4, redeploy: 35,
+    cost: 17, hp: 4252, atk: 127, def: 227, interval: 1.3, range: 1.3, block: 4, redeploy: 35,
     profile: '星の鎖を操る巫女。ブロック数4はゲーム中で最多。',
     passive: { name: '紅鎖の陣', type: 'blockMult', mult: 1.5, desc: 'ブロック数が1.5倍になる（4→6）' },
     lines: { deploy: '……この先へは、行かせません', skill: '星よ、鎖となりて縛めよ' },
   },
   nereia: {
     name: 'ネレイア', title: '深淵竜の魔女', rarity: 5, element: 'dark', role: 'mage',
-    cost: 16, hp: 756, atk: 126, def: 16, interval: 1.9, range: 2.6, splash: 0.9, redeploy: 35,
+    cost: 16, hp: 1021, atk: 170, def: 22, interval: 1.9, range: 2.6, splash: 0.9, redeploy: 35,
     profile: '深海の竜を従える魔女。竜の大波は敵を押し流す。',
     skill: { name: '深淵竜の大波', type: 'tidal', sp: 34, mult: 3.5, radius: 2.6, push: 2,
              desc: '周囲の敵に攻撃力350%のダメージを与え、2マス押し戻す（ボスには無効）' },
@@ -160,7 +160,7 @@ TD.CHARS = {
   },
   sylphina: {
     name: 'シルフィナ', title: '天翔ける風詠み', rarity: 5, element: 'wind', role: 'mage',
-    cost: 15, hp: 756, atk: 118, def: 16, interval: 1.8, range: 2.8, splash: 0.9, redeploy: 30,
+    cost: 15, hp: 1021, atk: 159, def: 22, interval: 1.8, range: 2.8, splash: 0.9, redeploy: 30,
     profile: '空の神殿で風の声を聴く巫女。彼女が歌えば、嵐さえ道を譲る。',
     skill: { name: '大竜巻', type: 'vortex', sp: 30, mult: 3, radius: 2.4,
              desc: '射程内の敵を一か所に吸い寄せ、攻撃力300%の範囲ダメージ（足止め中の敵とボスは吸い寄せない）' },
@@ -168,7 +168,7 @@ TD.CHARS = {
   },
   seira: {
     name: 'セイラ', title: '蒼波の剣聖', rarity: 5, element: 'water', role: 'sword',
-    cost: 15, hp: 1785, atk: 131, def: 74, interval: 0.95, range: 1.6, block: 2, redeploy: 30,
+    cost: 15, hp: 2410, atk: 177, def: 100, interval: 0.95, range: 1.6, block: 2, redeploy: 30,
     profile: '水の都の剣術道場を継ぐ剣聖。受けた刃をそのまま返す「水鏡」の使い手。',
     passive: { name: '常時水鏡', type: 'reflect', ratio: 0.5, defMult: 1.2, desc: '受けたダメージの50%を常に相手に返す。防御+20%' },
     lines: { deploy: '参ります。……お覚悟を', skill: '水鏡に映るは、あなた自身の刃' },
