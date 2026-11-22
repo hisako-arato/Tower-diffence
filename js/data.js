@@ -195,6 +195,16 @@ TD.CHARS = {
     lines: { deploy: '……雨の匂いがするねぇ', skill: '傘の内は、安全さ' },
   },
 
+  aster: {
+    name: 'アステル', title: '天翼の盾騎士', rarity: 4, element: 'light', role: 'shield',
+    cost: 12, hp: 2100, atk: 70, def: 110, interval: 1.3, range: 1.3, block: 2, redeploy: 25,
+    traits: ['fastRedeploy'],
+    profile: '天空の神殿に仕える盾の騎士。肩の小さな蛇は相棒。大盾ごと敵に突っ込む無鉄砲さが玉に瑕。',
+    skill: { name: '天盾突撃', type: 'shieldBash', sp: 24, radius: 1.6, stun: 2.5, dur: 8, defMult: 1.5,
+             desc: '周囲の敵を2.5秒間気絶させ、8秒間ブロック数+2・防御1.5倍' },
+    lines: { deploy: 'オレの盾は、絶対に割れない！', skill: 'どけどけーっ！ 天盾突撃！' },
+  },
+
   // ---------- ★3（初心者の戦力・サポート） ----------
   lux: {
     name: 'ルクス', title: '聖光の見習い狙撃手', rarity: 3, element: 'light', role: 'archer',

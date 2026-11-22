@@ -35,3 +35,4 @@
 | hayate.webp | ハヤテ（★3 風・剣） | AI生成（背景除去：BiRefNet） |
 | zephyr.webp | ゼファー（★4 風・弓） | AI生成（背景除去：isnet-anime） |
 | viola.webp | ヴィオラ（★3 闇・魔） | AI生成（背景除去：BiRefNet） |
+| aster.webp | アステル（★4 光・盾） | AI生成（背景除去：BiRefNet） |
