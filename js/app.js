@@ -582,6 +582,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const pv = base.passive;
     const next = prog.lv < maxLv ? TD.charStats(id, { lv: prog.lv + 1, lb: prog.lb }) : null;
     const up = (k) => next ? `<em>→${next[k]}</em>` : '';
+    // 攻撃・回復は1秒あたりの量（攻撃力 ÷ 攻撃間隔）で表示する
+    const dps = v => Math.round(v / d.interval);
     // 所持している経験の書で上げられる最大レベル
     let affordable = prog.lv;
     while (affordable < maxLv && lvUpCost(prog.lv, affordable + 1) <= save.crystals) affordable++;
@@ -596,10 +598,10 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="cd-lb">限界突破 ${TD.lbHTML(prog.lb)}<small>${prog.lb < TD.GROWTH.maxLB ? '同じ英雄の欠片を召喚すると突破' : '欠片がすべて集まりました'}</small></div></div>` +
       (base.profile ? `<div class="cd-profile">${base.profile}</div>` : '') +
       `<div class="cd-role">${r.desc}</div>` +
-      `<div class="cd-stats"><span>HP<b>${d.hp}${up('hp')}</b></span><span>${base.role === 'priest' ? '回復' : '攻撃'}<b>${d.atk}${up('atk')}</b></span><span>防御<b>${d.def}${up('def')}</b></span>` +
+      `<div class="cd-stats"><span>HP<b>${d.hp}${up('hp')}</b></span><span>${base.role === 'priest' ? '回復' : '攻撃'}<b>${dps(d.atk)}${next ? `<em>→${dps(next.atk)}</em>` : ''}</b></span><span>防御<b>${d.def}${up('def')}</b></span>` +
       `<span>コスト<b>${d.cost}</b></span><span>射程<b>${pv && pv.type === 'range' ? `${+(d.range * pv.mult).toFixed(1)}<small>(${d.range}×${pv.mult})</small>` : d.range}</b></span>` +
-      `<span>${r.melee ? 'ブロック' : '配置先'}<b>${!r.melee ? '草地' : pv && (pv.type === 'blockMult' || pv.blockMult) ? (m => `${Math.floor(d.block * m)}<small>(${d.block}×${m})</small>`)(pv.type === 'blockMult' ? pv.mult : pv.blockMult) : d.block}</b></span>` +
-      `<span>攻撃間隔<b>${d.interval}秒</b></span><span class="wide2">再配置<b>${Math.round(TD.redeployTime(d))}秒<small>（撤退時 ${TD.RETREAT.minCooldown}〜${Math.round(TD.redeployTime(d))}秒）</small></b></span></div>` +
+      (r.melee ? `<span>ブロック<b>${pv && (pv.type === 'blockMult' || pv.blockMult) ? (m => `${Math.floor(d.block * m)}<small>(${d.block}×${m})</small>`)(pv.type === 'blockMult' ? pv.mult : pv.blockMult) : d.block}</b></span>` : '') +
+      `<span class="${r.melee ? 'wide' : 'wide2'}">再配置<b>${Math.round(TD.redeployTime(d))}秒<small>（撤退時 ${TD.RETREAT.minCooldown}〜${Math.round(TD.redeployTime(d))}秒）</small></b></span></div>` +
       `<div class="cd-levelup"><div class="cd-own"><i class="expbook"></i> 経験の書 <b>${save.crystals}</b></div>` +
       (prog.lv < maxLv
         ? `<div class="lv-row">${lvBtn('+1', prog.lv + 1)}${lvBtn('+5', prog.lv + 5)}${lvBtn('最大', Math.max(affordable, prog.lv + 1))}</div>`
