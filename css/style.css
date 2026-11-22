@@ -860,3 +860,5 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 
 .chip.kind-power { background: #8a2a1a; border-color: #ff8a5a; }
 .chip.kind-tech { background: #1a5a6a; border-color: #6adfff; }
+
+.cd-stats span.wide2 { grid-column: span 2; }

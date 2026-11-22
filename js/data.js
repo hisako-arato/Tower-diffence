@@ -19,6 +19,8 @@ TD.elemMult = function (atk, def) {
   return 1;
 };
 
+// 攻撃間隔（秒）は職業ごとに固定
+TD.ROLE_INTERVAL = { sword: 0.9, archer: 1.0, mage: 1.9, shield: 1.4, priest: 1.6 };
 TD.ROLES = {
   sword:  { name: '剣士',   glyph: '剣', melee: true,  desc: '道に配置。敵を足止めして斬る。1マス後ろからも攻撃が届く' },
   shield: { name: '盾騎士', glyph: '盾', melee: true,  desc: '道に配置。多くの敵を食い止める' },
@@ -31,21 +33,21 @@ TD.ROLES = {
 TD.CHARS = {
   lydia: {
     name: 'リディア', title: '聖剣の騎士姫', rarity: 5, element: 'light', role: 'sword',
-    cost: 14, hp: 2268, atk: 184, def: 85, interval: 1.0, range: 1.6, block: 2, redeploy: 30,
+    cost: 14, hp: 2268, atk: 166, def: 85, interval: 0.9, range: 1.6, block: 2, redeploy: 30,
     skill: { name: '天穹断', type: 'allStrike', sp: 30, mult: 4,
              desc: 'フィールド上の全ての敵に攻撃力400%の光属性ダメージ' },
     lines: { deploy: '聖剣の名にかけて！', skill: '天よ、裂けよ――天穹断！' },
   },
   celes: {
     name: 'セレス', title: '氷華の魔女', rarity: 4, kind: 'power', element: 'water', role: 'mage',
-    cost: 12, hp: 891, atk: 120, def: 15, interval: 1.8, range: 2.6, splash: 0.9, redeploy: 30,
+    cost: 12, hp: 891, atk: 127, def: 15, interval: 1.9, range: 2.6, splash: 0.9, redeploy: 30,
     skill: { name: '氷華結界', type: 'freeze', sp: 30, mult: 2, radius: 2.6, dur: 4,
              desc: '周囲の敵を4秒間凍結し、攻撃力200%のダメージ' },
     lines: { deploy: '……凍える覚悟はある？', skill: '咲き誇れ、氷の華――氷華結界' },
   },
   fin: {
     name: 'フィン', title: '森の狩人', rarity: 4, kind: 'power', element: 'wind', role: 'archer',
-    cost: 10, hp: 822, atk: 86, def: 15, interval: 0.9, range: 3.6, redeploy: 25,
+    cost: 10, hp: 822, atk: 96, def: 15, interval: 1.0, range: 3.6, redeploy: 25,
     passive: { name: '鷹の目', type: 'range', mult: 1.5, desc: '射程が1.5倍になる' },
     lines: { deploy: '狙いは外さないよ', skill: '風よ、俺の矢に乗れ！疾風連射！' },
   },
@@ -58,7 +60,7 @@ TD.CHARS = {
   },
   nox: {
     name: 'ノクス', title: '影の剣士', rarity: 4, kind: 'power', element: 'dark', role: 'sword',
-    cost: 11, hp: 1507, atk: 150, def: 60, interval: 0.8, range: 1.6, block: 1, redeploy: 25,
+    cost: 11, hp: 1507, atk: 135, def: 60, interval: 0.9, range: 1.6, block: 1, redeploy: 25,
     passive: { name: '影の刃', type: 'crit', chance: 0.25, mult: 2, desc: '攻撃の25%が2倍ダメージ（クリティカル）になる' },
     lines: { deploy: '……斬るだけだ', skill: '影に沈め。影縫い' },
   },
@@ -73,20 +75,20 @@ TD.CHARS = {
   kai: {
     name: 'カイ', title: '紅蓮の魔導士', rarity: 3, element: 'fire', role: 'mage',
     partyFx: { name: '紅蓮の加護', type: 'atk', add: 0.15, filter: { element: 'fire' }, desc: '火属性の味方の攻撃+15%' },
-    cost: 12, hp: 600, atk: 85, def: 10, interval: 2.0, range: 2.4, splash: 0.8, redeploy: 25,
+    cost: 12, hp: 600, atk: 81, def: 10, interval: 1.9, range: 2.4, splash: 0.8, redeploy: 25,
     skill: { name: '爆炎陣', type: 'explosion', sp: 25, mult: 5, radius: 1.6,
              desc: '射程内の敵を中心に大爆発。攻撃力500%の範囲ダメージ' },
     lines: { deploy: '燃やし尽くしてやるぜ！', skill: 'まとめて吹き飛べ！爆炎陣！' },
   },
   zephyr: {
     name: 'ゼファー', title: '嵐を纏う射手', rarity: 4, kind: 'power', element: 'wind', role: 'archer',
-    cost: 10, hp: 932, atk: 102, def: 22, interval: 0.85, range: 3.8, redeploy: 25,
+    cost: 10, hp: 932, atk: 120, def: 22, interval: 1.0, range: 3.8, redeploy: 25,
     passive: { name: '風の双矢', type: 'multi', count: 2, desc: '攻撃が敵2体に当たる' },
     lines: { deploy: '風が騒いでる……来るぞ', skill: '吹き荒れろ、天嵐の矢雨！' },
   },
   blaire: {
     name: 'ブレア', title: '紅蓮の拳闘士', rarity: 4, kind: 'power', element: 'fire', role: 'sword',
-    cost: 11, hp: 1644, atk: 150, def: 68, interval: 0.75, range: 1.6, block: 1, redeploy: 25,
+    cost: 11, hp: 1644, atk: 140, def: 68, interval: 0.9, range: 1.6, block: 1, redeploy: 25,
     passive: { name: '連撃', type: 'ramp', step: 0.05, max: 0.5, desc: '攻撃するたびに攻撃速度+5%（最大+50%）。撤退すると元に戻る' },
     lines: { deploy: 'さぁ、かかってきな！', skill: '燃え上がれ！烈火連撃！' },
   },
@@ -106,7 +108,7 @@ TD.CHARS = {
   lily: {
     name: 'リリィ', title: '泉の巫女', rarity: 3, element: 'water', role: 'priest',
     partyFx: { name: '泉の祝福', type: 'atk', add: 0.2, filter: { role: 'priest' }, label: '回復量', desc: '僧侶の回復量+20%' },
-    cost: 9, hp: 520, atk: 80, def: 5, interval: 1.5, range: 2.6, redeploy: 20,
+    cost: 9, hp: 520, atk: 85, def: 5, interval: 1.6, range: 2.6, redeploy: 20,
     passive: { name: '浄化の泉', type: 'healUp', mult: 1.3, cleanse: true, desc: '回復量+30%。回復した味方の毒を消す' },
     lines: { deploy: '泉の加護を、あなたに', skill: '湧き出でよ、癒しの泉' },
   },
@@ -122,7 +124,7 @@ TD.CHARS = {
   // ---------- 追加キャラ（AI生成イラスト） ----------
   meltia: {
     name: 'メルティア', title: '魔界の恋姫', rarity: 5, element: 'dark', role: 'priest',
-    cost: 13, hp: 1134, atk: 157, def: 28, interval: 1.5, range: 2.8, redeploy: 30,
+    cost: 13, hp: 1134, atk: 167, def: 28, interval: 1.6, range: 2.8, redeploy: 30,
     profile: '魔界から家出してきたお姫さま。退屈しのぎに人間の味方をしているらしい。',
     skill: { name: '魔王の慈愛', type: 'drainHeal', sp: 32, ratio: 0.5, mult: 1.5,
              desc: '敵全体に攻撃力150%の闇ダメージを与え、味方全員のHPを最大HPの50%回復' },
@@ -130,7 +132,7 @@ TD.CHARS = {
   },
   kagura: {
     name: 'カグラ', title: '紅鎖の星姫', rarity: 5, element: 'fire', role: 'shield',
-    cost: 17, hp: 4252, atk: 127, def: 227, interval: 1.3, range: 1.3, block: 4, redeploy: 35,
+    cost: 17, hp: 4252, atk: 137, def: 227, interval: 1.4, range: 1.3, block: 4, redeploy: 35,
     profile: '星の鎖を操る巫女。ブロック数4はゲーム中で最多。',
     passive: { name: '紅鎖の陣', type: 'blockMult', mult: 1.5, desc: 'ブロック数が1.5倍になる（4→6）' },
     lines: { deploy: '……この先へは、行かせません', skill: '星よ、鎖となりて縛めよ' },
@@ -146,7 +148,7 @@ TD.CHARS = {
   akane: {
     name: 'アカネ', title: '異界の剣道少女', rarity: 4, kind: 'tech', element: 'wind', role: 'sword',
     unique: { name: '異界の剣気', type: 'duo', partner: 'shizuku', count: 2, desc: 'シズクと共に編成されている場合、アカネの攻撃は2体に当たるようになる' },
-    cost: 8, hp: 1089, atk: 123, def: 40, interval: 0.8, range: 1.6, block: 1, redeploy: 20,
+    cost: 8, hp: 1089, atk: 138, def: 40, interval: 0.9, range: 1.6, block: 1, redeploy: 20,
     profile: '召喚の儀のはずみで、異世界の学校から呼ばれてしまった剣道部員。',
     skill: { name: '一閃・疾風', type: 'execute', sp: 15, mult: 6, mana: 6,
              desc: '敵1体に攻撃力600%のダメージ。倒すとマナが6回復する' },
@@ -163,7 +165,7 @@ TD.CHARS = {
   },
   sylphina: {
     name: 'シルフィナ', title: '天翔ける風詠み', rarity: 5, element: 'wind', role: 'mage',
-    cost: 15, hp: 1021, atk: 159, def: 22, interval: 1.8, range: 2.8, splash: 0.9, redeploy: 30,
+    cost: 15, hp: 1021, atk: 168, def: 22, interval: 1.9, range: 2.8, splash: 0.9, redeploy: 30,
     profile: '空の神殿で風の声を聴く巫女。彼女が歌えば、嵐さえ道を譲る。',
     skill: { name: '大竜巻', type: 'vortex', sp: 30, mult: 3, radius: 2.4,
              desc: '射程内の敵を一か所に吸い寄せ、攻撃力300%の範囲ダメージ（足止め中の敵とボスは吸い寄せない）' },
@@ -171,7 +173,7 @@ TD.CHARS = {
   },
   seira: {
     name: 'セイラ', title: '蒼波の剣聖', rarity: 5, element: 'water', role: 'sword',
-    cost: 15, hp: 2410, atk: 177, def: 100, interval: 0.95, range: 1.6, block: 2, redeploy: 30,
+    cost: 15, hp: 2410, atk: 168, def: 100, interval: 0.9, range: 1.6, block: 2, redeploy: 30,
     profile: '水の都の剣術道場を継ぐ剣聖。受けた刃をそのまま返す「水鏡」の使い手。',
     passive: { name: '常時水鏡', type: 'reflect', ratio: 0.5, defMult: 1.2, blockMult: 1.5, desc: '受けたダメージの50%を常に相手に返す。防御+20%。ブロック数1.5倍' },
     lines: { deploy: '参ります。……お覚悟を', skill: '水鏡に映るは、あなた自身の刃' },
@@ -197,7 +199,7 @@ TD.CHARS = {
   shigure: {
     name: 'シグレ', title: '番傘の狙撃手', rarity: 4, kind: 'tech', element: 'water', role: 'archer',
     unique: { name: '雨宿りの番傘', type: 'aoeHalf', mult: 0.5, party: true, short: 'ボス範囲攻撃半減', desc: '出撃メンバーにいると、ボスの範囲攻撃で受けるダメージが半分になる' },
-    cost: 9, hp: 750, atk: 75, def: 20, interval: 1.1, range: 3.4, redeploy: 25,
+    cost: 9, hp: 750, atk: 68, def: 20, interval: 1.0, range: 3.4, redeploy: 25,
     profile: '仕込み銃の番傘を携えた流しの用心棒。雨の日にだけ、ふらりと現れる。',
     skill: { name: '時雨の番傘', type: 'barrier', sp: 26, dur: 8, mult: 2, reduce: 0.3,
              desc: '射程内の敵全員に攻撃力200%の連射。8秒間、配置中の味方全員の受けるダメージを30%軽減' },
@@ -207,7 +209,7 @@ TD.CHARS = {
   aster: {
     name: 'アステル', title: '天翼の盾騎士', rarity: 4, kind: 'tech', element: 'light', role: 'shield',
     unique: { name: '天翼の加護', type: 'lifeUp', add: 2, party: true, short: 'ライフ+2', desc: '出撃メンバーにいると、ステージのライフが+2される' },
-    cost: 12, hp: 2541, atk: 75, def: 146, interval: 1.3, range: 1.3, block: 2, redeploy: 25,
+    cost: 12, hp: 2541, atk: 81, def: 146, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
     profile: '天空の神殿に仕える盾の騎士。肩の小さな蛇は相棒。大盾ごと敵に突っ込む無鉄砲さが玉に瑕。',
     skill: { name: '天盾突撃', type: 'shieldBash', sp: 24, radius: 1.6, stun: 2.5, dur: 8, defMult: 1.5,
              desc: '周囲の敵を2.5秒間気絶させ、8秒間ブロック数+2・防御1.5倍' },
@@ -235,7 +237,7 @@ TD.CHARS = {
   emil: {
     name: 'エミル', title: '王都の新米衛兵', rarity: 3, element: 'light', role: 'sword',
     partyFx: { name: '衛兵の鼓舞', type: 'atk', add: 0.1, desc: '味方全員の攻撃+10%' },
-    cost: 9, hp: 950, atk: 95, def: 40, interval: 0.95, range: 1.6, block: 1, redeploy: 20,
+    cost: 9, hp: 950, atk: 90, def: 40, interval: 0.9, range: 1.6, block: 1, redeploy: 20,
     passive: { name: '衛兵の誇り', type: 'pride', threshold: 0.5, mult: 1.3, desc: 'HPが半分以上の間、攻撃力+30%' },
     lines: { deploy: '衛兵エミル、ただいま参上！', skill: 'ここが踏ん張りどころ！' },
   },
@@ -259,7 +261,7 @@ TD.CHARS = {
   hayate: {
     name: 'ハヤテ', title: '疾風の飛脚', rarity: 3, element: 'wind', role: 'sword',
     partyFx: { name: '疾風の運び屋', type: 'stones', add: 0.5, desc: 'クリア時にもらえる魔晶石+50%' },
-    cost: 8, hp: 850, atk: 80, def: 30, interval: 0.7, range: 1.6, block: 1, redeploy: 20,
+    cost: 8, hp: 850, atk: 103, def: 30, interval: 0.9, range: 1.6, block: 1, redeploy: 20,
     passive: { name: '疾風二刀', type: 'multi', count: 2, desc: '攻撃が敵2体に当たる' },
     lines: { deploy: '速達だよ！ ……あれ、戦い？', skill: '足には自信があるんだ！' },
   },
@@ -273,14 +275,14 @@ TD.CHARS = {
   kagerou: {
     name: 'カゲロウ', title: '夜回りの忍び', rarity: 3, element: 'dark', role: 'sword',
     unique: { name: '忍びの毒', type: 'darkPoison', stacks: 1, sub: 'duration', mult: 1.5, desc: '攻撃するたびに敵に毒を1つためる。さらに味方がためた毒の効果時間+50%' },
-    cost: 9, hp: 880, atk: 100, def: 30, interval: 0.85, range: 1.6, block: 1, redeploy: 20,
+    cost: 9, hp: 880, atk: 106, def: 30, interval: 0.9, range: 1.6, block: 1, redeploy: 20,
     passive: { name: '隠れ身', type: 'stealth', desc: '遠距離攻撃やボスの範囲攻撃の標的にならない' },
     lines: { deploy: '……御意', skill: '影より出でて、影に消ゆ' },
   },
   glen: {
     name: 'グレン', title: '墓守の大男', rarity: 3, element: 'dark', role: 'shield',
     unique: { name: '墓守の呪毒', type: 'darkPoison', stacks: 1, sub: 'maxStacks', max: 7, desc: '攻撃するたびに敵に毒を1つためる。さらに毒の最大数が5→7になる' },
-    cost: 12, hp: 2000, atk: 45, def: 105, interval: 1.5, range: 1.3, block: 2, redeploy: 25,
+    cost: 12, hp: 2000, atk: 42, def: 105, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
     passive: { name: '巨躯', type: 'blockMult', mult: 1.5, desc: 'ブロック数が1.5倍になる（2→3）' },
     lines: { deploy: '……眠りを妨げる者は、通さん', skill: 'ぬうぅん！' },
   },
@@ -294,7 +296,7 @@ TD.CHARS = {
   viola: {
     name: 'ヴィオラ', title: '見習い呪術師', rarity: 3, element: 'dark', role: 'mage',
     unique: { name: '蝕みの呪い', type: 'darkPoison', stacks: 1, sub: 'hunter', mult: 2, desc: '攻撃するたびに敵に毒を1つためる（範囲攻撃なら当たった全員）。さらに毒状態の敵に与えるダメージが2倍になる' },
-    cost: 11, hp: 560, atk: 80, def: 8, interval: 2.0, range: 2.4, splash: 0.8, redeploy: 25,
+    cost: 11, hp: 560, atk: 76, def: 8, interval: 1.9, range: 2.4, splash: 0.8, redeploy: 25,
     skill: { name: '呪いの霧', type: 'explosion', sp: 25, mult: 3.5, radius: 1.5,
              poison: 3, desc: '射程内の敵を中心に呪いの霧。攻撃力350%の範囲ダメージを与え、当たった敵に毒を3つためる' },
     lines: { deploy: 'うふふ、呪っちゃおっかな～', skill: 'のろのろ～、のろわれろ～！' },
@@ -310,7 +312,7 @@ TD.CHARS = {
   garo: {
     name: 'ガロ', title: '酒場の用心棒', rarity: 3, element: 'fire', role: 'sword',
     partyFx: { name: '用心棒の喝', type: 'atk', add: 0.15, filter: { role: 'sword' }, desc: '剣士の攻撃+15%' },
-    cost: 10, hp: 1000, atk: 98, def: 40, interval: 1.0, range: 1.6, block: 1, redeploy: 20,
+    cost: 10, hp: 1000, atk: 88, def: 40, interval: 0.9, range: 1.6, block: 1, redeploy: 20,
     passive: { name: '酔拳', type: 'evade', chance: 0.2, desc: '敵の攻撃を20%の確率でかわす' },
     lines: { deploy: 'ひっく……喧嘩なら買うぜ', skill: '燃えてきたぁ！' },
   },
@@ -1103,3 +1105,8 @@ for (const [id, d] of Object.entries(TD.CHARS)) {
   if (d.kind === 'tech' && !d.unique && !d.partyFx) console.warn(`[データ] 技型の${d.name}（${id}）にユニークスキルがありません`);
 }
 TD.KIND_LABEL = { power: '力型', tech: '技型' };
+
+// ルール確認：攻撃間隔は職業ごとに固定
+for (const [id, d] of Object.entries(TD.CHARS)) {
+  if (d.interval !== TD.ROLE_INTERVAL[d.role]) console.warn(`[データ] ${d.name}（${id}）の攻撃間隔が職業の値（${TD.ROLE_INTERVAL[d.role]}秒）と違います`);
+}
