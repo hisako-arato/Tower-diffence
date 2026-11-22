@@ -50,7 +50,7 @@ TD.CHARS = {
     lines: { deploy: '狙いは外さないよ', skill: '風よ、俺の矢に乗れ！疾風連射！' },
   },
   gald: {
-    name: 'ガルド', title: '鉄壁の守護者', rarity: 4, element: 'light', role: 'shield',
+    name: 'ガルド', title: '鉄壁の守護者', rarity: 3, element: 'light', role: 'shield',
     cost: 15, hp: 2600, atk: 50, def: 140, interval: 1.4, range: 1.3, block: 3, redeploy: 30,
     passive: { name: '隊長の号令', type: 'adjAtk', mult: 1.2, desc: '隣接するマスの味方の攻撃力+20%' },
     lines: { deploy: 'ここは一歩も通さん', skill: '我が盾は砕けぬ！不動の誓い！' },
