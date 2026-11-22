@@ -143,7 +143,6 @@ TD.CHARS = {
   akane: {
     name: 'アカネ', title: '異界の剣道少女', rarity: 4, element: 'wind', role: 'sword',
     cost: 8, hp: 900, atk: 115, def: 30, interval: 0.8, range: 1.6, block: 1, redeploy: 20,
-    traits: ['fastRedeploy'],
     profile: '召喚の儀のはずみで、異世界の学校から呼ばれてしまった剣道部員。',
     skill: { name: '一閃・疾風', type: 'execute', sp: 15, mult: 6, mana: 6,
              desc: '敵1体に攻撃力600%のダメージ。倒すとマナが6回復する' },
@@ -152,7 +151,6 @@ TD.CHARS = {
   shizuku: {
     name: 'シズク', title: '腹ペコ弓道少女', rarity: 4, element: 'dark', role: 'archer',
     cost: 8, hp: 560, atk: 64, def: 10, interval: 1.0, range: 3.4, redeploy: 20,
-    traits: ['fastRedeploy'],
     profile: 'アカネと一緒に異世界から呼ばれた弓道部員。肉まんがあれば戦える。',
     skill: { name: '肉まん配給', type: 'battery', sp: 20, amount: 10,
              desc: '配置中の味方全員の発動スキルのゲージを10増やす' },
@@ -184,7 +182,6 @@ TD.CHARS = {
   karin: {
     name: 'カリン', title: '火守りの薬師', rarity: 4, element: 'fire', role: 'priest',
     cost: 8, hp: 560, atk: 75, def: 8, interval: 1.6, range: 2.6, redeploy: 20,
-    traits: ['fastRedeploy'],
     profile: '火山のふもとで薬屋を営む薬師。調合した秘薬は、飲めば力が湧いてくる。',
     skill: { name: '炎の秘薬', type: 'rally', sp: 24, dur: 10, atkMult: 1.3, ratio: 0.2,
              desc: '10秒間、配置中の味方全員の攻撃力30%アップ。さらにHPを20%回復' },
@@ -202,7 +199,6 @@ TD.CHARS = {
   aster: {
     name: 'アステル', title: '天翼の盾騎士', rarity: 4, element: 'light', role: 'shield',
     cost: 12, hp: 2100, atk: 70, def: 110, interval: 1.3, range: 1.3, block: 2, redeploy: 25,
-    traits: ['fastRedeploy'],
     profile: '天空の神殿に仕える盾の騎士。肩の小さな蛇は相棒。大盾ごと敵に突っ込む無鉄砲さが玉に瑕。',
     skill: { name: '天盾突撃', type: 'shieldBash', sp: 24, radius: 1.6, stun: 2.5, dur: 8, defMult: 1.5,
              desc: '周囲の敵を2.5秒間気絶させ、8秒間ブロック数+2・防御1.5倍' },
