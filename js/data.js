@@ -155,7 +155,7 @@ TD.CHARS = {
     traits: ['fastRedeploy'],
     profile: 'アカネと一緒に異世界から呼ばれた弓道部員。肉まんがあれば戦える。',
     skill: { name: '肉まん配給', type: 'battery', sp: 20, amount: 10,
-             desc: '配置中の味方全員のスキルゲージを10増やす' },
+             desc: '配置中の味方全員の発動スキルのゲージを10増やす' },
     lines: { deploy: '……もぐもぐ。狙いは、つけた', skill: 'みんなの分もあるよ。……一個ずつね' },
   },
   sylphina: {
@@ -213,7 +213,7 @@ TD.CHARS = {
   lux: {
     name: 'ルクス', title: '聖光の見習い狙撃手', rarity: 3, element: 'light', role: 'archer',
     cost: 8, hp: 560, atk: 60, def: 12, interval: 1.0, range: 3.4, redeploy: 20,
-    profile: '【サポート】敵の守りを崩す専門家。硬い敵やボス戦で真価を発揮する。',
+    profile: '敵の守りを崩す見習い狙撃手。硬い敵やボス戦で真価を発揮する。',
     skill: { name: '聖光の刻印', type: 'defDown', sp: 22, dur: 10, mult: 0.5,
              desc: '射程内の敵全員の防御を10秒間半減する' },
     lines: { deploy: '弱点、見つけてみせます', skill: '光よ、印を刻め！' },
@@ -243,8 +243,8 @@ TD.CHARS = {
   soyo: {
     name: 'ソヨ', title: 'そよ風の歌い手', rarity: 3, element: 'wind', role: 'priest',
     cost: 9, hp: 520, atk: 65, def: 5, interval: 1.6, range: 2.6, redeploy: 20,
-    aura: { radius: 2, haste: 1.15 },
-    profile: '【バフ専門】配置しているだけで、周囲2マスの味方の攻撃速度が15%上がる。',
+    unique: { name: '天使の加護', type: 'invuln', desc: '自身のHPが減らない（敵の攻撃・範囲攻撃・毒を受けない）' },
+    profile: '風に歌を乗せる天使のような歌い手。どんな攻撃も、彼女を傷つけることはできない。',
     skill: { name: '追い風の歌', type: 'haste', sp: 24, dur: 8, mult: 1.4, ratio: 0.15,
              desc: '8秒間、配置中の味方全員の攻撃速度1.4倍。さらにHPを15%回復' },
     lines: { deploy: 'ラララ～♪ 風よ、みんなに届いて', skill: '追い風の歌、聴いてください！' },
@@ -283,8 +283,7 @@ TD.CHARS = {
     name: 'ヴィオラ', title: '見習い呪術師', rarity: 3, element: 'dark', role: 'mage',
     cost: 11, hp: 560, atk: 80, def: 8, interval: 2.0, range: 2.4, splash: 0.8, redeploy: 25,
     skill: { name: '呪いの霧', type: 'explosion', sp: 25, mult: 3.5, radius: 1.5,
-             desc: '射程内の敵を中心に呪いの霧。攻撃力350%の範囲ダメージ' },
-    passive: { name: '呪毒の霧', type: 'poisonSplash', stacks: 2, desc: '範囲攻撃が当たった敵すべてに毒を2つためる' },
+             poison: 3, desc: '射程内の敵を中心に呪いの霧。攻撃力350%の範囲ダメージを与え、当たった敵に毒を3つためる' },
     lines: { deploy: 'うふふ、呪っちゃおっかな～', skill: 'のろのろ～、のろわれろ～！' },
   },
   shion: {
@@ -828,7 +827,7 @@ TD.NAVI_LINES = [
   '大結界がまた少し弱まっています……。',
   '剣士や盾騎士は「道」に、弓兵や魔導士は「草地」に配置できますよ。',
   '属性の相性は 火→風→水→火。光と闇はお互いが弱点です！',
-  'スキルゲージが溜まったら、キャラのカードをタップ！',
+  '発動スキルのゲージが溜まったら、キャラのカードをタップ！',
   'ひゃっ！？つ、つつかないでください～！',
   'いつか、七つの災厄をすべて退けられる日が来るはずです。',
   '撤退させるとマナが半分戻ってきます。HPが多いうちに下げれば、すぐに再配置できますよ。',
@@ -853,7 +852,7 @@ TD.DAILY_MISSIONS = [
   { id: 'd-login',  name: 'ログインする',                 key: 'login',    goal: 1,  reward: { stones: 10 } },
   { id: 'd-win',    name: 'バトルに3回勝利する',           key: 'wins',     goal: 3,  reward: { stones: 30 } },
   { id: 'd-kill',   name: '敵を50体倒す',                  key: 'kills',    goal: 50, reward: { stones: 20 } },
-  { id: 'd-skill',  name: 'スキルを5回使う',               key: 'skills',   goal: 5,  reward: { crystals: 300 } },
+  { id: 'd-skill',  name: '発動スキルを5回使う',               key: 'skills',   goal: 5,  reward: { crystals: 300 } },
   { id: 'd-lvup',   name: 'キャラをレベルアップする',       key: 'levelups', goal: 1,  reward: { crystals: 200 } },
   { id: 'd-cave',   name: '「古代の書庫」をクリアする',     key: 'caves',    goal: 1,  reward: { crystals: 300 } },
   { id: 'd-all',    name: 'デイリーミッションをすべて達成', key: '_all',     goal: 6,  reward: { stones: 50 } },
@@ -1024,7 +1023,7 @@ TD.partyValid = party => party.length > 0 && TD.partyStars(party) <= TD.ADJUTANT
 // ========== 状態異常：毒 ==========
 // 敵の毒：1つごとに毎秒、最大HPの perStack 分のダメージ。ボスは bossMult 倍。
 TD.POISON = { perStack: 0.01, maxStacks: 5, dur: 5, bossMult: 1 / 3 };
-// ========== 編成効果（出撃メンバーにいるだけで有効・重ねがけ可） ==========
+// ========== ユニークスキル（編成）：出撃メンバーにいるだけで有効・重ねがけ可 ==========
 TD.partyEffects = function (party) {
   const fx = { atk: 0, def: 0, hp: 0, mana: 0, exp: 0 };
   for (const id of party) { const p = TD.CHARS[id] && TD.CHARS[id].partyFx; if (p) fx[p.type] += p.add; }
@@ -1042,3 +1041,16 @@ TD.partyEffectsText = function (party) {
 
 // 2回目以降のクリアでもらえる魔晶石（本編ステージ）。★3でクリアすると多くもらえる
 TD.REPEAT_REWARD = { base: 30, star3: 40 };
+
+// ========== ルール確認：発動スキルと常時スキルはどちらか1つだけ ==========
+for (const [id, d] of Object.entries(TD.CHARS)) {
+  if (!!d.skill === !!d.passive) console.warn(`[データ] ${d.name}（${id}）は発動スキルと常時スキルのどちらか1つだけを持つ必要があります`);
+}
+// ユニークスキルの一覧（編成効果・特性・個別の効果）
+TD.uniquesOf = function (d) {
+  const a = [];
+  if (d.partyFx) a.push({ name: d.partyFx.name, desc: d.partyFx.desc, note: '出撃メンバーにいるだけで有効・重ねがけ可' });
+  for (const k of d.traits || []) if (TD.TRAITS[k]) a.push({ name: TD.TRAITS[k].name, icon: TD.TRAITS[k].icon, desc: TD.TRAITS[k].desc, note: '' });
+  if (d.unique) a.push({ name: d.unique.name, desc: d.unique.desc, note: '' });
+  return a;
+};

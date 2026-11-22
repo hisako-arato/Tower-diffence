@@ -295,7 +295,7 @@ window.TD = window.TD || {};
         `<div class="um-name">${d.name}<small>${TD.ELEMENTS[d.element].name}・${TD.ROLES[d.role].name}</small></div>` +
         `<div class="um-hp">HP ${Math.ceil(u.hp)} / ${u.maxHp}</div>` +
         (d.passive ? `<div class="um-passive"><b>常時スキル「${d.passive.name}」</b>${d.passive.desc}</div>` : '') +
-        (d.skill ? `<button class="um-skill" ${ready ? '' : 'disabled'}>スキル「${d.skill.name}」${ready ? '' : ` (${Math.floor(u.sp)}/${d.skill.sp})`}</button>` : '') +
+        (d.skill ? `<button class="um-skill" ${ready ? '' : 'disabled'}>発動スキル「${d.skill.name}」${ready ? '' : ` (${Math.floor(u.sp)}/${d.skill.sp})`}</button>` : '') +
         `<button class="um-retreat">${this.retreatLabel(u)}</button>`;
       const skb = m.querySelector('.um-skill');
       if (skb) skb.onclick = () => { this.activateSkill(u); this.hideMenu(); };
@@ -472,7 +472,7 @@ window.TD = window.TD || {};
         case 'explosion': {
           const inRange = alive.filter(e => dist(e, u) <= d.range * T);
           const c = inRange.sort((a, b) => b.hp - a.hp)[0] || u;
-          for (const e of alive) if (dist(e, c) <= s.radius * T) this.hit(u, e, this.atkOf(u) * s.mult);
+          for (const e of alive) if (dist(e, c) <= s.radius * T) { this.hit(u, e, this.atkOf(u) * s.mult); if (s.poison) this.addPoison(e, s.poison); }
           this.fx.push({ type: 'ring', x: c.x, y: c.y, r0: 6, r1: s.radius * T, t: 0, dur: 0.6, color: '#ffb04a', width: 10 });
           this.fx.push({ type: 'burst', x: c.x, y: c.y, t: 0, dur: 0.6, color: '#ff6b4a', big: true });
           break;
@@ -556,9 +556,7 @@ window.TD = window.TD || {};
       let r = u.buff && u.buff.rate ? u.buff.rate : 1;
       if (u.hasteT > 0) r *= u.hasteMult;
       // 常時効果（オーラ）：近くの味方の攻撃速度アップ（重複はしない・最大のもの）
-      let aura = 1;
-      for (const o of this.units) if (o.def.aura && dist(o, u) <= o.def.aura.radius * T) aura = Math.max(aura, o.def.aura.haste);
-      return r * aura * (1 + (u.ramp || 0));
+      return r * (1 + (u.ramp || 0));
     }
 
     hit(src, e, power) {
@@ -599,6 +597,7 @@ window.TD = window.TD || {};
 
     hurt(e, u, power) {
       if (u.removed) return;
+      if (u.def.unique && u.def.unique.type === 'invuln') { this.pop(u.x, u.y - 20, '無効', '#fff6c0', { size: 10 }); return; }
       const ev = this.pas(u, 'evade');
       if (ev && Math.random() < ev.chance) { this.pop(u.x, u.y - 20, 'MISS', '#c8f0ff', { size: 11 }); return; }
       const m = TD.elemMult(e.def.element, u.def.element);
@@ -912,7 +911,7 @@ window.TD = window.TD || {};
         if (sk) {
           const ready = !!d.skill && this.menuUnit.sp >= d.skill.sp;
           sk.disabled = !ready;
-          if (d.skill) sk.textContent = `スキル「${d.skill.name}」` + (ready ? '' : ` (${Math.floor(this.menuUnit.sp)}/${d.skill.sp})`);
+          if (d.skill) sk.textContent = `発動スキル「${d.skill.name}」` + (ready ? '' : ` (${Math.floor(this.menuUnit.sp)}/${d.skill.sp})`);
         }
       }
     }
@@ -964,9 +963,9 @@ window.TD = window.TD || {};
         g.fillStyle = 'rgba(122,216,255,.18)'; g.strokeStyle = 'rgba(160,230,255,.7)'; g.lineWidth = 1.5;
         g.beginPath(); g.arc(u.x, u.y, 21, 0, Math.PI * 2); g.fill(); g.stroke();
       }
-      if (u.def.aura) { // 常時オーラの範囲
-        g.strokeStyle = 'rgba(138,255,192,.25)'; g.lineWidth = 1; g.setLineDash([2, 5]);
-        g.beginPath(); g.arc(u.x, u.y, u.def.aura.radius * T, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+      if (u.def.unique && u.def.unique.type === 'invuln') { // 天使の加護
+        g.strokeStyle = 'rgba(255,250,200,.8)'; g.lineWidth = 1.5;
+        g.beginPath(); g.ellipse(u.x, u.y - 19, 8, 2.5, 0, 0, Math.PI * 2); g.stroke();
       }
       if (u.hasteT > 0) { // 攻撃速度アップの印
         g.strokeStyle = '#8affc0'; g.lineWidth = 2;

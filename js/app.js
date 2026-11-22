@@ -345,7 +345,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       (st.map.join('').split('G').length - 1 >= 2 ? `<div class="brief-goals">⚠ 守る拠点が2つあります（どちらに届いてもライフが減ります）</div>` : '') +
       `<div class="brief-sec">出現する敵</div><ul class="enemy-list">${enemies}</ul>` +
       `<div class="brief-sec">出撃メンバー<small class="brief-stars${TD.partyValid(save.party) ? '' : ' over'}">副官以外の★ ${TD.partyStars(save.party)} / ${TD.ADJUTANT.starCap}</small></div><div class="brief-party">${party}</div>` +
-      (TD.partyEffectsText(save.party) ? `<div class="brief-fx">編成効果：${TD.partyEffectsText(save.party)}</div>` : '') +
+      (TD.partyEffectsText(save.party) ? `<div class="brief-fx">ユニークスキル：${TD.partyEffectsText(save.party)}</div>` : '') +
       (st.recLv ? (() => { const avg = Math.round(save.party.reduce((a, id) => a + save.chars[id].lv, 0) / save.party.length);
         return `<div class="brief-rec${avg < st.recLv ? ' low' : ''}">推奨Lv ${st.recLv}<small>（編成の平均 Lv${avg}${avg < st.recLv ? '・育成すると楽になります' : ''}）</small></div>`; })() : '') +
       `<div class="brief-sub">ライフ ${st.lives}・初期マナ ${st.mana}<br>報酬：${rewardText}</div>` +
@@ -453,7 +453,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="res-stats">撃破 ${r.killed}/${r.total}・残りライフ ${r.lives}/${r.maxLives}</div>` +
       (r.win ? `<div class="res-cond"><div class="${r.stars >= 1 ? 'ok' : ''}">★ ステージクリア</div><div class="${r.stars >= 2 ? 'ok' : ''}">★ ライフを半分以上残す</div><div class="${r.stars >= 3 ? 'ok' : ''}">★ ライフを減らさずクリア</div></div>` : '') +
       `<div class="res-reward">` +
-      `<div><i class="expbook"></i> 経験の書 +${exp}${expBonus > 1 ? `<small class="bonus">（編成効果 +${Math.round((expBonus - 1) * 100)}%）</small>` : ''}</div>` +
+      `<div><i class="expbook"></i> 経験の書 +${exp}${expBonus > 1 ? `<small class="bonus">（ユニークスキル +${Math.round((expBonus - 1) * 100)}%）</small>` : ''}</div>` +
       (evPts ? `<div><i class="star"></i> ${esc(TD.EVENT.currency)} +${evPts}</div>` : '') +
       (stones ? `<div><i class="gem"></i> 魔晶石 +${stones}</div><small>${notes.join(' / ')}</small>` : '') +
       `</div></div>` +
@@ -527,7 +527,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     }
     const stars = TD.partyStars(save.party), cap = TD.ADJUTANT.starCap;
     const fxText = TD.partyEffectsText(save.party);
-    $('#party-stars').innerHTML = `副官以外の★ <b>${stars}</b> / ${cap}` + (fxText ? `<span class="ps-fx">編成効果：${fxText}</span>` : '') + (stars > cap ? '<em>上限を超えています。誰かを外すまで出撃できません</em>' : '');
+    $('#party-stars').innerHTML = `副官以外の★ <b>${stars}</b> / ${cap}` + (fxText ? `<span class="ps-fx">ユニークスキル：${fxText}</span>` : '') + (stars > cap ? '<em>上限を超えています。誰かを外すまで出撃できません</em>' : '');
     $('#party-stars').classList.toggle('over', stars > cap);
     renderFilter();
     const roster = $('#roster'), scroller = $('.roster-scroll'), keepTop = scroller.scrollTop;
@@ -544,7 +544,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       el.innerHTML = `${TD.portraitHTML(id, false, !have)}<span class="cc-name">${have ? d.name : '？？？'}</span>${TD.starsHTML(d.rarity, 0)}` +
         (have ? `<span class="cc-lv">Lv${save.chars[id].lv}</span>${TD.lbHTML(save.chars[id].lb)}` : '<span class="cc-lv">未所持</span>') +
         (d.passive && !d.skill ? '<span class="cc-pas">常時</span>' : '') +
-        (d.partyFx ? '<span class="cc-fx">編成</span>' : '');
+        (TD.uniquesOf(d).length ? '<span class="cc-fx">ユニーク</span>' : '');
       el.addEventListener('click', () => openSheet(id));
       roster.appendChild(el);
     }
@@ -592,8 +592,6 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="cd-lb">限界突破 ${TD.lbHTML(prog.lb)}<small>${prog.lb < TD.GROWTH.maxLB ? '同じ英雄の欠片を召喚すると突破' : '欠片がすべて集まりました'}</small></div></div>` +
       (base.profile ? `<div class="cd-profile">${base.profile}</div>` : '') +
       `<div class="cd-role">${r.desc}</div>` +
-      (base.partyFx ? `<div class="cd-skill partyfx"><div class="cd-skill-name">編成効果「${base.partyFx.name}」<small>出撃メンバーにいるだけで有効</small></div><div>${base.partyFx.desc}（重ねがけ可）</div></div>` : '') +
-      ((base.traits || []).length ? `<div class="cd-traits">${base.traits.filter(k => TD.TRAITS[k]).map(k => `<div class="trait"><b>${TD.TRAITS[k].icon} ${TD.TRAITS[k].name}</b><span>${TD.TRAITS[k].desc}</span></div>`).join('')}</div>` : '') +
       `<div class="cd-stats"><span>HP<b>${d.hp}${up('hp')}</b></span><span>${base.role === 'priest' ? '回復' : '攻撃'}<b>${d.atk}${up('atk')}</b></span><span>防御<b>${d.def}${up('def')}</b></span>` +
       `<span>コスト<b>${d.cost}</b></span><span>射程<b>${pv && pv.type === 'range' ? `${+(d.range * pv.mult).toFixed(1)}<small>(${d.range}×${pv.mult})</small>` : d.range}</b></span>` +
       `<span>${r.melee ? 'ブロック' : '配置先'}<b>${!r.melee ? '草地' : pv && pv.type === 'blockMult' ? `${Math.floor(d.block * pv.mult)}<small>(${d.block}×${pv.mult})</small>` : d.block}</b></span>` +
@@ -603,8 +601,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
         ? `<div class="lv-row">${lvBtn('+1', prog.lv + 1)}${lvBtn('+5', prog.lv + 5)}${lvBtn('最大', Math.max(affordable, prog.lv + 1))}</div>`
         : `<div class="lv-max">${prog.lb < TD.GROWTH.maxLB ? 'レベル上限です。限界突破で上限が上がります' : 'これ以上は上げられません'}</div>`) +
       `</div>` +
-      (base.skill ? `<div class="cd-skill"><div class="cd-skill-name">スキル「${base.skill.name}」<small>SP ${base.skill.sp}・タップで発動</small></div><div>${base.skill.desc}</div></div>` : '') +
+      (base.skill ? `<div class="cd-skill"><div class="cd-skill-name">発動スキル「${base.skill.name}」<small>SP ${base.skill.sp}・タップで発動</small></div><div>${base.skill.desc}</div></div>` : '') +
       (base.passive ? `<div class="cd-skill passive"><div class="cd-skill-name">常時スキル「${base.passive.name}」<small>配置中ずっと有効</small></div><div>${base.passive.desc}</div></div>` : '') +
+      TD.uniquesOf(base).map(u => `<div class="cd-skill partyfx"><div class="cd-skill-name">ユニークスキル「${u.icon ? u.icon + ' ' : ''}${u.name}」${u.note ? `<small>${u.note}</small>` : ''}</div><div>${u.desc}</div></div>`).join('') +
       `<div class="btn-row party-btns">` +
       (save.party[0] === id ? `<div class="adj-now">👑 副官に任命中<small>HP・攻撃・防御 +${Math.round((TD.ADJUTANT.statMult - 1) * 100)}%</small></div>` : `<button class="btn ghost" id="btn-adjutant">👑 副官に任命</button>`) +
       `<button class="btn ${inParty ? 'ghost' : 'primary'}" id="btn-toggle-party">${inParty ? '編成から外す' : '編成に加える'}</button></div>`;
