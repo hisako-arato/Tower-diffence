@@ -675,6 +675,40 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     one.disabled = !TD.Gacha.canPull(save, 1).ok;
     ten.disabled = !TD.Gacha.canPull(save, 10).ok;
   }
+  // ---------- テスト用の隠しコマンド（召喚陣を3秒以内に7回タップ） ----------
+  let secretTaps = [];
+  $('#banner').addEventListener('click', () => {
+    if (!TD.DEBUG_COMMANDS) return;
+    const now = Date.now();
+    secretTaps = secretTaps.filter(t => now - t < 3000);
+    secretTaps.push(now);
+    if (secretTaps.length >= 7) { secretTaps = []; openSecretMenu(); }
+  });
+  function openSecretMenu() {
+    const body = modal(
+      `<div class="pause-title">テスト用メニュー</div>` +
+      `<p class="small" style="text-align:center">召喚のテストプレイ用です</p>` +
+      `<div class="btn-col">` +
+      `<button class="btn primary" data-dbg="stones">魔晶石 +3000</button>` +
+      `<button class="btn ghost" data-dbg="stones30k">魔晶石 +30000</button>` +
+      `<button class="btn ghost" data-dbg="books">経験の書 +10000</button>` +
+      `<button class="btn danger" data-dbg="resetFrag">英雄の欠片をリセット（初期の5人だけに戻す）</button>` +
+      `<button class="btn ghost" data-dbg="close">閉じる</button></div>`);
+    const done = text => { persist(); updateCurrency(); renderSummon(); toast(text); };
+    body.querySelector('[data-dbg=stones]').onclick = () => { save.stones += 3000; done('魔晶石 +3000'); };
+    body.querySelector('[data-dbg=stones30k]').onclick = () => { save.stones += 30000; done('魔晶石 +30000'); };
+    body.querySelector('[data-dbg=books]').onclick = () => { save.crystals += 10000; done('経験の書 +10000'); };
+    body.querySelector('[data-dbg=resetFrag]').onclick = () => {
+      if (!confirm('仲間と限界突破をリセットして、初期の5人だけに戻します。よろしいですか？')) return;
+      const d = TD.Save.defaults();
+      save.owned = [...d.owned];
+      save.chars = JSON.parse(JSON.stringify(d.chars));
+      save.party = [...d.party];
+      done('英雄の欠片をリセットしました');
+    };
+    body.querySelector('[data-dbg=close]').onclick = closeModal;
+  }
+
   $('#btn-pull1').addEventListener('click', () => doPull(1));
   $('#btn-pull10').addEventListener('click', () => doPull(10));
   $('#btn-rates').addEventListener('click', () => {

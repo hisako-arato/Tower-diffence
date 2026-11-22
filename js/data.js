@@ -1054,3 +1054,8 @@ TD.uniquesOf = function (d) {
   if (d.unique) a.push({ name: d.unique.name, desc: d.unique.desc, note: '' });
   return a;
 };
+
+// ========== テスト用の隠しコマンド ==========
+// 召喚画面の召喚陣（バナー）を3秒以内に7回タップすると、テスト用メニューが開く。
+// 公開時に無効にしたい場合は false にする。
+TD.DEBUG_COMMANDS = true;
