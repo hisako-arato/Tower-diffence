@@ -850,5 +850,22 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .cs-row b { color: #fff; font-size: 14px; margin-left: 4px; }
 .cs-row small { color: #7dffa0; margin-left: 3px; font-size: 10px; }
 
-#event-tabs { padding: 0 0 8px; }
-#event-tabs:empty { display: none; }
+
+/* ========== クエスト選択（階層） ========== */
+.q-card {
+  position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; text-align: left;
+  padding: 18px 44px 18px 18px; margin-bottom: 10px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--gold);
+}
+.q-card.story, .q-card.chapter, .q-card.evq { border-left-color: var(--gold); }
+.q-card.daily { border-left-color: #4fe0b0; background: linear-gradient(90deg, rgba(79, 224, 176, .14), var(--panel)); }
+.q-card.event, .q-card.evshop { border-left-color: #ff6bb0; background: linear-gradient(90deg, rgba(255, 107, 176, .14), var(--panel)); }
+.q-card.story, .q-card.daily, .q-card.event:not(.locked) { min-height: 92px; justify-content: center; }
+.q-card.locked { opacity: .5; cursor: default; }
+.qc-title { font-size: 19px; font-weight: 900; }
+.qc-sub { font-size: 12px; color: var(--muted); }
+.qc-arrow { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 22px; color: var(--muted); }
+.qc-tag { position: absolute; right: 40px; top: 10px; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 900; background: #ff4f7a; color: #fff; }
+.q-card .st-story { position: absolute; right: 40px; bottom: 10px; }
+.chapter-title small { margin-left: 8px; font-size: 11px; font-weight: 600; color: var(--muted); }
+.shop-head { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin: 4px 0 12px; font-size: 13px; font-weight: 800; color: var(--muted); }
+.shop-head .eh-pts { color: var(--text, #fff); white-space: nowrap; }

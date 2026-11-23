@@ -41,9 +41,11 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     if (id === 'screen-summon') renderSummon();
     if (id === 'screen-story') renderStoryList();
     if (id === 'screen-mission') renderMissions();
-    if (id === 'screen-event') renderEvent();
   }
-  document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => show(b.dataset.go)));
+  document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.go === 'screen-stages' && b.closest('#screen-home')) openQuest([]);   // ホームから入るとトップから
+    else show(b.dataset.go);
+  }));
 
   function modal(html, cls = '') {
     const m = $('#modal');
@@ -187,37 +189,11 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
 
   // ---------- イベント ----------
   function eventStageOpen(st) { return !st.unlockAfter || save.cleared[st.unlockAfter] > 0; }
-  let eventIdx = -1;
-  function renderEvent() {
-    updateCurrency();
+  // ホームのイベントバナー → 最新の開催中イベントのメニューへ直接
+  $('#home-event').addEventListener('click', () => {
     const actives = TD.EVENTS.filter(e => TD.Live.eventActive(e));
-    const list = actives.length ? actives : [TD.EVENT];
-    if (eventIdx < 0 || eventIdx >= list.length) eventIdx = list.length - 1;
-    $('#event-tabs').innerHTML = list.length > 1 ? list.map((e, i) => `<button class="${i === eventIdx ? 'on' : ''}" data-ei="${i}">${esc(e.name)}</button>`).join('') : '';
-    $('#event-tabs').querySelectorAll('[data-ei]').forEach(b => b.onclick = () => { eventIdx = +b.dataset.ei; renderEvent(); });
-    const ev = list[eventIdx], es = TD.Live.eventState(save, ev), active = TD.Live.eventActive(ev);
-    $('#event-head').className = `event-head el-${ev.element}`;
-    $('#event-head').innerHTML = `<div class="eh-name">${esc(ev.name)}</div><div class="eh-period">${ev.start.replace(/-/g, '/')} 〜 ${ev.end.replace(/-/g, '/')}${active ? `（あと${TD.Live.eventDaysLeft(ev)}日）` : '（終了しました）'}</div>` +
-      `<p>${esc(ev.desc)}</p><div class="eh-pts"><i class="star"></i> ${esc(ev.currency)} <b>${es.pts}</b></div>`;
-    const stages = $('#event-stages');
-    stages.innerHTML = `<button class="story-item" data-evstory><span class="si-title">イベントストーリーを見る</span><span class="si-sub">${save.story[ev.story] ? '▶ 再生' : 'NEW'}</span></button>`;
-    stages.querySelector('[data-evstory]').onclick = () => playStory(ev.story, renderEvent);
-    for (const st of ev.stages) stages.appendChild(stageItem(st, active && eventStageOpen(st), active ? `${ev.currency} ×${st.eventPoints}` : '期間外'));
-    $('#event-shop').innerHTML = ev.shop.map(it => {
-      const used = es.shop[it.id] || 0, left = it.limit - used, ok = active && left > 0 && es.pts >= it.cost;
-      return `<div class="shop-item"><div class="si-icon">${it.char ? TD.portraitHTML(it.char) : it.reward.stones ? '<i class="gem big"></i>' : '<i class="expbook big"></i>'}</div>` +
-        `<div class="si-body"><div class="si-title">${esc(it.name)}</div><div class="si-sub">交換上限 ${left}/${it.limit}</div></div>` +
-        `<button class="btn ${ok ? 'primary' : 'ghost'}" data-shop="${it.id}" ${ok ? '' : 'disabled'}><i class="star"></i>${it.cost}</button></div>`;
-    }).join('');
-    $('#event-shop').querySelectorAll('[data-shop]').forEach(b => b.onclick = () => {
-      const it = ev.shop.find(x => x.id === b.dataset.shop), r = TD.Live.exchange(save, it, ev);
-      if (!r) return;
-      persist(); renderEvent();
-      if (it.char) toast(r.isNew ? `${TD.CHARS[it.char].name}が仲間になった！` : r.limitBreak ? `${TD.CHARS[it.char].name}が限界突破 ${r.limitBreak}！` : `魔晶石 ×${r.converted} に変換されました`);
-      else toast(`${TD.Live.rewardText(it.reward)} を受け取りました`);
-    });
-  }
-  $('#home-event').addEventListener('click', () => show('screen-event'));
+    openQuest(actives.length ? [{ v: 'events' }, { v: 'event', ev: actives[actives.length - 1].id }] : []);
+  });
 
   // ---------- ストーリー ----------
   const adv = new TD.Adv($('#adv'));
@@ -239,7 +215,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   const storyFor = (st, kind) => { const id = `${st.id}-${kind}`; return TD.STORY[id] ? id : null; };
 
   function storyUnlockHint(id) {
-    if (id.startsWith('event-')) return 'イベント画面から見られます（開催期間中）';
+    if (id.startsWith('event-')) return 'クエスト＞イベントから見られます（開催期間中）';
     const [a, b, kind] = id.split('-');
     return kind === 'pre' ? `ステージ${a}-${b}に挑戦すると解放` : `ステージ${a}-${b}クリアで解放`;
   }
@@ -271,33 +247,156 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     if (open) el.addEventListener('click', () => openBrief(st));
     return el;
   }
+  // ---------- クエスト選択（階層） ----------
+  // qstack: 現在の階層。[] = トップ（ストーリー / デイリー / イベント）
+  //   {v:'chapters'} → {v:'chapter', ch} / {v:'daily'} / {v:'events'} → {v:'event', ev} → {v:'evq'|'evshop', ev}
+  let qstack = [];
+  const chapters = () => [...new Set(TD.STAGES.map(st => st.chapter))];
+  const evById = id => TD.EVENTS.find(e => e.id === id);
+  function openQuest(stack) {
+    qstack = stack.slice();
+    history.replaceState({ q: qstack.length }, '');
+    show('screen-stages');
+  }
+  function qpush(node) {
+    qstack.push(node);
+    history.pushState({ q: qstack.length }, '');
+    renderStages();
+    $('#stage-list').scrollTop = 0;
+  }
+  function qback() {
+    if (!qstack.length) { show('screen-home'); return; }
+    if (history.state && history.state.q === qstack.length) history.back();   // popstate で1段戻る
+    else { qstack.pop(); renderStages(); }
+  }
+  window.addEventListener('popstate', () => {
+    if (!$('#screen-stages').classList.contains('active') || $('#modal').classList.contains('show')) return;
+    if (qstack.length) { qstack.pop(); renderStages(); }
+  });
+  $('#quest-back').addEventListener('click', qback);
+
+  function chapterInfo(ch) {
+    const sts = TD.STAGES.filter(st => st.chapter === ch);
+    const first = TD.STAGES.indexOf(sts[0]);
+    return { sts, open: stageUnlocked(first), cleared: sts.filter(st => save.cleared[st.id] > 0).length,
+      stars: sts.reduce((a, st) => a + (save.cleared[st.id] || 0), 0) };
+  }
+  function evShopReady(ev) {
+    const es = TD.Live.eventState(save, ev);
+    return ev.shop.some(it => (es.shop[it.id] || 0) < it.limit && es.pts >= it.cost);
+  }
+  function qcard(cls, title, sub, tag, onclick, locked) {
+    const el = document.createElement('button');
+    el.className = `q-card ${cls}${locked ? ' locked' : ''}`;
+    el.innerHTML = `<span class="qc-title">${title}</span><span class="qc-sub">${sub}</span>${tag ? `<span class="qc-tag">${tag}</span>` : ''}<span class="qc-arrow">${locked ? '🔒' : '›'}</span>`;
+    if (!locked) el.onclick = onclick;
+    return el;
+  }
+  function eventHeadHTML(ev) {
+    const es = TD.Live.eventState(save, ev), active = TD.Live.eventActive(ev);
+    return `<div class="event-head el-${ev.element}"><div class="eh-name">${esc(ev.name)}</div>` +
+      `<div class="eh-period">${ev.start.replace(/-/g, '/')} 〜 ${ev.end.replace(/-/g, '/')}${active ? `（あと${TD.Live.eventDaysLeft(ev)}日）` : '（終了しました）'}</div>` +
+      `<p>${esc(ev.desc)}</p><div class="eh-pts"><i class="star"></i> ${esc(ev.currency)} <b>${es.pts}</b></div></div>`;
+  }
+
   function renderStages() {
     updateCurrency();
     TD.Live.ensureDaily(save);
-    const list = $('#stage-list');
+    // 期間が終わったイベントの階層にいたらトップへ戻す
+    if (qstack.some(n => n.ev && !TD.Live.eventActive(evById(n.ev)))) qstack = [];
+    const list = $('#stage-list'), node = qstack[qstack.length - 1] || { v: 'top' };
     list.innerHTML = '';
-    let lastCh = null;
-    TD.STAGES.forEach((st, i) => {
-      if (st.chapter !== lastCh) { lastCh = st.chapter; list.insertAdjacentHTML('beforeend', `<div class="chapter-title">${esc(st.chapter)}</div>`); }
-      const open = stageUnlocked(i), best = save.cleared[st.id] || 0;
-      const el = document.createElement('button');
-      el.className = 'stage-item' + (open ? '' : ' locked') + (st.waves.some(w => TD.ENEMIES[w.e].boss) ? ' boss' : '');
-      el.innerHTML = `<span class="st-id">${st.id}</span><span class="st-name">${st.name}<small>${st.recLv ? `推奨Lv${st.recLv}・` : ''}経験の書 ×${TD.stageExp(st)}</small></span>` +
-        `<span class="st-stars">${open ? TD.starsHTML(best, 3) : '🔒'}</span>`;
-      const unreadStory = open && [storyFor(st, 'pre'), storyFor(st, 'post')].some(id => id && !save.story[id]);
-      if (unreadStory) el.insertAdjacentHTML('beforeend', '<span class="st-story">STORY</span>');
-      if (open) el.addEventListener('click', () => openBrief(st));
-      list.appendChild(el);
-    });
-    list.insertAdjacentHTML('beforeend', `<div class="chapter-title daily">デイリークエスト</div>`);
-    for (const st of TD.DAILY_STAGES) {
-      const unlocked = save.cleared[st.unlockAfter] > 0, left = TD.Live.runsLeft(save, st);
-      list.appendChild(stageItem(st, unlocked && left > 0, `経験の書 ×${TD.stageExp(st)}・本日あと${left}回`,
-        !unlocked ? `${st.unlockAfter}クリアで解放` : '本日の挑戦回数は終了しました'));
-    }
-    for (const ev of TD.EVENTS.filter(e => TD.Live.eventActive(e))) {
-      list.insertAdjacentHTML('beforeend', `<div class="chapter-title event">イベント：${esc(ev.name)}</div>`);
-      for (const st of ev.stages) list.appendChild(stageItem(st, eventStageOpen(st), `${ev.currency} ×${st.eventPoints}`, `${st.unlockAfter}クリアで解放`));
+    const titles = { top: 'クエスト', chapters: 'ストーリー', daily: 'デイリー', events: 'イベント', evshop: '交換所' };
+    $('#quest-title').textContent = node.v === 'chapter' ? node.ch.split(/[\s　]/)[0]
+      : node.ev ? (node.v === 'evshop' ? '交換所' : evById(node.ev).name) : titles[node.v];
+    $('#quest-back').textContent = qstack.length ? '‹ 戻る' : '‹ ホーム';
+    const add = el => list.appendChild(el);
+
+    if (node.v === 'top') {
+      // ストーリー
+      const prog = [...TD.STAGES].reverse().find(st => save.cleared[st.id] > 0);
+      const allStars = TD.STAGES.reduce((a, st) => a + (save.cleared[st.id] || 0), 0);
+      add(qcard('story', 'ストーリー', prog ? `${prog.id}まで進行・★${allStars}/${TD.STAGES.length * 3}` : 'ここから冒険が始まります', '', () => qpush({ v: 'chapters' })));
+      // デイリー
+      const d = TD.DAILY_STAGES[0], dOpen = save.cleared[d.unlockAfter] > 0, left = TD.Live.runsLeft(save, d);
+      add(qcard('daily', 'デイリー', dOpen ? `${esc(d.name)}・本日あと${left}/${d.dailyLimit}回` : `${d.unlockAfter}クリアで解放`, dOpen && left ? '' : '', () => qpush({ v: 'daily' }), !dOpen));
+      // イベント
+      const actives = TD.EVENTS.filter(e => TD.Live.eventActive(e));
+      add(qcard('event', 'イベント', actives.length ? `開催中 ${actives.length}` : '開催予定なし',
+        actives.some(evShopReady) ? '交換可' : '', () => qpush({ v: 'events' }), !actives.length));
+    } else if (node.v === 'chapters') {
+      const chs = chapters();
+      const cur = chs.find(ch => { const i = chapterInfo(ch); return i.open && i.cleared < i.sts.length; });
+      for (const ch of chs) {
+        const i = chapterInfo(ch);
+        const unread = i.open && i.sts.some(st => [storyFor(st, 'pre'), storyFor(st, 'post')].some(id => id && !save.story[id]) && (st === i.sts[0] || save.cleared[i.sts[i.sts.indexOf(st) - 1].id]));
+        add(qcard('chapter', esc(ch), i.open ? `クリア ${i.cleared}/${i.sts.length}・★${i.stars}/${i.sts.length * 3}` : `${TD.STAGES[TD.STAGES.indexOf(i.sts[0]) - 1].id}クリアで解放`,
+          ch === cur ? '進行中' : i.stars === i.sts.length * 3 ? 'COMPLETE' : '', () => qpush({ v: 'chapter', ch }), !i.open));
+        if (unread) list.lastChild.insertAdjacentHTML('beforeend', '<span class="st-story">STORY</span>');
+      }
+      list.insertAdjacentHTML('beforeend', `<div class="story-next">第4章は近日公開予定です</div>`);
+    } else if (node.v === 'chapter') {
+      list.insertAdjacentHTML('beforeend', `<div class="chapter-title">${esc(node.ch)}</div>`);
+      TD.STAGES.forEach((st, i) => {
+        if (st.chapter !== node.ch) return;
+        const open = stageUnlocked(i), best = save.cleared[st.id] || 0;
+        const el = document.createElement('button');
+        el.className = 'stage-item' + (open ? '' : ' locked') + (st.waves.some(w => TD.ENEMIES[w.e].boss) ? ' boss' : '');
+        el.innerHTML = `<span class="st-id">${st.id}</span><span class="st-name">${st.name}<small>${st.recLv ? `推奨Lv${st.recLv}・` : ''}経験の書 ×${TD.stageExp(st)}</small></span>` +
+          `<span class="st-stars">${open ? TD.starsHTML(best, 3) : '🔒'}</span>`;
+        const unreadStory = open && [storyFor(st, 'pre'), storyFor(st, 'post')].some(id => id && !save.story[id]);
+        if (unreadStory) el.insertAdjacentHTML('beforeend', '<span class="st-story">STORY</span>');
+        if (open) el.addEventListener('click', () => openBrief(st));
+        add(el);
+      });
+    } else if (node.v === 'daily') {
+      list.insertAdjacentHTML('beforeend', `<div class="chapter-title daily">デイリークエスト<small>毎日0時に回数が戻ります</small></div>`);
+      for (const st of TD.DAILY_STAGES) {
+        const unlocked = save.cleared[st.unlockAfter] > 0, left = TD.Live.runsLeft(save, st);
+        add(stageItem(st, unlocked && left > 0, `経験の書 ×${TD.stageExp(st)}・本日あと${left}回`,
+          !unlocked ? `${st.unlockAfter}クリアで解放` : '本日の挑戦回数は終了しました'));
+      }
+    } else if (node.v === 'events') {
+      const actives = TD.EVENTS.filter(e => TD.Live.eventActive(e));
+      for (const ev of actives.slice().reverse()) {
+        const es = TD.Live.eventState(save, ev);
+        add(qcard('event', esc(ev.name), `あと${TD.Live.eventDaysLeft(ev)}日・${esc(ev.currency)} ${es.pts}`,
+          evShopReady(ev) ? '交換可' : !save.story[ev.story] ? 'NEW' : '', () => qpush({ v: 'event', ev: ev.id })));
+      }
+      if (!actives.length) list.insertAdjacentHTML('beforeend', `<div class="story-next">開催中のイベントはありません</div>`);
+    } else if (node.v === 'event') {
+      const ev = evById(node.ev);
+      list.insertAdjacentHTML('beforeend', eventHeadHTML(ev));
+      const sb = document.createElement('button');
+      sb.className = 'story-item';
+      sb.innerHTML = `<span class="si-title">イベントストーリーを見る</span><span class="si-sub">${save.story[ev.story] ? '▶ 再生' : 'NEW'}</span>`;
+      sb.onclick = () => playStory(ev.story, renderStages);
+      add(sb);
+      const cleared = ev.stages.filter(st => save.cleared[st.id] > 0).length;
+      add(qcard('evq', 'クエストへ', `${ev.stages.length}ステージ・クリア ${cleared}/${ev.stages.length}`, '', () => qpush({ v: 'evq', ev: ev.id })));
+      add(qcard('evshop', '交換所', `${esc(ev.currency)}で英雄の欠片などと交換`, evShopReady(ev) ? '交換可' : '', () => qpush({ v: 'evshop', ev: ev.id })));
+    } else if (node.v === 'evq') {
+      const ev = evById(node.ev), es = TD.Live.eventState(save, ev);
+      list.insertAdjacentHTML('beforeend', `<div class="chapter-title event">${esc(ev.name)}<small><i class="star"></i> ${esc(ev.currency)} ${es.pts}</small></div>`);
+      for (const st of ev.stages) add(stageItem(st, eventStageOpen(st), `${ev.currency} ×${st.eventPoints}${st.recLv ? `・推奨Lv${st.recLv}` : ''}`, `${st.unlockAfter}クリアで解放`));
+    } else if (node.v === 'evshop') {
+      const ev = evById(node.ev), es = TD.Live.eventState(save, ev);
+      list.insertAdjacentHTML('beforeend', `<div class="shop-head">${esc(ev.name)}<div class="eh-pts"><i class="star"></i> ${esc(ev.currency)} <b>${es.pts}</b></div></div>`);
+      const box = document.createElement('div');
+      box.innerHTML = ev.shop.map(it => {
+        const used = es.shop[it.id] || 0, left = it.limit - used, ok = left > 0 && es.pts >= it.cost;
+        return `<div class="shop-item"><div class="si-icon">${it.char ? TD.portraitHTML(it.char) : it.reward.stones ? '<i class="gem big"></i>' : '<i class="expbook big"></i>'}</div>` +
+          `<div class="si-body"><div class="si-title">${esc(it.name)}</div><div class="si-sub">交換上限 ${left}/${it.limit}</div></div>` +
+          `<button class="btn ${ok ? 'primary' : 'ghost'}" data-shop="${it.id}" ${ok ? '' : 'disabled'}><i class="star"></i>${it.cost}</button></div>`;
+      }).join('');
+      box.querySelectorAll('[data-shop]').forEach(b => b.onclick = () => {
+        const it = ev.shop.find(x => x.id === b.dataset.shop), r = TD.Live.exchange(save, it, ev);
+        if (!r) return;
+        persist(); renderStages();
+        if (it.char) toast(r.isNew ? `${TD.CHARS[it.char].name}が仲間になった！` : r.limitBreak ? `${TD.CHARS[it.char].name}が限界突破 ${r.limitBreak}！` : `魔晶石 ×${r.converted} に変換されました`);
+        else toast(`${TD.Live.rewardText(it.reward)} を受け取りました`);
+      });
+      add(box);
     }
   }
 
@@ -389,7 +488,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<button class="btn danger" data-act="quit">撤退してステージ選択へ</button></div>`, 'locked');
     body.querySelector('[data-act=resume]').onclick = () => { closeModal(); battle.paused = false; battle.last = performance.now(); };
     body.querySelector('[data-act=retry]').onclick = () => { closeModal(); startBattle(currentStage); };
-    body.querySelector('[data-act=quit]').onclick = () => { closeModal(); battle.destroy(); battle = null; show(currentStage.type === 'event' ? 'screen-event' : 'screen-stages'); };
+    body.querySelector('[data-act=quit]').onclick = () => { closeModal(); battle.destroy(); battle = null; show('screen-stages'); };
   });
 
   function onBattleEnd(r) {
@@ -422,7 +521,6 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     save.crystals += exp;
     persist();
     const idx = TD.STAGES.indexOf(st), next = idx >= 0 ? TD.STAGES[idx + 1] : null;
-    const back = st.type === 'event' ? 'screen-event' : 'screen-stages';
     const body = modal(
       `<div class="result ${r.win ? 'win' : 'lose'}">` +
       `<div class="res-title">${r.win ? 'VICTORY' : 'DEFEAT'}</div>` +
@@ -438,7 +536,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       (r.win && next ? `<button class="btn primary" data-act="next">次のステージへ</button>` : '') +
       (!r.win ? `<button class="btn primary" data-act="party">育成する</button>` : '') +
       `<button class="btn ${r.win && next ? 'ghost' : r.win ? 'primary' : 'ghost'}" data-act="retry">もう一度</button>` +
-      `<button class="btn ghost" data-act="stages">${st.type === 'event' ? 'イベントへ' : 'ステージ選択へ'}</button></div>`, 'locked');
+      `<button class="btn ghost" data-act="stages">${st.type === 'event' ? 'イベントへ' : st.type === 'daily' ? 'デイリーへ' : 'ステージ選択へ'}</button></div>`, 'locked');
     const post = r.win ? storyFor(st, 'post') : null;
     const pendingPost = post && !save.story[post];
     if (pendingPost) body.insertAdjacentHTML('afterbegin', '<div class="res-story">クリア後のストーリーが始まります</div>');
@@ -447,14 +545,14 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       const b = body.querySelector(`[data-act=${act}]`);
       if (b) b.onclick = () => (pendingPost ? () => { leave(); show('screen-stages'); playStory(post, fn); } : fn)();
     };
-    on('next', () => { leave(); show('screen-stages'); openBrief(next); });
+    on('next', () => { leave(); if (next.chapter !== st.chapter) qstack = [{ v: 'chapters' }, { v: 'chapter', ch: next.chapter }]; show('screen-stages'); openBrief(next); });
     on('party', () => { leave(); show('screen-party'); });
     on('retry', () => {
       leave();
       if (st.type === 'daily' && TD.Live.runsLeft(save, st) <= 0) { show('screen-stages'); alertBox('本日の挑戦回数は終了しました'); }
       else if (partyOk()) startBattle(st);
     });
-    on('stages', () => { leave(); show(back); });
+    on('stages', () => { leave(); show('screen-stages'); });
   }
 
   // ---------- 編成・育成 ----------
@@ -547,9 +645,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
         `<div class="cd-head">${TD.portraitHTML(id, true, true)}<div><div class="cd-title">${base.title}</div>` +
         `<div class="cd-name">？？？</div>${TD.starsHTML(base.rarity, 0)} ${TD.elemChip(base.element)}<span class="chip role">${r.name}</span></div></div>` +
         (base.eventOnly
-          ? `<p class="hint">イベント「${esc((TD.eventCharSource(id) || {}).name || '')}」の交換所で仲間にできる英雄です（召喚には出ません）。</p><button class="btn primary" data-go-summon>イベントへ</button>`
+          ? `<p class="hint">イベント「${esc((TD.eventCharSource(id) || {}).name || '')}」の交換所で仲間にできる英雄です（召喚には出ません）。</p><button class="btn primary" data-go-summon>交換所へ</button>`
           : `<p class="hint">まだ出会っていない英雄です。「召喚」で仲間にしましょう。</p><button class="btn primary" data-go-summon>召喚へ</button>`);
-      box.querySelector('[data-go-summon]').onclick = () => { $('#char-sheet').classList.remove('show'); show(base.eventOnly ? 'screen-event' : 'screen-summon'); };
+      box.querySelector('[data-go-summon]').onclick = () => { $('#char-sheet').classList.remove('show'); if (base.eventOnly) { const ev = TD.eventCharSource(id); openQuest(ev && TD.Live.eventActive(ev) ? [{ v: 'events' }, { v: 'event', ev: ev.id }, { v: 'evshop', ev: ev.id }] : [{ v: 'events' }]); } else show('screen-summon'); };
       return;
     }
     const prog = save.chars[id], d = TD.charStats(id, prog), maxLv = TD.maxLv(prog.lb), inParty = save.party.includes(id);
@@ -843,5 +941,5 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     else setTimeout(after, 400);
   });
   show('screen-home');
-  TD.app = { show, startBattle, playStory, get save() { return save; } };
+  TD.app = { show, openQuest, startBattle, playStory, get save() { return save; } };
 })();

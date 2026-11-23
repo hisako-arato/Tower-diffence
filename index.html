@@ -97,8 +97,8 @@
   <!-- ステージ選択 -->
   <section id="screen-stages" class="screen">
     <header class="topbar sub">
-      <button class="back" data-go="screen-home">‹ ホーム</button>
-      <div class="sub-title">クエスト</div>
+      <button class="back" id="quest-back">‹ ホーム</button>
+      <div class="sub-title" id="quest-title">クエスト</div>
       <button class="currency" data-cur="stones"><small class="cur-label summon">召喚</small><i class="gem"></i><span class="stones-val">0</span></button>
     </header>
     <div id="stage-list" class="scroll"></div>
@@ -159,22 +159,6 @@
     <div class="mission-foot"><button id="btn-claim-all" class="btn primary">一括受け取り</button></div>
   </section>
 
-  <!-- イベント -->
-  <section id="screen-event" class="screen">
-    <header class="topbar sub">
-      <button class="back" data-go="screen-home">‹ ホーム</button>
-      <div class="sub-title">イベント</div>
-      <button class="currency" data-cur="stones"><small class="cur-label summon">召喚</small><i class="gem"></i><span class="stones-val">0</span></button>
-    </header>
-    <div class="scroll">
-      <div id="event-tabs" class="tabs"></div>
-      <div id="event-head"></div>
-      <div class="sec-label">イベントクエスト</div>
-      <div id="event-stages"></div>
-      <div class="sec-label">交換所</div>
-      <div id="event-shop"></div>
-    </div>
-  </section>
 
   <!-- 召喚 -->
   <section id="screen-summon" class="screen">
