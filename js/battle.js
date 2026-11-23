@@ -1187,7 +1187,7 @@ window.TD = window.TD || {};
     }
 
     drawFx(g, f) {
-      const p = f.t / f.dur;
+      const p = Math.max(0, Math.min(1, f.t / f.dur));   // 進行度は0〜1に収める（半径が負にならないように）
       switch (f.type) {
         case 'ring':
           g.strokeStyle = f.color; g.lineWidth = (f.width || 3) * (1 - p);
