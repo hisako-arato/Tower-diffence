@@ -157,7 +157,7 @@ TD.CHARS = {
   shizuku: {
     name: 'シズク', title: '腹ペコ弓道少女', rarity: 4, kind: 'tech', element: 'dark', role: 'archer',
     unique: { name: '腹ペコの絆', type: 'duo', partner: 'akane', count: 2, desc: 'アカネと共に編成されている場合、シズクの攻撃は2体に当たるようになる' },
-    cost: 8, hp: 678, atk: 68, def: 13, interval: 1.0, range: 3.4, redeploy: 20,
+    cost: 8, hp: 678, atk: 82, def: 13, interval: 1.0, range: 3.4, redeploy: 20,
     profile: 'アカネと一緒に異世界から呼ばれた弓道部員。肉まんがあれば戦える。',
     skill: { name: '肉まん配給', type: 'battery', sp: 20, amount: 10,
              desc: '配置中の味方全員の発動スキルのゲージを10増やす' },
