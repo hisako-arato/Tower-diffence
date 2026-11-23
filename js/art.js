@@ -25,6 +25,8 @@ TD.CUSTOM_ART = {
   viola:    { src: 'assets/chars/viola.webp',    ratio: 1.024, face: [0.46, 0.27, 0.34] },
   aster:    { src: 'assets/chars/aster.webp',    ratio: 0.790, face: [0.48, 0.47, 0.30] },
   minamo:   { src: 'assets/chars/minamo.webp',   ratio: 1.503, face: [0.47, 0.17, 0.30] },
+  ciel:     { src: 'assets/chars/ciel.webp',     ratio: 1.860, face: [0.59, 0.13, 0.42] },
+  chloe:    { src: 'assets/chars/chloe.webp',    ratio: 1.443, face: [0.59, 0.12, 0.30] },
 };
 // 文字列だけで登録した場合にも対応
 TD.customArt = function (id) {

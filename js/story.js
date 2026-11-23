@@ -16,6 +16,8 @@ TD.SPEAKERS = {
   shigure: { char: 'shigure' },
   leviath: { name: 'リヴァイア', enemy: true },
   glacies: { name: 'グラキエス', enemy: true },
+  ciel:    { char: 'ciel' },
+  chloe:   { char: 'chloe' },
   zephyr:  { char: 'zephyr' },
   kagura:  { char: 'kagura' },
   scout:   { name: '雪原の斥候', stand: false },
@@ -265,6 +267,21 @@ TD.STORY['3-5-post'] = {
   ],
 };
 
+TD.STORY['event-maid'] = {
+  title: 'イベント　王城メイド隊の奮闘', chapter: 'ev',
+  lines: [
+    [null, '王城の朝。いつもなら静かな中庭に、けたたましい鐘の音が響いた。', { bg: 'gate' }],
+    ['soldier', '魔物の群れが城内に！ 守備隊は城門に出払っています！', { fx: 'shake' }],
+    ['ciel', '……困りましたね。今日は大広間のお掃除の日なのですが。'],
+    ['chloe', 'シエル、のんきなことを言ってる場合じゃない。お嬢様たちの避難が先よ。'],
+    ['lumina', 'あなたたちは……王城のメイドさん？ その杖と盾は……！'],
+    ['ciel', '王城メイド隊、副メイド長のシエルと申します。こちらは護衛担当のクロエ。'],
+    ['chloe', '……召喚士さま、でしたね。手を貸していただけますか。'],
+    ['ciel', 'お礼は……そうですね。銀のティースプーンを集めてきてくださったら、わたしたちも正式にお仕えいたします。'],
+    ['lumina', 'ティースプーン……？ と、とにかく行きましょう、{name}さま！'],
+  ],
+};
+
 TD.STORY['event-starfest'] = {
   title: 'イベント　星降る夜の魔導祭', chapter: 'ev',
   lines: [
@@ -281,7 +298,7 @@ TD.STORY['event-starfest'] = {
 };
 TD.STORY_ORDER = ['prologue', '1-1-post', '1-2-pre', '1-2-post', '1-3-pre', '1-3-post', '1-4-pre', '1-5-pre', '1-5-post',
   '2-1-pre', '2-1-post', '2-3-pre', '2-5-pre', '2-5-post',
-  '3-1-pre', '3-1-post', '3-3-pre', '3-5-pre', '3-5-post', 'event-starfest'];
+  '3-1-pre', '3-1-post', '3-3-pre', '3-5-pre', '3-5-post', 'event-starfest', 'event-maid'];
 TD.CHAPTERS = { 1: '第1章 結界のほころび', 2: '第2章 蒼の結界石', 3: '第3章 白銀の結界石', ev: 'イベントストーリー' };
 
 // ---------- ADVプレイヤー ----------

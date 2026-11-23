@@ -37,3 +37,5 @@
 | viola.webp | ヴィオラ（★3 闇・魔） | AI生成（背景除去：BiRefNet） |
 | aster.webp | アステル（★4 光・盾） | AI生成（背景除去：BiRefNet） |
 | minamo.webp | ミナモ（★5 水・弓） | AI生成（背景除去：BiRefNet） |
+| ciel.webp | シエル（★4 光・魔導士、イベント限定） | AI生成（背景除去：BiRefNet） |
+| chloe.webp | クロエ（★4 闇・盾、イベント限定） | AI生成（背景除去：BiRefNet） |

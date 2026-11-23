@@ -9,7 +9,7 @@ window.TD = window.TD || {};
 
 TD.Gacha = {
   pool(rarity) {
-    return Object.keys(TD.CHARS).filter(id => TD.CHARS[id].rarity === rarity);
+    return Object.keys(TD.CHARS).filter(id => TD.CHARS[id].rarity === rarity && !TD.CHARS[id].eventOnly);
   },
 
   // その英雄の欠片がすべて集まったか（限界突破が最大）
@@ -28,7 +28,7 @@ TD.Gacha = {
   },
   // 全体でまだ集まっていない欠片の数（これが0なら召喚できない）
   fragmentsLeft(save) {
-    return Object.keys(TD.CHARS).reduce((a, id) => a + this.fragmentsLeftOf(save, id), 0);
+    return Object.keys(TD.CHARS).filter(id => !TD.CHARS[id].eventOnly).reduce((a, id) => a + this.fragmentsLeftOf(save, id), 0);
   },
 
   // 欠片が残っているレアリティだけで、出やすさを分け直す

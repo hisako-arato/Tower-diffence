@@ -225,6 +225,26 @@ TD.CHARS = {
     lines: { deploy: '……狙いは、もう定めています', skill: '流れよ、蒼き一矢――蒼流穿矢！' },
   },
 
+  // ---------- イベント入手キャラ（召喚には出ない） ----------
+  ciel: {
+    name: 'シエル', title: '王城の星詠みメイド', rarity: 4, kind: 'tech', eventOnly: true, element: 'light', role: 'mage',
+    cost: 13, hp: 820, atk: 120, def: 15, interval: 1.9, range: 2.6, splash: 0.9, redeploy: 30,
+    unique: { name: 'メイド長の段取り', type: 'startSp', party: true, short: '開始時ゲージ半分', desc: '味方全員の発動スキルのゲージが、半分たまった状態で配置される（各キャラの最初の配置のみ）' },
+    profile: '王城メイド隊の副メイド長。紫水晶の杖で星の魔法を操り、仕事も戦いも段取りが命。',
+    skill: { name: '星屑の箒星', type: 'flash', sp: 26, radius: 1.8, stun: 2, mult: 3,
+             desc: '周囲の敵を2秒間気絶させ、攻撃力300%のダメージ' },
+    lines: { deploy: 'お掃除の時間です。……魔物の、ですが', skill: '星屑よ、塵ひとつ残さずに' },
+  },
+  chloe: {
+    name: 'クロエ', title: '黒薔薇の護衛メイド', rarity: 4, kind: 'tech', eventOnly: true, element: 'dark', role: 'shield',
+    cost: 13, hp: 2450, atk: 75, def: 150, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
+    unique: { name: 'お嬢様の盾', type: 'retreatRefund', rate: 0.75, party: true, short: '撤退マナ75%', desc: '撤退したときに戻るマナが、半分から75%になる' },
+    profile: '王城メイド隊の護衛担当。黒薔薇の大盾で、主も仲間も守り抜く。',
+    skill: { name: '黒薔薇の誓い', type: 'guard', sp: 28, dur: 10,
+             desc: '10秒間、防御2倍・ブロック数+2。HPを50%回復' },
+    lines: { deploy: 'ここから先は、通しません', skill: '黒薔薇に誓って――お守りします' },
+  },
+
   // ---------- ★3（初心者の戦力・サポート） ----------
   lux: {
     name: 'ルクス', title: '聖光の見習い狙撃手', rarity: 3, element: 'light', role: 'archer',
@@ -1015,6 +1035,85 @@ TD.EVENT = {
     { id: 'st30',  name: '魔晶石 ×30', reward: { stones: 30 }, cost: 40, limit: 99 },
   ],
 };
+TD.EVENT_MAID = {
+  id: 'maid',
+  name: '王城メイド隊の奮闘',
+  start: '2026-11-23', end: '2027-01-10',
+  currency: '銀のティースプーン',
+  element: 'light',
+  desc: '人手不足の王城に、魔物の群れが押し寄せた！ 頼れるのは、腕利きのメイド隊。仲間になってもらうには……？',
+  story: 'event-maid',
+  stages: [
+    {
+      id: 'M-1', type: 'event', name: '王城の中庭', chapter: '王城メイド隊の奮闘', unlockAfter: null,
+      brief: '王城の中庭に魔物が！ 銀のティースプーンを集めて、交換所でメイドたちの欠片と交換しましょう。',
+      lives: 10, mana: 14, hpScale: 1.6, reward: 50, exp: 600, eventPoints: 30, recLv: 10,
+      map: [
+        '...S.....',
+        '...#..x..',
+        '.###.....',
+        '.#.......',
+        '.#####...',
+        '.....#.x.',
+        '.x...#...',
+        '..####...',
+        '..#......',
+        '..####...',
+        '.....#...',
+        '.x...#...',
+        '.....G...',
+      ],
+      waves: [
+        { t: 3, e: 'goblin', n: 5, gap: 1.8 },
+        { t: 14, e: 'wolf', n: 5, gap: 1.2 },
+        { t: 24, e: 'goblinArcher', n: 2, gap: 3 },
+        { t: 32, e: 'skeleton', n: 2, gap: 4 },
+        { t: 42, e: 'wolf', n: 6, gap: 1 },
+        { t: 52, e: 'darkMage', n: 2, gap: 3 },
+      ],
+    },
+    {
+      id: 'M-2', type: 'event', name: '王城大広間【上級】', chapter: '王城メイド隊の奮闘', unlockAfter: 'M-1',
+      brief: '大広間に魔物の大群が！ 守る拠点は2つ。銀のティースプーンが2倍以上もらえます。',
+      lives: 10, mana: 16, hpScale: 2.0, reward: 80, exp: 900, eventPoints: 70, recLv: 16,
+      map: [
+        'S.......S',
+        '#.......#',
+        '###...###',
+        '..#...#..',
+        '..#####..',
+        '....#....',
+        '.x..#..x.',
+        '..#####..',
+        '..#...#..',
+        '..#.x.#..',
+        '.##...##.',
+        '.#.....#.',
+        '.G.....G.',
+      ],
+      waves: [
+        { t: 3, e: 'goblin', n: 4, gap: 1.5, s: 0, g: 0 },
+        { t: 5, e: 'wolf', n: 4, gap: 1.2, s: 1, g: 1 },
+        { t: 18, e: 'skeleton', n: 2, gap: 4, s: 0, g: 1 },
+        { t: 22, e: 'goblinArcher', n: 3, gap: 2.5, s: 1, g: 0 },
+        { t: 34, e: 'harpy', n: 4, gap: 1.5, s: 0, g: 0 },
+        { t: 44, e: 'iceGolem', n: 1, gap: 0, s: 1, g: 1 },
+        { t: 50, e: 'darkMage', n: 2, gap: 3, s: 0, g: 1 },
+        { t: 58, e: 'wolf', n: 6, gap: 1, s: 1, g: 0 },
+      ],
+    },
+  ],
+  shop: [
+    { id: 'ciel',  name: '★4 シエルの欠片（加入 or 限界突破）', char: 'ciel', cost: 200, limit: 5 },
+    { id: 'chloe', name: '★4 クロエの欠片（加入 or 限界突破）', char: 'chloe', cost: 200, limit: 5 },
+    { id: 'st100', name: '魔晶石 ×100', reward: { stones: 100 }, cost: 120, limit: 5 },
+    { id: 'bk1k',  name: '経験の書 ×1000', reward: { crystals: 1000 }, cost: 40, limit: 10 },
+  ],
+};
+// 開催するイベントの一覧（複数を同時に開催できる）
+TD.EVENTS = [TD.EVENT, TD.EVENT_MAID];
+TD.eventOf = st => TD.EVENTS.find(e => e.stages.includes(st)) || TD.EVENT;
+
 
 // ========== キャラの個性（特性） ==========
 // キャラ定義に traits: ['fastRedeploy'] のように書くと、その特性を持つ。
@@ -1119,3 +1218,6 @@ TD.KIND_LABEL = { power: '力型', tech: '技型' };
 for (const [id, d] of Object.entries(TD.CHARS)) {
   if (d.interval !== TD.ROLE_INTERVAL[d.role]) console.warn(`[データ] ${d.name}（${id}）の攻撃間隔が職業の値（${TD.ROLE_INTERVAL[d.role]}秒）と違います`);
 }
+
+// イベント入手キャラ：召喚には出ない
+TD.eventCharSource = id => TD.EVENTS.find(e => e.shop.some(it => it.char === id));

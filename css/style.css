@@ -869,3 +869,6 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .cs-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 4px; font-size: 11px; color: var(--muted); }
 .cs-row b { color: #fff; font-size: 14px; margin-left: 4px; }
 .cs-row small { color: #7dffa0; margin-left: 3px; font-size: 10px; }
+
+#event-tabs { padding: 0 0 8px; }
+#event-tabs:empty { display: none; }
