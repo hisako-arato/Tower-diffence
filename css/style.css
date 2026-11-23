@@ -870,3 +870,9 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .chapter-title small { margin-left: 8px; font-size: 11px; font-weight: 600; color: var(--muted); }
 .shop-head { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin: 4px 0 12px; font-size: 13px; font-weight: 800; color: var(--muted); }
 .shop-head .eh-pts { color: var(--text, #fff); white-space: nowrap; }
+
+/* キャラ詳細：副官・編成ボタンを下に固定 */
+.sheet-foot { flex: none; padding: 10px 12px max(10px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: #1d1738; }
+.sheet-foot:empty { display: none; }
+.sheet-foot .btn-row { margin: 0; }
+.roster-empty { grid-column: 1 / -1; padding: 24px 0; text-align: center; color: var(--muted); font-size: 13px; }

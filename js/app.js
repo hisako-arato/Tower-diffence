@@ -613,11 +613,12 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const roster = $('#roster'), scroller = $('.roster-scroll'), keepTop = scroller.scrollTop;
     roster.style.minHeight = roster.offsetHeight + 'px'; // 作り直しの間に高さが縮んでスクロール位置が飛ばないようにする
     roster.innerHTML = '';
+    // 一覧には所持している英雄だけを並べる
     listIds = Object.keys(TD.CHARS)
-      .filter(id => (filter.rarity === 'all' || TD.CHARS[id].rarity === filter.rarity) && (filter.element === 'all' || TD.CHARS[id].element === filter.element))
-      .sort((a, b) => (owns(b) - owns(a)) || (TD.CHARS[b].rarity - TD.CHARS[a].rarity));
-    const ownedN = listIds.filter(owns).length;
-    $('#roster-count').textContent = `表示中 ${listIds.length}人（所持 ${ownedN}人）`;
+      .filter(id => owns(id) && (filter.rarity === 'all' || TD.CHARS[id].rarity === filter.rarity) && (filter.element === 'all' || TD.CHARS[id].element === filter.element))
+      .sort((a, b) => (TD.CHARS[b].rarity - TD.CHARS[a].rarity));
+    $('#roster-count').textContent = `表示中 ${listIds.length}人（所持 ${save.owned.length}人）`;
+    if (!listIds.length) roster.innerHTML = '<div class="roster-empty">条件に合う英雄はいません</div>';
     for (const id of listIds) {
       const d = TD.CHARS[id], el = document.createElement('button'), have = owns(id);
       el.className = `char-card r${d.rarity}` + (have ? '' : ' unowned') + (save.party.includes(id) ? ' in-party' : '') + (partySel === id && sheetOpen() ? ' sel' : '');
@@ -646,6 +647,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     $('#sheet-pos').textContent = pos >= 0 ? `${pos + 1} / ${listIds.length}` : '';
     const id = partySel, base = TD.CHARS[id], r = TD.ROLES[base.role], have = owns(id);
     if (!have) {
+      $('#sheet-foot').innerHTML = '';
       box.innerHTML =
         `<div class="cd-head">${TD.portraitHTML(id, true, true)}<div><div class="cd-title">${base.title}</div>` +
         `<div class="cd-name">？？？</div>${TD.starsHTML(base.rarity, 0)} ${TD.elemChip(base.element)}<span class="chip role">${r.name}</span></div></div>` +
@@ -700,7 +702,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       (base.skill ? `<div class="cd-skill"><div class="cd-skill-name">発動スキル「${base.skill.name}」<small>SP ${base.skill.sp}・タップで発動</small></div><div>${base.skill.desc}</div></div>` : '') +
       (base.passive ? `<div class="cd-skill passive"><div class="cd-skill-name">常時スキル「${base.passive.name}」<small>配置中ずっと有効</small></div><div>${base.passive.desc}</div></div>` : '') +
       TD.uniquesOf(base).map(u => `<div class="cd-skill partyfx"><div class="cd-skill-name">ユニークスキル「${u.icon ? u.icon + ' ' : ''}${u.name}」${u.note ? `<small>${u.note}</small>` : ''}</div><div>${u.desc}</div></div>`).join('') +
-      `<div class="btn-row party-btns">` +
+      '';
+    // 副官・編成ボタンは画面下に固定（キャラを切り替えても位置が変わらない）
+    $('#sheet-foot').innerHTML = `<div class="btn-row party-btns">` +
       (save.party[0] === id ? `<div class="adj-now">👑 副官に任命中<small>HP・攻撃・防御 +${Math.round((TD.ADJUTANT.statMult - 1) * 100)}%</small></div>` : `<button class="btn ghost" id="btn-adjutant">👑 副官に任命</button>`) +
       `<button class="btn ${inParty ? 'ghost' : 'primary'}" id="btn-toggle-party">${inParty ? '編成から外す' : '編成に加える'}</button></div>`;
     box.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => {
