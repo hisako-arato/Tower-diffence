@@ -97,7 +97,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     if (TD.Live.ensureDaily(save)) persist();
     const n = TD.Live.claimableCount(save), badge = $('#mission-badge');
     badge.textContent = n; badge.hidden = !n;
-    const evb = $('#home-event'), actives = TD.EVENTS.filter(e => TD.Live.eventActive(e)), ev = actives[actives.length - 1];
+    const evb = $('#home-event'), actives = activeEvents(), ev = actives[0];
     evb.hidden = !ev;
     if (ev) evb.innerHTML = `<span class="he-tag">EVENT${actives.length > 1 ? ' ×' + actives.length : ''}</span><span class="he-name">${esc(ev.name)}</span><span class="he-left">あと${TD.Live.eventDaysLeft(ev)}日</span>`;
   }
@@ -188,11 +188,13 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   }
 
   // ---------- イベント ----------
+  // 開催中のイベント：新しく始まったものが上。同じ開始日なら定義順（前編 → 後編）
+  function activeEvents() { return TD.EVENTS.filter(e => TD.Live.eventActive(e)).sort((a, b) => b.start.localeCompare(a.start)); }
   function eventStageOpen(st) { return !st.unlockAfter || save.cleared[st.unlockAfter] > 0; }
   // ホームのイベントバナー → 最新の開催中イベントのメニューへ直接
   $('#home-event').addEventListener('click', () => {
-    const actives = TD.EVENTS.filter(e => TD.Live.eventActive(e));
-    openQuest(actives.length ? [{ v: 'events' }, { v: 'event', ev: actives[actives.length - 1].id }] : []);
+    const actives = activeEvents();
+    openQuest(actives.length ? [{ v: 'events' }, { v: 'event', ev: actives[0].id }] : []);
   });
 
   // ---------- ストーリー ----------
@@ -294,7 +296,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   }
   function eventHeadHTML(ev) {
     const es = TD.Live.eventState(save, ev), active = TD.Live.eventActive(ev);
-    return `<div class="event-head el-${ev.element}"><div class="eh-name">${esc(ev.name)}</div>` +
+    const [main, subt] = ev.name.split('　');
+    return `<div class="event-head el-${ev.element}"><div class="eh-name">${esc(main)}</div>${subt ? `<div class="eh-sub">${esc(subt)}</div>` : ''}` +
       `<div class="eh-period">${ev.start.replace(/-/g, '/')} 〜 ${ev.end.replace(/-/g, '/')}${active ? `（あと${TD.Live.eventDaysLeft(ev)}日）` : '（終了しました）'}</div>` +
       `<p>${esc(ev.desc)}</p><div class="eh-pts"><i class="star"></i> ${esc(ev.currency)} <b>${es.pts}</b></div></div>`;
   }
@@ -308,7 +311,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     list.innerHTML = '';
     const titles = { top: 'クエスト', chapters: 'ストーリー', daily: 'デイリー', events: 'イベント', evshop: '交換所' };
     $('#quest-title').textContent = node.v === 'chapter' ? node.ch.split(/[\s　]/)[0]
-      : node.ev ? (node.v === 'evshop' ? '交換所' : evById(node.ev).name) : titles[node.v];
+      : node.ev ? (node.v === 'evshop' ? '交換所' : evById(node.ev).short || evById(node.ev).name) : titles[node.v];
     $('#quest-back').textContent = qstack.length ? '‹ 戻る' : '‹ ホーム';
     const add = el => list.appendChild(el);
 
@@ -357,8 +360,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
           !unlocked ? `${st.unlockAfter}クリアで解放` : '本日の挑戦回数は終了しました'));
       }
     } else if (node.v === 'events') {
-      const actives = TD.EVENTS.filter(e => TD.Live.eventActive(e));
-      for (const ev of actives.slice().reverse()) {
+      const actives = activeEvents();
+      for (const ev of actives) {
         const es = TD.Live.eventState(save, ev);
         add(qcard('event', esc(ev.name), `あと${TD.Live.eventDaysLeft(ev)}日・${esc(ev.currency)} ${es.pts}`,
           evShopReady(ev) ? '交換可' : !save.story[ev.story] ? 'NEW' : '', () => qpush({ v: 'event', ev: ev.id })));
@@ -378,7 +381,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     } else if (node.v === 'evq') {
       const ev = evById(node.ev), es = TD.Live.eventState(save, ev);
       list.insertAdjacentHTML('beforeend', `<div class="chapter-title event">${esc(ev.name)}<small><i class="star"></i> ${esc(ev.currency)} ${es.pts}</small></div>`);
-      for (const st of ev.stages) add(stageItem(st, eventStageOpen(st), `${ev.currency} ×${st.eventPoints}${st.recLv ? `・推奨Lv${st.recLv}` : ''}`, `${st.unlockAfter}クリアで解放`));
+      for (const st of ev.stages) add(stageItem(st, eventStageOpen(st), `${ev.currency} ×${st.eventPoints}${st.recLv ? `・推奨Lv${st.recLv}` : ''}`, st.lockText || `${st.unlockAfter}クリアで解放`));
     } else if (node.v === 'evshop') {
       const ev = evById(node.ev), es = TD.Live.eventState(save, ev);
       list.insertAdjacentHTML('beforeend', `<div class="shop-head">${esc(ev.name)}<div class="eh-pts"><i class="star"></i> ${esc(ev.currency)} <b>${es.pts}</b></div></div>`);

@@ -1037,15 +1037,15 @@ TD.EVENT = {
 };
 TD.EVENT_MAID = {
   id: 'maid',
-  name: '王城メイド隊の奮闘',
+  name: '王城メイド隊 前編　星詠みのシエル', short: 'メイド隊 前編',
   start: '2026-11-23', end: '2027-01-10',
   currency: '銀のティースプーン',
   element: 'light',
-  desc: '人手不足の王城に、魔物の群れが押し寄せた！ 頼れるのは、腕利きのメイド隊。仲間になってもらうには……？',
+  desc: '人手不足の王城に、魔物の群れが押し寄せた！ 立ちはだかるのは、星の魔法を操る副メイド長シエル。銀のティースプーンを集めて、彼女を仲間に迎えよう。',
   story: 'event-maid',
   stages: [
     {
-      id: 'M-1', type: 'event', name: '王城の中庭', chapter: '王城メイド隊の奮闘', unlockAfter: null,
+      id: 'M-1', type: 'event', name: '王城の中庭', chapter: '王城メイド隊 前編', unlockAfter: null,
       brief: '王城の中庭に魔物が！ 銀のティースプーンを集めて、交換所でメイドたちの欠片と交換しましょう。',
       lives: 10, mana: 14, hpScale: 1.6, reward: 50, exp: 600, eventPoints: 30, recLv: 10,
       map: [
@@ -1073,7 +1073,7 @@ TD.EVENT_MAID = {
       ],
     },
     {
-      id: 'M-2', type: 'event', name: '王城大広間【上級】', chapter: '王城メイド隊の奮闘', unlockAfter: 'M-1',
+      id: 'M-2', type: 'event', name: '王城大広間【上級】', chapter: '王城メイド隊 前編', unlockAfter: 'M-1',
       brief: '大広間に魔物の大群が！ 守る拠点は2つ。銀のティースプーンが2倍以上もらえます。',
       lives: 10, mana: 16, hpScale: 2.0, reward: 80, exp: 900, eventPoints: 70, recLv: 16,
       map: [
@@ -1105,13 +1105,88 @@ TD.EVENT_MAID = {
   ],
   shop: [
     { id: 'ciel',  name: '★4 シエルの欠片（加入 or 限界突破）', char: 'ciel', cost: 200, limit: 5 },
+    { id: 'st100', name: '魔晶石 ×100', reward: { stones: 100 }, cost: 120, limit: 5 },
+    { id: 'bk1k',  name: '経験の書 ×1000', reward: { crystals: 1000 }, cost: 40, limit: 10 },
+  ],
+};
+
+// 後編：前編の続き。前編のM-1クリアで後編のステージが解放される
+TD.EVENT_MAID2 = {
+  id: 'maid2',
+  name: '王城メイド隊 後編　黒薔薇のクロエ', short: 'メイド隊 後編',
+  start: '2026-11-23', end: '2027-01-10',
+  currency: '黒薔薇のブローチ',
+  element: 'dark',
+  desc: '魔物は王城の地下からあふれ出していた。お嬢様を守り、ひとり地下回廊に残った護衛メイド・クロエを救い出せ！',
+  story: 'event-maid2',
+  stages: [
+    {
+      id: 'K-1', type: 'event', name: '王城の地下回廊', chapter: '王城メイド隊 後編', unlockAfter: 'M-1', lockText: '前編のM-1クリアで解放',
+      brief: '暗い地下回廊に魔物がひしめいています。黒薔薇のブローチを集めて、クロエの欠片と交換しましょう。',
+      lives: 10, mana: 15, hpScale: 1.8, reward: 50, exp: 700, eventPoints: 40, recLv: 14,
+      map: [
+        '....S....',
+        '....#....',
+        '.x..#..x.',
+        '.####....',
+        '.#.......',
+        '.#..x....',
+        '.######..',
+        '......#..',
+        '.x....#.x',
+        '..#####..',
+        '..#......',
+        '..#...x..',
+        '..G......',
+      ],
+      waves: [
+        { t: 3, e: 'goblin', n: 5, gap: 1.6 },
+        { t: 14, e: 'bogSlime', n: 4, gap: 1.8 },
+        { t: 24, e: 'skeleton', n: 2, gap: 4 },
+        { t: 32, e: 'wraith', n: 4, gap: 1.5 },
+        { t: 42, e: 'darkMage', n: 3, gap: 2.5 },
+        { t: 52, e: 'skeleton', n: 3, gap: 3 },
+      ],
+    },
+    {
+      id: 'K-2', type: 'event', name: '封じられた宝物庫【上級】', chapter: '王城メイド隊 後編', unlockAfter: 'K-1',
+      brief: '宝物庫の奥から魔物が湧き出しています。左右の通路から敵が合流します。黒薔薇のブローチが2倍もらえます。',
+      lives: 10, mana: 17, hpScale: 2.2, reward: 80, exp: 1000, eventPoints: 80, recLv: 20,
+      map: [
+        'S.......S',
+        '#.......#',
+        '#..x.x..#',
+        '###...###',
+        '..#...#..',
+        '..##.##..',
+        '...###...',
+        '.x..#..x.',
+        '....#....',
+        '..###....',
+        '..#...x..',
+        '..###....',
+        '....G....',
+      ],
+      waves: [
+        { t: 3, e: 'goblin', n: 4, gap: 1.5, s: 0 },
+        { t: 5, e: 'bogSlime', n: 4, gap: 1.6, s: 1 },
+        { t: 16, e: 'skeleton', n: 2, gap: 4, s: 0 },
+        { t: 20, e: 'wraith', n: 4, gap: 1.4, s: 1 },
+        { t: 32, e: 'darkMage', n: 3, gap: 2.5, s: 0 },
+        { t: 40, e: 'skeleton', n: 3, gap: 3, s: 1 },
+        { t: 50, e: 'wraith', n: 5, gap: 1.2, s: 0 },
+        { t: 56, e: 'goblin', n: 6, gap: 1, s: 1 },
+      ],
+    },
+  ],
+  shop: [
     { id: 'chloe', name: '★4 クロエの欠片（加入 or 限界突破）', char: 'chloe', cost: 200, limit: 5 },
     { id: 'st100', name: '魔晶石 ×100', reward: { stones: 100 }, cost: 120, limit: 5 },
     { id: 'bk1k',  name: '経験の書 ×1000', reward: { crystals: 1000 }, cost: 40, limit: 10 },
   ],
 };
 // 開催するイベントの一覧（複数を同時に開催できる）
-TD.EVENTS = [TD.EVENT, TD.EVENT_MAID];
+TD.EVENTS = [TD.EVENT, TD.EVENT_MAID, TD.EVENT_MAID2];
 TD.eventOf = st => TD.EVENTS.find(e => e.stages.includes(st)) || TD.EVENT;
 
 

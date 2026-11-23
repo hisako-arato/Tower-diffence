@@ -653,6 +653,7 @@ textarea { width: 100%; background: #0e0a1f; color: var(--text); border: 1px sol
   background: radial-gradient(circle at 50% 0, var(--ec), var(--ed) 55%, #120e24); border: 2px solid #ff9ad0; box-shadow: 0 0 20px rgba(255, 107, 176, .3);
 }
 .eh-name { font-size: 22px; font-weight: 900; text-shadow: 0 2px 6px rgba(0, 0, 0, .6); }
+.eh-sub { font-size: 15px; font-weight: 800; margin-top: 2px; text-shadow: 0 2px 6px rgba(0, 0, 0, .6); }
 .eh-period { font-size: 11px; margin-top: 4px; }
 .event-head p { font-size: 12px; line-height: 1.6; margin: 10px 0; }
 .eh-pts { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: rgba(0, 0, 0, .5); font-size: 13px; }
