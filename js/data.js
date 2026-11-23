@@ -216,6 +216,15 @@ TD.CHARS = {
     lines: { deploy: 'オレの盾は、絶対に割れない！', skill: 'どけどけーっ！ 天盾突撃！' },
   },
 
+  minamo: {
+    name: 'ミナモ', title: '蒼流の弓姫', rarity: 5, element: 'water', role: 'archer',
+    cost: 15, hp: 1250, atk: 190, def: 35, interval: 1.0, range: 3.8, redeploy: 30,
+    profile: '水の都の弓術を極めた姫。放つ矢は奔流となり、どれほど遠くの敵も逃さない。',
+    skill: { name: '蒼流穿矢', type: 'snipe', sp: 30, mult: 8,
+             desc: 'フィールド上で最もHPの多い敵（ボスを優先）に、射程に関係なく攻撃力800%のダメージ' },
+    lines: { deploy: '……狙いは、もう定めています', skill: '流れよ、蒼き一矢――蒼流穿矢！' },
+  },
+
   // ---------- ★3（初心者の戦力・サポート） ----------
   lux: {
     name: 'ルクス', title: '聖光の見習い狙撃手', rarity: 3, element: 'light', role: 'archer',

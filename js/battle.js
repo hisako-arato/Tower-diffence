@@ -387,6 +387,14 @@ window.TD = window.TD || {};
           this.fx.push({ type: 'flash', t: 0, dur: 0.35, color: 'rgba(255,255,220,' });
           this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 6, r1: s.radius * T, t: 0, dur: 0.4, color: '#fff6c0', width: 8 });
           break;
+        case 'snipe': { // 最もHPの多い敵（ボス優先）を射程に関係なく狙い撃つ
+          const tgt = alive.slice().sort((a, b) => (b.def.boss ? 1 : 0) - (a.def.boss ? 1 : 0) || b.hp - a.hp)[0];
+          if (tgt) {
+            this.shots.push({ x: u.x, y: u.y, target: tgt, power: this.atkOf(u) * s.mult, src: u, speed: 900, color: '#7ad8ff', kind: 'archer' });
+            this.fx.push({ type: 'ring', x: tgt.x, y: tgt.y, r0: 28, r1: 6, t: 0, dur: 0.5, color: '#7ad8ff', width: 3 });
+          }
+          break;
+        }
         case 'shieldBash':
           for (const e of alive) if (dist(e, u) <= s.radius * T) { e.frozen = Math.max(e.frozen, s.stun); e.bound = false; }
           u.buff = { type: 'guard', dur: s.dur, defMult: s.defMult }; u.buffT = s.dur;
