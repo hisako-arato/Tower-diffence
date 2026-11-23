@@ -882,9 +882,9 @@ TD.NAVI_LINES = [
   '弓や魔法を使う敵は、後ろのキャラも狙ってきます。回復役を忘れずに！',
 ];
 
-// ========== フェーズ4：ログインボーナス・ミッション・デイリー・イベント ==========
+// ========== フェーズ4：ログイン報酬・ミッション・デイリー・イベント ==========
 
-// 7日周期のログインボーナス
+// 7日周期のログイン報酬（デイリーミッション「ログインする」の報酬になる）
 TD.LOGIN_BONUS = [
   { stones: 50 },
   { crystals: 500 },
@@ -897,7 +897,7 @@ TD.LOGIN_BONUS = [
 
 // デイリーミッション（毎日0時にリセット）。key は daily カウンタ名
 TD.DAILY_MISSIONS = [
-  { id: 'd-login',  name: 'ログインする',                 key: 'login',    goal: 1,  reward: { stones: 10 } },
+  { id: 'd-login',  name: 'ログインする',                 key: 'login',    goal: 1,  reward: { stones: 50 }, loginCycle: true },  // 報酬は TD.LOGIN_BONUS の日替わり
   { id: 'd-win',    name: 'バトルに3回勝利する',           key: 'wins',     goal: 3,  reward: { stones: 30 } },
   { id: 'd-kill',   name: '敵を50体倒す',                  key: 'kills',    goal: 50, reward: { stones: 20 } },
   { id: 'd-skill',  name: '発動スキルを5回使う',               key: 'skills',   goal: 5,  reward: { crystals: 300 } },

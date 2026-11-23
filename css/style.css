@@ -597,7 +597,7 @@ textarea { width: 100%; background: #0e0a1f; color: var(--text); border: 1px sol
 @keyframes advFlash { 0% { opacity: .9; } 100% { opacity: 0; } }
 @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
 
-/* ========== フェーズ4：ログボ・ミッション・デイリー・イベント ========== */
+/* ========== フェーズ4：ミッション・デイリー・イベント ========== */
 .star {
   display: inline-block; width: 15px; height: 15px; vertical-align: -2px;
   clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
@@ -625,25 +625,6 @@ textarea { width: 100%; background: #0e0a1f; color: var(--text); border: 1px sol
 .chapter-title.daily { margin-top: 18px; border-left-color: #4fe0b0; background: linear-gradient(90deg, rgba(79, 224, 176, .2), transparent); }
 .chapter-title.event { margin-top: 18px; border-left-color: #ff6bb0; background: linear-gradient(90deg, rgba(255, 107, 176, .22), transparent); }
 .stage-item.event { border-color: #a040c8; }
-
-/* ログインボーナス */
-.lb-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 14px 0 10px; }
-.lb-day {
-  position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; border-radius: 10px;
-  background: rgba(255, 255, 255, .05); border: 1px solid var(--line); font-size: 11px;
-}
-.lb-day.big { grid-column: span 2; background: linear-gradient(180deg, rgba(242, 201, 76, .25), rgba(255, 255, 255, .03)); border-color: var(--gold); }
-.lb-day.got { opacity: .6; }
-.lb-day.today { opacity: 1; border-color: var(--gold); box-shadow: 0 0 12px rgba(242, 201, 76, .6); }
-.lbd { font-size: 10px; color: var(--muted); }
-.lb-day b { font-size: 12px; }
-.stamp {
-  position: absolute; top: 2px; right: 2px; transform: rotate(-15deg); font-size: 11px; font-weight: 900; color: #ff4f7a;
-  border: 2px solid #ff4f7a; border-radius: 50%; width: 24px; height: 24px; display: grid; place-items: center; background: rgba(20, 10, 30, .75);
-}
-.lb-day.today .stamp { animation: stampIn .5s .3s backwards cubic-bezier(.3, 1.6, .5, 1); }
-.lb-get { text-align: center; font-size: 14px; margin-top: 4px; }
-.lb-get b { color: var(--gold); }
 
 /* ミッション */
 .tabs { display: flex; gap: 6px; padding: 10px 16px 0; }
@@ -688,7 +669,6 @@ textarea { width: 100%; background: #0e0a1f; color: var(--text); border: 1px sol
   padding: 8px 16px; border-radius: 999px; background: rgba(10, 8, 22, .95); border: 1px solid var(--gold); font-size: 13px; font-weight: 700; white-space: nowrap;
 }
 #app-toast.show { animation: toast 2.2s ease forwards; }
-@keyframes stampIn { from { transform: rotate(-15deg) scale(3); opacity: 0; } to { transform: rotate(-15deg) scale(1); opacity: 1; } }
 
 /* ========== キャラクターアート ========== */
 .pt-art { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; }

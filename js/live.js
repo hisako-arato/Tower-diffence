@@ -1,4 +1,4 @@
-// ライブ運営系の仕組み：日付リセット・ログインボーナス・ミッション・イベント
+// ライブ運営系の仕組み：日付リセット・ログイン記録・ミッション・イベント
 // 日付は端末のローカル時刻で判定する（0時に切り替わる）。
 window.TD = window.TD || {};
 
@@ -15,19 +15,26 @@ TD.Live = {
   // 日付が変わっていたらデイリー状態をリセットする。リセットしたら true
   ensureDaily(save) {
     const t = this.today();
-    if (!save.daily || save.daily.date !== t) { save.daily = this.newDaily(t); return true; }
-    return false;
+    let reset = false;
+    if (!save.daily || save.daily.date !== t) { save.daily = this.newDaily(t); reset = true; }
+    this.checkLogin(save);
+    return reset;
   },
 
-  // 今日まだ受け取っていなければログインボーナスを付与して内容を返す
+  // 今日のログインを記録して、7日周期の何日目かを進める（報酬はデイリーミッションで受け取る）
   checkLogin(save) {
     const t = this.today();
-    if (save.login.last === t) return null;
+    if (save.login.last === t) return false;
     const day = save.login.day % TD.LOGIN_BONUS.length + 1;   // 1〜7
     save.login = { last: t, day, total: save.login.total + 1 };
-    const reward = TD.LOGIN_BONUS[day - 1];
-    this.grant(save, reward);
-    return { day, reward };
+    return true;
+  },
+
+  // ミッション定義を、今日の内容に合わせて解決する（ログインは7日周期の報酬）
+  resolveDaily(save, m) {
+    if (!m.loginCycle) return m;
+    const day = save.login.day || 1;
+    return Object.assign({}, m, { name: `ログインする（${day}日目${day === TD.LOGIN_BONUS.length ? '・豪華報酬' : ''}）`, reward: TD.LOGIN_BONUS[day - 1] });
   },
 
   grant(save, reward) {
@@ -52,7 +59,8 @@ TD.Live = {
   dailyList(save) {
     this.ensureDaily(save);
     const others = TD.DAILY_MISSIONS.filter(m => m.key !== '_all');
-    return TD.DAILY_MISSIONS.map(m => {
+    return TD.DAILY_MISSIONS.map(m0 => {
+      const m = this.resolveDaily(save, m0);
       const cur = m.key === '_all'
         ? others.filter(o => (save.daily[o.key] || 0) >= o.goal).length
         : Math.min(m.goal, save.daily[m.key] || 0);

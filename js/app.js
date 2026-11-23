@@ -68,7 +68,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="ch-name">${books ? '経験の書' : '魔晶石'}<small class="cur-label ${books ? 'grow' : 'summon'}">${books ? '育成用' : '召喚用'}</small></div>` +
       `<p>${books
         ? 'キャラのレベルアップに使う本です。<br>ステージクリアで毎回手に入ります。デイリークエスト「古代の書庫」ならたくさん集められます。'
-        : '英雄の召喚に使う魔法の石です。<br>初回クリア報酬・ミッション・ログインボーナス・イベント交換所で手に入ります。'}</p>` +
+        : '英雄の召喚に使う魔法の石です。<br>初回クリア報酬・ミッション（毎日のログイン報酬を含む）・イベント交換所で手に入ります。'}</p>` +
       `<div class="ch-own">所持数 <b>${books ? save.crystals : save.stones}</b></div></div>` +
       `<div class="btn-row"><button class="btn primary">閉じる</button></div>`);
     body.querySelector('button').onclick = closeModal;
@@ -99,11 +99,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     evb.hidden = !ev;
     if (ev) evb.innerHTML = `<span class="he-tag">EVENT${actives.length > 1 ? ' ×' + actives.length : ''}</span><span class="he-name">${esc(ev.name)}</span><span class="he-left">あと${TD.Live.eventDaysLeft(ev)}日</span>`;
   }
-  // アプリを開いたまま日付が変わった場合もログインボーナスを出す
+  // アプリを開いたまま日付が変わった場合も、デイリーミッション（ログイン報酬）を更新する
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && save.story.prologue && $('#screen-home').classList.contains('active') && !$('#modal').classList.contains('show')) {
-      showLoginBonus(() => renderHome());
-    }
+    if (document.visibilityState === 'visible' && $('#screen-home').classList.contains('active')) renderHome();
   });
   function naviSay(text) {
     const b = $('#navi-bubble');
@@ -150,36 +148,6 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     body.querySelector('[data-act=summon]').onclick = () => { closeModal(); show('screen-summon'); };
     body.querySelector('[data-act=close]').onclick = () => { closeModal(); next && next(); };
   }
-
-  // ---------- ログインボーナス ----------
-  function loginGrid(day) {
-    return `<div class="lb-grid">${TD.LOGIN_BONUS.map((r, i) => {
-      const d = i + 1, got = d <= day, today = d === day;
-      const icon = r.stones ? '<i class="gem"></i>' : '<i class="expbook"></i>';
-      return `<div class="lb-day${got ? ' got' : ''}${today ? ' today' : ''}${d === 7 ? ' big' : ''}"><span class="lbd">${d}日目</span>${icon}<b>×${r.stones || r.crystals}</b>${got ? '<span class="stamp">済</span>' : ''}</div>`;
-    }).join('')}</div>`;
-  }
-  function showLoginBonus(next) {
-    const res = TD.Live.checkLogin(save);
-    if (!res) { next && next(); return; }
-    TD.Live.ensureDaily(save);
-    persist();
-    updateCurrency();
-    const body = modal(
-      `<div class="pause-title">ログインボーナス</div>` +
-      `<div class="small" style="text-align:center">通算 ${save.login.total} 日目・7日ごとに豪華報酬！</div>` +
-      loginGrid(res.day) +
-      `<div class="lb-get">本日の報酬：<b>${TD.Live.rewardText(res.reward)}</b></div>` +
-      `<div class="btn-row"><button class="btn primary">受け取る</button></div>`, 'locked');
-    body.querySelector('button').onclick = () => { closeModal(); renderHome(); next && next(); };
-  }
-  $('#btn-loginbonus').addEventListener('click', () => {
-    const body = modal(`<div class="pause-title">ログインボーナス</div>` +
-      `<div class="small" style="text-align:center">通算 ${save.login.total} 日目</div>${loginGrid(save.login.day)}` +
-      `<div class="small" style="text-align:center">毎日0時に次の報酬が受け取れます</div>` +
-      `<div class="btn-row"><button class="btn primary">閉じる</button></div>`);
-    body.querySelector('button').onclick = closeModal;
-  });
 
   // ---------- ミッション ----------
   let missionTab = 'daily';
@@ -869,8 +837,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   $('#title-screen').addEventListener('click', () => {
     $('#title-screen').classList.add('hide');
     naviSay(TD.NAVI_LINES[0]);
-    // 起動時の流れ：プロローグ → ログインボーナス → 初回プレゼント
-    const after = () => showLoginBonus(() => checkGift());
+    // 起動時の流れ：プロローグ → 初回プレゼント（ログイン報酬はデイリーミッションで受け取る）
+    const after = () => { TD.Live.ensureDaily(save); persist(); renderHome(); checkGift(); };
     if (!save.story.prologue) setTimeout(() => playStory('prologue', after), 500);
     else setTimeout(after, 400);
   });

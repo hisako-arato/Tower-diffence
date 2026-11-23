@@ -23,7 +23,7 @@ TD.Save = {
       daily: null,        // その日のミッション進捗（TD.Live.ensureDaily で生成）
       stats: { wins: 0, kills: 0, skills: 0, pulls: 0 },  // 通算記録
       achieved: {},       // 受け取り済みの通常ミッション
-      login: { last: '', day: 0, total: 0 },              // ログインボーナス
+      login: { last: '', day: 0, total: 0 },              // ログイン記録（7日周期の何日目か）
       events: {},         // イベントごとの状態 { starfest: { pts, shop } }
     };
   },
