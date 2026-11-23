@@ -5,6 +5,10 @@ window.TD = window.TD || {};
   const T = 40, COLS = 9, ROWS = 13, W = COLS * T, H = ROWS * T;
   const PATH = '#SG';
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  // '#rrggbb' → 'rgba(r,g,b,a)'
+  const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+  // ★5スキルの画面の揺れの強さ
+  TD.STAR5_SHAKE = { allStrike: 7, drainHeal: 5, tidal: 7, vortex: 6, snipe: 9 };
 
   class Battle {
     constructor(stage, party, els, onEnd) {
@@ -63,6 +67,9 @@ window.TD = window.TD || {};
       this.speed = 1;
       this.paused = false;
       this.slowT = 0;
+      this.shakeT = 0; this.shakeMag = 0;   // 画面の揺れ
+      this.glow = null;                     // ★5スキル後の属性色の残光
+      this._burst = null;                   // ★5スキルのダメージ集計
       this.over = false;
       this.uid = 0;
       this.deployCount = 0;
@@ -346,6 +353,9 @@ window.TD = window.TD || {};
       this.skillCount = (this.skillCount || 0) + 1;
       const alive = this.enemies.filter(e => !e.dead);
       const col = TD.ELEMENTS[d.element].color;
+      // ★5の発動スキル：ダメージを大きく表示し、合計を集計する
+      const star5 = d.rarity === 5;
+      if (star5) this._burst = { src: u, total: 0, n: 0, x: 0, y: 0 };
       switch (s.type) {
         case 'allStrike':
           for (const e of alive) this.hit(u, e, this.atkOf(u) * s.mult);
@@ -390,7 +400,7 @@ window.TD = window.TD || {};
         case 'snipe': { // 最もHPの多い敵（ボス優先）を射程に関係なく狙い撃つ
           const tgt = alive.slice().sort((a, b) => (b.def.boss ? 1 : 0) - (a.def.boss ? 1 : 0) || b.hp - a.hp)[0];
           if (tgt) {
-            this.shots.push({ x: u.x, y: u.y, target: tgt, power: this.atkOf(u) * s.mult, src: u, speed: 900, color: '#7ad8ff', kind: 'archer' });
+            this.shots.push({ x: u.x, y: u.y, target: tgt, power: this.atkOf(u) * s.mult, src: u, speed: 900, color: '#7ad8ff', kind: 'archer', burst: star5 ? { src: u, total: 0, n: 0, x: 0, y: 0, shake: 9 } : null });
             this.fx.push({ type: 'ring', x: tgt.x, y: tgt.y, r0: 28, r1: 6, t: 0, dur: 0.5, color: '#7ad8ff', width: 3 });
           }
           break;
@@ -503,22 +513,39 @@ window.TD = window.TD || {};
         }
       }
       this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 8, r1: 34, t: 0, dur: 0.5, color: col, width: 4 });
+      if (star5) {
+        const b = this._burst; this._burst = null;
+        if (b.n) this.finishBurst(b, TD.STAR5_SHAKE[s.type] || 5);
+        this.glow = { color: col, t: 0, dur: 1.8 };
+      }
       this.showCutin(u);
-      this.slowT = 1.0;
+      this.slowT = star5 ? 1.4 : 1.0;
       this.refreshCards(true);
     }
 
+    // ★5スキルのダメージ合計を中央に出し、画面を揺らす
+    finishBurst(b, mag) {
+      this.shake(mag);
+      if (b.n > 1) this.pop(W / 2, H * 0.42, `${b.total.toLocaleString()}!!`, '#ffe066', { size: 30, dur: 1.4, big: true, label: `${b.n}体に命中` });
+    }
+    shake(mag, dur = 0.45) { this.shakeMag = Math.max(this.shakeMag, mag); this.shakeT = Math.max(this.shakeT, dur); }
+
     showCutin(u) {
       const d = u.def, c = this.els.cutin;
-      c.className = `cutin el-${d.element}`;
-      c.innerHTML =
-        `<div class="ci-band"></div>` +
-        `<div class="ci-face">${TD.portraitHTML(u.card.id, true)}</div>` +
-        `<div class="ci-text"><div class="ci-skill">${d.skill.name}</div><div class="ci-line">「${d.lines.skill}」</div></div>`;
+      if (TD.prefs && TD.prefs.cutin === false) return;   // 設定でカットインを省略
+      const star5 = d.rarity === 5;
+      c.className = `cutin el-${d.element}${star5 ? ' star5' : ''}`;
+      c.innerHTML = star5
+        ? `<div class="ci-band"></div><div class="ci-shine"></div>` +
+          `<div class="ci-art">${TD.fullArtHTML(u.card.id)}</div>` +
+          `<div class="ci-text"><div class="ci-stars">★★★★★</div><div class="ci-skill">${d.skill.name}</div><div class="ci-line">「${d.lines.skill}」</div></div>`
+        : `<div class="ci-band"></div>` +
+          `<div class="ci-face">${TD.portraitHTML(u.card.id, true)}</div>` +
+          `<div class="ci-text"><div class="ci-skill">${d.skill.name}</div><div class="ci-line">「${d.lines.skill}」</div></div>`;
       void c.offsetWidth;
       c.classList.add('show');
       clearTimeout(this._cutinT);
-      this._cutinT = setTimeout(() => c.classList.remove('show'), 1300);
+      this._cutinT = setTimeout(() => c.classList.remove('show'), star5 ? 1500 : 1300);
     }
 
     // 射程内で最もゴールに近い敵
@@ -584,8 +611,9 @@ window.TD = window.TD || {};
       return r * (1 + (u.ramp || 0));
     }
 
-    hit(src, e, power) {
+    hit(src, e, power, burst) {
       if (e.dead) return;
+      const bb = burst || (this._burst && this._burst.src === src ? this._burst : null);
       const m = TD.elemMult(src.def.element, e.def.element);
       let crit = false;
       // ヴィオラ「蝕みの呪い」：毒状態の敵に与えるダメージが倍
@@ -601,7 +629,10 @@ window.TD = window.TD || {};
       e.hp -= d;
       e.flash = 0.12;
       const color = m > 1 ? '#ffd23f' : m < 1 ? '#a8b0b8' : '#ffffff';
-      this.pop(e.x + (Math.random() * 10 - 5), e.y - e.size - 6, String(d), crit ? '#ff8a3a' : color, { size: crit || m > 1 ? 15 : 12, weak: m > 1 });
+      if (bb) {   // ★5スキル：金色の大きな数字
+        bb.total += d; bb.n++;
+        this.pop(e.x, e.y - e.size - 8 - (bb.n % 3) * 9, d.toLocaleString(), '#ffe066', { size: m > 1 ? 22 : 19, weak: m > 1, dur: 1.1, big: true });
+      } else this.pop(e.x + (Math.random() * 10 - 5), e.y - e.size - 6, String(d), crit ? '#ff8a3a' : color, { size: crit || m > 1 ? 15 : 12, weak: m > 1 });
       if (crit) this.pop(e.x, e.y - e.size - 20, 'CRITICAL', '#ff8a3a', { size: 9 });
       if (du && !e.dead) this.addPoison(e, du.stacks);
       this.checkKill(e);
@@ -650,18 +681,20 @@ window.TD = window.TD || {};
     }
 
     pop(x, y, text, color, o = {}) {
-      this.pops.push({ x, y, text, color, size: o.size || 12, t: 0, dur: o.dur || 0.8, weak: o.weak, bubble: o.bubble });
+      this.pops.push({ x, y, text, color, size: o.size || 12, t: 0, dur: o.dur || 0.8, weak: o.weak, bubble: o.bubble, big: o.big, label: o.label });
     }
 
     // ---------- 更新 ----------
     loop(now) {
       let dt = Math.min(0.05, (now - this.last) / 1000);
+      const realDt = dt;
       this.last = now;
       if (!this.paused && !this.over) {
         if (this.slowT > 0) { this.slowT -= dt; dt *= 0.2; }
         const steps = this.speed;
         for (let i = 0; i < steps; i++) this.update(dt);
       }
+      if (this.shakeT > 0 && !this.paused && (this.shakeT -= realDt) <= 0) this.shakeMag = 0;
       this.draw();
       this.refreshCards(false);
       this.raf = requestAnimationFrame(t => this.loop(t));
@@ -686,6 +719,7 @@ window.TD = window.TD || {};
 
       for (const f of this.fx) f.t += dt;
       this.fx = this.fx.filter(f => f.t < f.dur);
+      if (this.glow && (this.glow.t += dt) >= this.glow.dur) this.glow = null;
       for (const p of this.pops) p.t += dt;
       this.pops = this.pops.filter(p => p.t < p.dur);
       this.enemies = this.enemies.filter(e => !e.dead && !e.leaked);
@@ -894,7 +928,8 @@ window.TD = window.TD || {};
             for (const e of this.enemies) if (!e.dead && dist(e, t) <= s.splash * T) { this.hit(s.src, e, s.power); if (ps) this.addPoison(e, ps.stacks); }
             this.fx.push({ type: 'ring', x: t.x, y: t.y, r0: 4, r1: s.splash * T, t: 0, dur: 0.3, color: s.color });
           } else {
-            this.hit(s.src, t, s.power);
+            this.hit(s.src, t, s.power, s.burst);
+            if (s.burst) { this.finishBurst(s.burst, s.burst.shake); this.fx.push({ type: 'burst', x: t.x, y: t.y, t: 0, dur: 0.6, color: s.color, big: true }); }
             const sl = s.src.def && s.src.def.passive && s.src.def.passive.type === 'slowShot' ? s.src.def.passive : null;
             if (sl && !t.dead) { t.slowShotT = sl.dur; t.slowShotMult = sl.mult; }
           }
@@ -951,7 +986,11 @@ window.TD = window.TD || {};
     // ---------- 描画 ----------
     draw() {
       const g = this.ctx;
+      const sm = this.shakeT > 0 ? this.shakeMag * Math.min(1, this.shakeT / 0.3) : 0;
+      const ox = sm ? (Math.random() * 2 - 1) * sm : 0, oy = sm ? (Math.random() * 2 - 1) * sm : 0;
       g.setTransform(this.scale, 0, 0, this.scale, 0, 0);
+      if (sm) { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); }
+      g.setTransform(this.scale, 0, 0, this.scale, ox * this.scale, oy * this.scale);
       g.drawImage(this.bg, 0, 0, W, H);
 
       if (this.selected) {
@@ -974,7 +1013,17 @@ window.TD = window.TD || {};
       for (const w of this.warns) this.drawWarn(g, w);
       for (const s of this.shots) this.drawShot(g, s);
       for (const f of this.fx) this.drawFx(g, f);
+      if (this.glow) this.drawGlow(g, this.glow);
       for (const p of this.pops) this.drawPop(g, p);
+    }
+
+    // ★5スキル後、画面の縁が属性の色にうっすら光る
+    drawGlow(g, gl) {
+      const k = gl.t / gl.dur, a = (k < 0.15 ? k / 0.15 : 1 - (k - 0.15) / 0.85) * 0.55;
+      const grd = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.7);
+      grd.addColorStop(0, 'rgba(0,0,0,0)');
+      grd.addColorStop(1, hexA(gl.color, a));
+      g.fillStyle = grd; g.fillRect(-20, -20, W + 40, H + 40);
     }
 
     drawUnit(g, u) {
@@ -1226,6 +1275,19 @@ window.TD = window.TD || {};
         g.fillStyle = 'rgba(20,16,30,.85)';
         g.beginPath(); g.roundRect(bx, y - 9, w, 18, 6); g.fill();
         g.fillStyle = p.color; g.fillText(p.text, bx + w / 2, y + 0.5);
+      } else if (p.big) {
+        // ★5スキルの数字：最初にポンと大きくなってから落ち着く
+        const sc = k < 0.12 ? 0.6 + k / 0.12 * 0.7 : k < 0.25 ? 1.3 - (k - 0.12) / 0.13 * 0.3 : 1;
+        const px = Math.max(30, Math.min(W - 30, p.x));
+        g.save(); g.translate(px, y); g.scale(sc, sc);
+        g.font = `900 ${p.size}px "Hiragino Sans","Noto Sans JP",sans-serif`;
+        g.lineWidth = 5; g.strokeStyle = 'rgba(60,20,0,.9)'; g.strokeText(p.text, 0, 0);
+        const lg = g.createLinearGradient(0, -p.size / 2, 0, p.size / 2);
+        lg.addColorStop(0, '#fffbe0'); lg.addColorStop(0.5, p.color); lg.addColorStop(1, '#ff9a2a');
+        g.fillStyle = lg; g.fillText(p.text, 0, 0);
+        if (p.label) { g.font = 'bold 12px sans-serif'; g.lineWidth = 3; g.strokeText(p.label, 0, -p.size * 0.85); g.fillStyle = '#fff'; g.fillText(p.label, 0, -p.size * 0.85); }
+        if (p.weak) { g.font = 'bold 10px sans-serif'; g.lineWidth = 3; g.strokeText('WEAK!', 0, -p.size * 0.75); g.fillStyle = '#ff9a3f'; g.fillText('WEAK!', 0, -p.size * 0.75); }
+        g.restore();
       } else {
         g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.75)';
         g.strokeText(p.text, p.x, y); g.fillStyle = p.color; g.fillText(p.text, p.x, y);

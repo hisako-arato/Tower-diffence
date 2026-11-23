@@ -876,3 +876,26 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .sheet-foot:empty { display: none; }
 .sheet-foot .btn-row { margin: 0; }
 .roster-empty { grid-column: 1 / -1; padding: 24px 0; text-align: center; color: var(--muted); font-size: 13px; }
+
+/* ========== ★5スキルのカットイン ========== */
+.cutin.star5 { top: 24%; height: 170px; }
+.cutin.star5 .ci-band { animation-duration: 1.5s; border-width: 4px; border-color: #ffe9a8; box-shadow: 0 0 40px var(--ec), 0 0 80px var(--ec); }
+.cutin.star5 .ci-shine {
+  position: absolute; inset: 0; transform: skewY(-6deg); overflow: hidden; pointer-events: none;
+  background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, .7) 48%, transparent 60%) no-repeat;
+  background-size: 60% 100%; animation: ciShine 1.5s ease-out forwards;
+}
+.cutin.star5 .ci-art {
+  position: absolute; left: -6px; bottom: -34px; width: 190px; height: 240px; display: flex; align-items: flex-end; justify-content: center;
+  filter: drop-shadow(0 0 14px var(--ec)); animation: ciArt 1.5s cubic-bezier(.2, .9, .3, 1) forwards;
+}
+.cutin.star5 .ci-art .full-art { width: 190px; height: 240px; display: flex; align-items: flex-end; justify-content: center; }
+.cutin.star5 .ci-art img.char-img.full { max-height: 240px; max-width: 190px; }
+.cutin.star5 .ci-text { left: 176px; animation-duration: 1.5s; }
+.cutin.star5 .ci-stars { font-size: 13px; color: #ffe066; letter-spacing: .1em; text-shadow: 0 0 6px rgba(0, 0, 0, .8); }
+.cutin.star5 .ci-skill { font-size: 30px; line-height: 1.15; text-shadow: 0 2px 0 rgba(0, 0, 0, .6), 0 0 16px var(--ec), 0 0 30px #fff; }
+@keyframes ciShine { 0%, 15% { background-position: -80% 0; } 70%, 100% { background-position: 220% 0; } }
+@keyframes ciArt { 0% { transform: translateX(-220px) scale(1.15); opacity: 0; } 18% { transform: translateX(0) scale(1.05); opacity: 1; } 80% { transform: translateX(8px) scale(1); opacity: 1; } 100% { transform: translateX(60px) scale(1); opacity: 0; } }
+.set-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, .05); border: 1px solid var(--line); font-size: 14px; font-weight: 700; }
+.set-toggle small { display: block; font-size: 11px; font-weight: 500; color: var(--muted); margin-top: 2px; }
+.set-toggle input { width: 22px; height: 22px; accent-color: var(--gold); flex-shrink: 0; }

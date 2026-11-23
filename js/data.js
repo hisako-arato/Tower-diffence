@@ -34,8 +34,8 @@ TD.CHARS = {
   lydia: {
     name: 'リディア', title: '聖剣の騎士姫', rarity: 5, element: 'light', role: 'sword',
     cost: 14, hp: 2268, atk: 166, def: 85, interval: 0.9, range: 1.6, block: 2, redeploy: 30,
-    skill: { name: '天穹断', type: 'allStrike', sp: 30, mult: 4,
-             desc: 'フィールド上の全ての敵に攻撃力400%の光属性ダメージ' },
+    skill: { name: '天穹断', type: 'allStrike', sp: 30, mult: 5,
+             desc: 'フィールド上の全ての敵に攻撃力500%の光属性ダメージ' },
     lines: { deploy: '聖剣の名にかけて！', skill: '天よ、裂けよ――天穹断！' },
   },
   celes: {
@@ -126,8 +126,8 @@ TD.CHARS = {
     name: 'メルティア', title: '魔界の恋姫', rarity: 5, element: 'dark', role: 'priest',
     cost: 13, hp: 1134, atk: 167, def: 28, interval: 1.6, range: 2.8, redeploy: 30,
     profile: '魔界から家出してきたお姫さま。退屈しのぎに人間の味方をしているらしい。',
-    skill: { name: '魔王の慈愛', type: 'drainHeal', sp: 32, ratio: 0.5, mult: 1.5,
-             desc: '敵全体に攻撃力150%の闇ダメージを与え、味方全員のHPを最大HPの50%回復' },
+    skill: { name: '魔王の慈愛', type: 'drainHeal', sp: 32, ratio: 0.5, mult: 2.5,
+             desc: '敵全体に攻撃力250%の闇ダメージを与え、味方全員のHPを最大HPの50%回復' },
     lines: { deploy: 'ふふっ、わたしが遊んであげる♪', skill: 'みんなの痛み、ぜーんぶ吸い取っちゃう！' },
   },
   kagura: {
@@ -141,8 +141,8 @@ TD.CHARS = {
     name: 'ネレイア', title: '深淵竜の魔女', rarity: 5, element: 'dark', role: 'mage',
     cost: 16, hp: 1021, atk: 170, def: 22, interval: 1.9, range: 2.6, splash: 0.9, redeploy: 35,
     profile: '深海の竜を従える魔女。竜の大波は敵を押し流す。',
-    skill: { name: '深淵竜の大波', type: 'tidal', sp: 34, mult: 3.5, radius: 2.6, push: 2,
-             desc: '周囲の敵に攻撃力350%のダメージを与え、2マス押し戻す（ボスには無効）' },
+    skill: { name: '深淵竜の大波', type: 'tidal', sp: 34, mult: 4.5, radius: 2.6, push: 2,
+             desc: '周囲の敵に攻撃力450%のダメージを与え、2マス押し戻す（ボスには無効）' },
     lines: { deploy: '……深淵から、来たわ', skill: '呑み込みなさい、深淵の竜' },
   },
   akane: {
@@ -167,8 +167,8 @@ TD.CHARS = {
     name: 'シルフィナ', title: '天翔ける風詠み', rarity: 5, element: 'wind', role: 'mage',
     cost: 15, hp: 1021, atk: 168, def: 22, interval: 1.9, range: 2.8, splash: 0.9, redeploy: 30,
     profile: '空の神殿で風の声を聴く巫女。彼女が歌えば、嵐さえ道を譲る。',
-    skill: { name: '大竜巻', type: 'vortex', sp: 30, mult: 3, radius: 2.4,
-             desc: '射程内の敵を一か所に吸い寄せ、攻撃力300%の範囲ダメージ（足止め中の敵とボスは吸い寄せない）' },
+    skill: { name: '大竜巻', type: 'vortex', sp: 30, mult: 4, radius: 2.4,
+             desc: '射程内の敵を一か所に吸い寄せ、攻撃力400%の範囲ダメージ（足止め中の敵とボスは吸い寄せない）' },
     lines: { deploy: '風が、あなたを選んだのね', skill: '集え、天の風――大竜巻' },
   },
   seira: {
@@ -220,8 +220,8 @@ TD.CHARS = {
     name: 'ミナモ', title: '蒼流の弓姫', rarity: 5, element: 'water', role: 'archer',
     cost: 15, hp: 1250, atk: 190, def: 35, interval: 1.0, range: 3.8, redeploy: 30,
     profile: '水の都の弓術を極めた姫。放つ矢は奔流となり、どれほど遠くの敵も逃さない。',
-    skill: { name: '蒼流穿矢', type: 'snipe', sp: 30, mult: 8,
-             desc: 'フィールド上で最もHPの多い敵（ボスを優先）に、射程に関係なく攻撃力800%のダメージ' },
+    skill: { name: '蒼流穿矢', type: 'snipe', sp: 30, mult: 10,
+             desc: 'フィールド上で最もHPの多い敵（ボスを優先）に、射程に関係なく攻撃力1000%のダメージ' },
     lines: { deploy: '……狙いは、もう定めています', skill: '流れよ、蒼き一矢――蒼流穿矢！' },
   },
 

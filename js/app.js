@@ -19,9 +19,11 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let save = TD.Save.load();
+  TD.prefs = save.opts;
   let battle = null, currentStage = null;
   let saveWarned = false;
   const persist = () => {
+    TD.prefs = save.opts;
     const ok = TD.Save.store(save);
     if (!ok && !saveWarned) {
       saveWarned = true;
@@ -885,6 +887,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="brief-sec">アプリとしてインストール</div>` +
       `<p class="small">${installHelpText()}</p>` +
       (installPrompt ? `<button class="btn primary" data-act="install" style="width:100%">ホーム画面に追加する</button>` : '') +
+      `<div class="brief-sec">バトル</div>` +
+      `<label class="set-toggle"><span>スキルのカットインを表示<small>オフにすると発動時の演出を省略します</small></span><input type="checkbox" id="set-cutin" ${save.opts.cutin !== false ? 'checked' : ''}></label>` +
       `<div class="brief-sec">ストーリー</div>` +
       `<button class="btn ghost" data-act="story" style="width:100%">ストーリーを見返す</button>` +
       `<div class="brief-sec">データのバックアップ</div>` +
@@ -893,6 +897,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="btn-row"><button class="btn ghost" data-act="export">コードを発行</button><button class="btn ghost" data-act="import">コードで復元</button></div>` +
       `<div class="brief-sec">その他</div>` +
       `<div class="btn-col"><button class="btn danger" data-act="reset">データを初期化</button><button class="btn primary" data-act="close">閉じる</button></div>`);
+    body.querySelector('#set-cutin').onchange = e => { save.opts.cutin = e.target.checked; TD.prefs = save.opts; persist(); };
     const ta = body.querySelector('#backup-code');
     body.querySelector('[data-act=export]').onclick = () => {
       ta.value = TD.Save.exportCode(save); ta.select();
