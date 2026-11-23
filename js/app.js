@@ -257,7 +257,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   const evById = id => TD.EVENTS.find(e => e.id === id);
   function openQuest(stack) {
     qstack = stack.slice();
-    history.replaceState({ q: qstack.length }, '');
+    // 階層ごとに履歴を積む（「戻る」ボタン・端末の戻る操作で1段ずつ戻れるように）
+    history.replaceState({ q: 0 }, '');
+    for (let i = 1; i <= qstack.length; i++) history.pushState({ q: i }, '');
     show('screen-stages');
   }
   function qpush(node) {
