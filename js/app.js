@@ -564,7 +564,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
 
   // ---------- 編成・育成 ----------
   let partySel = null, listIds = [];
-  const filter = { rarity: 'all', element: 'all' };
+  const filter = { rarity: 'all', element: 'all', role: 'all' };
   const sheetOpen = () => $('#char-sheet').classList.contains('show');
   function openSheet(id) {
     partySel = id;
@@ -588,8 +588,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   function renderFilter() {
     const chips = [['rarity', 'all', 'すべて'], ['rarity', 5, '★5'], ['rarity', 4, '★4'], ['rarity', 3, '★3']];
     const els = [['element', 'all', '全属性'], ...Object.keys(TD.ELEMENTS).map(k => ['element', k, TD.ELEMENTS[k].name])];
+    const roles = [['role', 'all', '全職業'], ...Object.keys(TD.ROLES).map(k => ['role', k, TD.ROLES[k].name])];
     const html = arr => arr.map(([k, v, label]) => `<button class="fchip${String(filter[k]) === String(v) ? ' on' : ''}${k === 'element' && v !== 'all' ? ' el-' + v : ''}" data-fk="${k}" data-fv="${v}">${label}</button>`).join('');
-    $('#roster-filter').innerHTML = `<div class="frow">${html(chips)}</div><div class="frow">${html(els)}</div>`;
+    $('#roster-filter').innerHTML = `<div class="frow">${html(chips)}</div><div class="frow">${html(els)}</div><div class="frow">${html(roles)}</div>`;
     $('#roster-filter').querySelectorAll('[data-fk]').forEach(b => b.onclick = () => {
       filter[b.dataset.fk] = b.dataset.fv === 'all' ? 'all' : (b.dataset.fk === 'rarity' ? +b.dataset.fv : b.dataset.fv);
       renderParty();
@@ -617,7 +618,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     roster.innerHTML = '';
     // 一覧には所持している英雄だけを並べる
     listIds = Object.keys(TD.CHARS)
-      .filter(id => owns(id) && (filter.rarity === 'all' || TD.CHARS[id].rarity === filter.rarity) && (filter.element === 'all' || TD.CHARS[id].element === filter.element))
+      .filter(id => owns(id) && (filter.rarity === 'all' || TD.CHARS[id].rarity === filter.rarity) && (filter.element === 'all' || TD.CHARS[id].element === filter.element)
+        && (filter.role === 'all' || TD.CHARS[id].role === filter.role))
       .sort((a, b) => (TD.CHARS[b].rarity - TD.CHARS[a].rarity));
     $('#roster-count').textContent = `表示中 ${listIds.length}人（所持 ${save.owned.length}人）`;
     if (!listIds.length) roster.innerHTML = '<div class="roster-empty">条件に合う英雄はいません</div>';

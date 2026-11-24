@@ -16,7 +16,7 @@ window.TD = window.TD || {};
   // '#rrggbb' → 'rgba(r,g,b,a)'
   const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
   // ★5スキルの画面の揺れの強さ
-  TD.STAR5_SHAKE = { allStrike: 7, drainHeal: 5, tidal: 7, vortex: 6, snipe: 9 };
+  TD.STAR5_SHAKE = { allStrike: 7, drainHeal: 5, tidal: 7, vortex: 6, snipe: 9, meteor: 4 };
 
   class Battle {
     constructor(stage, party, els, onEnd) {
@@ -77,6 +77,8 @@ window.TD = window.TD || {};
       this.paused = false;
       this.slowT = 0;
       this.shakeT = 0; this.shakeMag = 0;   // 画面の揺れ
+      this.showers = [];                    // 流星雨（降っている最中のスキル）
+      this.meteors = [];                    // 落下中の隕石
       this.glow = null;                     // ★5スキル後の属性色の残光
       this._burst = null;                   // ★5スキルのダメージ集計
       this.over = false;
@@ -489,7 +491,8 @@ window.TD = window.TD || {};
           for (const a of this.units) {
             const h = a.maxHp * s.ratio;
             a.hp = Math.min(a.maxHp, a.hp + h);
-            this.pop(a.x, a.y - 18, '+' + Math.round(h), '#ff9ad0', { size: 12 });
+            a.poisonT = s.ratio >= 1 ? 0 : a.poisonT;   // 全回復なら毒も消える
+            this.pop(a.x, a.y - 18, s.ratio >= 1 ? '全回復' : '+' + Math.round(h), '#ff9ad0', { size: 12 });
             this.fx.push({ type: 'ring', x: a.x, y: a.y, r0: 4, r1: 22, t: 0, dur: 0.5, color: '#ff9ad0' });
           }
           this.fx.push({ type: 'flash', t: 0, dur: 0.5, color: 'rgba(200,80,200,' });
@@ -499,6 +502,9 @@ window.TD = window.TD || {};
           for (const e of alive) if (dist(e, u) <= s.radius * T) { e.frozen = Math.max(e.frozen, s.bindDur); e.bound = true; }
           u.buff = Object.assign({}, s, { type: 'guard', noBlock: true }); u.buffT = s.dur;
           this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 10, r1: s.radius * T, t: 0, dur: 0.7, color: '#ffb04a', width: 7 });
+          break;
+        case 'meteor':   // 一定時間、フィールドにランダムに隕石を降らせる
+          this.showers.push({ src: u, s, t: 0, next: 0.2, burst: star5 ? { src: u, total: 0, n: 0 } : null });
           break;
         case 'tidal':
           for (const e of alive) if (dist(e, u) <= s.radius * T) {
@@ -742,6 +748,7 @@ window.TD = window.TD || {};
       this.updateUnits(dt);
       this.updateShots(dt);
       this.updateWarns(dt);
+      this.updateMeteors(dt);
 
       for (const f of this.fx) f.t += dt;
       this.fx = this.fx.filter(f => f.t < f.dur);
@@ -991,6 +998,50 @@ window.TD = window.TD || {};
       this.fx.push({ type: 'beam', x: e.x, y: e.y, x2: tgt.x, y2: tgt.y, t: 0, dur: 0.35, color: '#9dffb8' });
     }
 
+    // ---------- 流星雨 ----------
+    updateMeteors(dt) {
+      for (const sh of this.showers) {
+        sh.t += dt;
+        if (sh.t < sh.s.dur && (sh.next -= dt) <= 0) {
+          sh.next = sh.s.every;
+          // 着弾地点：生きている敵のどれかの近く（ばらつきあり）。敵がいなければ道のどこか
+          const alive = this.enemies.filter(e => !e.dead);
+          let x, y;
+          if (alive.length) { const e = alive[Math.floor(Math.random() * alive.length)]; x = e.x + (Math.random() - 0.5) * T * 1.4; y = e.y + (Math.random() - 0.5) * T * 1.4; }
+          else { x = T / 2 + Math.random() * (W - T); y = T / 2 + Math.random() * (H - T); }
+          this.meteors.push({ sh, x, y, t: 0, fall: 0.45 });
+        }
+      }
+      for (const m of this.meteors) {
+        m.t += dt;
+        if (m.t < m.fall) continue;
+        m.done = true;
+        const sh = m.sh, u = sh.src, R = sh.s.radius * T;
+        for (const e of this.enemies) if (!e.dead && dist(e, m) <= R) this.hit(u, e, this.atkOf(u) * sh.s.mult, sh.burst);
+        this.fx.push({ type: 'burst', x: m.x, y: m.y, t: 0, dur: 0.6, color: '#b070ff', big: true });
+        this.fx.push({ type: 'ring', x: m.x, y: m.y, r0: 6, r1: R, t: 0, dur: 0.45, color: '#e0b0ff', width: 8 });
+        this.fx.push({ type: 'flashDot', x: m.x, y: m.y, t: 0, dur: 0.3 });
+        this.shake(3, 0.2);
+      }
+      this.meteors = this.meteors.filter(m => !m.done);
+      for (const sh of this.showers) if (sh.t >= sh.s.dur && !this.meteors.some(m => m.sh === sh)) {
+        sh.done = true;
+        if (sh.burst && sh.burst.n) this.finishBurst(sh.burst, TD.STAR5_SHAKE.meteor);
+      }
+      this.showers = this.showers.filter(sh => !sh.done);
+    }
+    drawMeteor(g, m) {   // 右上から斜めに落ちてくる隕石と、着弾地点の影
+      const p = Math.min(1, m.t / m.fall), sx = m.x + 120 * (1 - p), sy = m.y - 220 * (1 - p);
+      g.fillStyle = `rgba(90,20,140,${0.25 + 0.35 * p})`;
+      g.beginPath(); g.ellipse(m.x, m.y, 10 + 8 * p, 5 + 4 * p, 0, 0, Math.PI * 2); g.fill();
+      const grd = g.createLinearGradient(sx + 40, sy - 70, sx, sy);
+      grd.addColorStop(0, 'rgba(180,100,255,0)'); grd.addColorStop(1, 'rgba(230,190,255,.9)');
+      g.strokeStyle = grd; g.lineWidth = 7; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(sx + 40, sy - 70); g.lineTo(sx, sy); g.stroke(); g.lineCap = 'butt';
+      g.fillStyle = '#fff2ff'; g.beginPath(); g.arc(sx, sy, 6, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#b070ff'; g.beginPath(); g.arc(sx, sy, 9, 0, Math.PI * 2); g.globalAlpha = 0.4; g.fill(); g.globalAlpha = 1;
+    }
+
     // ---------- ビーム ----------
     // 射程内で一番近いキャラを狙う（隠れ身中は狙わない）
     beamTarget(e) {
@@ -1007,6 +1058,11 @@ window.TD = window.TD || {};
       for (const u of [...this.units]) {
         const px = u.x - e.x, py = u.y - e.y, along = px * ux + py * uy, perp = Math.abs(px * uy - py * ux);
         if (along < 0 || perp > half + 12) continue;
+        if (this.pas(u, 'beamImmune') || (u.def.passive && u.def.passive.beamImmune)) {   // カグラ：ビームが効かない
+          this.pop(u.x, u.y - 22, 'ビーム無効', '#ffd23f', { size: 12 });
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 18, r1: 26, t: 0, dur: 0.6, color: '#ffd23f', width: 4 });
+          continue;
+        }
         this.hurt(e, u, e.atk * bm.mult);
         this.fx.push({ type: 'burst', x: u.x, y: u.y, t: 0, dur: 0.7, color: '#ffb04a', big: true });
         this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 6, r1: 34, t: 0, dur: 0.6, color: '#fff1c0', width: 7 });
@@ -1170,6 +1226,7 @@ window.TD = window.TD || {};
       for (const e of [...this.enemies].sort((a, b) => a.y - b.y)) this.drawEnemy(g, e);
       for (const w of this.warns) this.drawWarn(g, w);
       for (const s of this.shots) this.drawShot(g, s);
+      for (const m of this.meteors) this.drawMeteor(g, m);
       for (const f of this.fx) this.drawFx(g, f);
       if (this.glow) this.drawGlow(g, this.glow);
       for (const p of this.pops) this.drawPop(g, p);
