@@ -1004,11 +1004,14 @@ window.TD = window.TD || {};
         sh.t += dt;
         if (sh.t < sh.s.dur && (sh.next -= dt) <= 0) {
           sh.next = sh.s.every;
-          // 着弾地点：生きている敵のどれかの近く（ばらつきあり）。敵がいなければ道のどこか
+          // 着弾地点：一部はフィールドのどこか（完全ランダム）、残りは敵のどれかの近く（大きくばらつく）
           const alive = this.enemies.filter(e => !e.dead);
           let x, y;
-          if (alive.length) { const e = alive[Math.floor(Math.random() * alive.length)]; x = e.x + (Math.random() - 0.5) * T * 1.4; y = e.y + (Math.random() - 0.5) * T * 1.4; }
-          else { x = T / 2 + Math.random() * (W - T); y = T / 2 + Math.random() * (H - T); }
+          if (alive.length && Math.random() >= sh.s.wild) {
+            const e = alive[Math.floor(Math.random() * alive.length)];
+            x = e.x + (Math.random() - 0.5) * T * sh.s.spread; y = e.y + (Math.random() - 0.5) * T * sh.s.spread;
+          } else { x = T / 2 + Math.random() * (W - T); y = T / 2 + Math.random() * (H - T); }
+          x = Math.max(T / 2, Math.min(W - T / 2, x)); y = Math.max(T / 2, Math.min(H - T / 2, y));
           this.meteors.push({ sh, x, y, t: 0, fall: 0.45 });
         }
       }

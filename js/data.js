@@ -141,8 +141,9 @@ TD.CHARS = {
     name: 'ネレイア', title: '深淵竜の魔女', rarity: 5, element: 'dark', role: 'mage',
     cost: 16, hp: 1021, atk: 170, def: 22, interval: 1.9, range: 2.6, splash: 0.9, redeploy: 35,
     profile: '深海の竜を従える魔女。竜が呼ぶ流星は、戦場を焼き尽くす。',
-    skill: { name: '深淵竜の流星雨', type: 'meteor', sp: 34, mult: 4, radius: 1.2, dur: 6, every: 0.75,
-             desc: '6秒間、フィールドにランダムに隕石を降らせる。着弾地点の周囲の敵に攻撃力400%の範囲ダメージ' },
+    // wild: 完全ランダムに落ちる割合 / spread: 敵の近くに落ちるときのばらつき（マス）
+    skill: { name: '深淵竜の流星雨', type: 'meteor', sp: 34, mult: 3, radius: 1.2, dur: 6, every: 0.75, wild: 0.4, spread: 3,
+             desc: '6秒間、フィールドにランダムに隕石を降らせる。着弾地点の周囲の敵に攻撃力300%の範囲ダメージ' },
     lines: { deploy: '……深淵から、来たわ', skill: '降り注ぎなさい、深淵の星' },
   },
   akane: {
