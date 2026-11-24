@@ -74,7 +74,10 @@ TD.CHARS = {
   },
   kai: {
     name: 'カイ', title: '紅蓮の魔導士', rarity: 3, element: 'fire', role: 'mage',
-    partyFx: { name: '紅蓮の加護', type: 'atk', add: 0.15, filter: { element: 'fire' }, desc: '火属性の味方の攻撃+15%' },
+    partyFx: { name: '紅蓮の加護', desc: '魔導士と僧侶の最大HP+10%。さらに魔導士の攻撃+10%、僧侶の回復量+10%',
+               effects: [{ type: 'hp', add: 0.1, filter: { role: ['mage', 'priest'] } },
+                         { type: 'atk', add: 0.1, filter: { role: 'mage' } },
+                         { type: 'atk', add: 0.1, filter: { role: 'priest' }, label: '回復量' }] },
     cost: 12, hp: 600, atk: 81, def: 10, interval: 1.9, range: 2.4, splash: 0.8, redeploy: 25,
     skill: { name: '爆炎陣', type: 'explosion', sp: 25, mult: 5, radius: 1.6,
              desc: '射程内の敵を中心に大爆発。攻撃力500%の範囲ダメージ' },
@@ -156,7 +159,7 @@ TD.CHARS = {
     lines: { deploy: 'えっ、ここどこ!? ……まあいっか、いくよ！', skill: '面ーーーっ！' },
   },
   shizuku: {
-    name: 'シズク', title: '腹ペコ弓道少女', rarity: 4, kind: 'tech', element: 'dark', role: 'archer',
+    name: 'シズク', title: '腹ペコ弓道少女', rarity: 4, kind: 'tech', element: 'fire', role: 'archer',
     unique: { name: '腹ペコの絆', type: 'duo', partner: 'akane', count: 2, desc: 'アカネと共に編成されている場合、シズクの攻撃は2体に当たるようになる' },
     cost: 8, hp: 678, atk: 82, def: 13, interval: 1.0, range: 3.4, redeploy: 20,
     profile: 'アカネと一緒に異世界から呼ばれた弓道部員。肉まんがあれば戦える。',
@@ -273,7 +276,9 @@ TD.CHARS = {
   },
   bold: {
     name: 'ボルド', title: '風車小屋の番人', rarity: 3, element: 'wind', role: 'shield',
-    partyFx: { name: '風車の恵み', type: 'hp', add: 0.15, filter: { element: 'wind' }, desc: '風属性の味方の最大HP+15%' },
+    partyFx: { name: '風車の恵み', desc: '剣士・盾騎士・弓兵の最大HP+10%、攻撃+10%',
+               effects: [{ type: 'hp', add: 0.1, filter: { role: ['sword', 'shield', 'archer'] } },
+                         { type: 'atk', add: 0.1, filter: { role: ['sword', 'shield', 'archer'] } }] },
     cost: 11, hp: 1800, atk: 45, def: 100, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
     skill: { name: '向かい風', type: 'gust', sp: 24, push: 1, dur: 8, defMult: 2,
              desc: '足止め中の敵を1マス押し戻し、8秒間防御2倍' },
@@ -1571,25 +1576,31 @@ TD.partyValid = party => party.length > 0 && TD.partyStars(party) <= TD.ADJUTANT
 TD.POISON = { perStack: 0.01, maxStacks: 5, dur: 5, bossMult: 1 / 3 };
 // ========== ユニークスキル（編成）：出撃メンバーにいるだけで有効・重ねがけ可 ==========
 // filter（属性・職業）つきの効果は、当てはまる味方にだけ効く
-TD.fxMatch = (f, def) => !f || ((!f.element || f.element === def.element) && (!f.role || f.role === def.role));
+// filter.role / filter.element は1つ、または配列（いずれかに当てはまれば対象）
+const fxIn = (v, x) => Array.isArray(v) ? v.includes(x) : v === x;
+TD.fxMatch = (f, def) => !f || ((!f.element || fxIn(f.element, def.element)) && (!f.role || fxIn(f.role, def.role)));
+// ユニークスキル（編成効果）は1つの効果、または effects に複数の効果を持てる
+TD.fxList = p => p ? (p.effects || [p]) : [];
 TD.partyEffects = function (party, def) {
   const fx = { atk: 0, def: 0, hp: 0, mana: 0, exp: 0, stones: 0, enemySlow: 0 };
   for (const id of party) {
-    const p = TD.CHARS[id] && TD.CHARS[id].partyFx;
-    if (!p) continue;
-    if (p.filter && !(def && TD.fxMatch(p.filter, def))) continue; // 対象がしぼられた効果は、def を渡したときだけ数える
-    fx[p.type] += p.add;
+    for (const p of TD.fxList(TD.CHARS[id] && TD.CHARS[id].partyFx)) {
+      if (p.filter && !(def && TD.fxMatch(p.filter, def))) continue; // 対象がしぼられた効果は、def を渡したときだけ数える
+      fx[p.type] += p.add;
+    }
   }
   return fx;
 };
 TD.partyEffectsText = function (party) {
   const a = [], names = { atk: '攻撃', def: '防御', hp: '最大HP' };
   const sum = {};
+  const nm = (v, f) => [].concat(v).map(f).join('、');
   for (const id of party) {
-    const p = TD.CHARS[id] && TD.CHARS[id].partyFx; if (!p) continue;
-    const who = p.filter ? (p.filter.element ? TD.ELEMENTS[p.filter.element].name + '属性' : TD.ROLES[p.filter.role].name) : '';
-    const key = who + '|' + p.type + '|' + (p.label || '');
-    sum[key] = (sum[key] || 0) + p.add;
+    for (const p of TD.fxList(TD.CHARS[id] && TD.CHARS[id].partyFx)) {
+      const who = p.filter ? (p.filter.element ? nm(p.filter.element, e => TD.ELEMENTS[e].name) + '属性' : nm(p.filter.role, r => TD.ROLES[r].name)) : '';
+      const key = who + '|' + p.type + '|' + (p.label || '');
+      sum[key] = (sum[key] || 0) + p.add;
+    }
   }
   for (const [key, v] of Object.entries(sum)) {
     const [who, type, label] = key.split('|');
