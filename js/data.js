@@ -411,12 +411,21 @@ TD.ENEMIES = {
   tideMage: { name: '潮の魔導士',   element: 'water', hp: 450,  atk: 85,  def: 10,  speed: 0.45, interval: 2.6, size: 12, shape: 'mage', ranged: 2.6 },
   leviath:  { name: '氷鱗の災厄 リヴァイア', element: 'water', hp: 4300, atk: 180, def: 110, speed: 0.27, interval: 2.0, size: 22, shape: 'boss', life: 5, boss: true,
               aoe: { every: 12, radius: 1.5, mult: 0.25, warn: 2.0, below: 0.7 } },
+  // ---------- ビームを撃つ敵（第3章以降） ----------
+  // beam: first 最初の発射までの秒数 / every 間隔 / charge 溜め秒数（その場に留まる）/ range 狙える距離（マス）
+  //       width ビームの幅（マス）/ mult 攻撃力の倍率 / dur ビームの見た目が残る秒数
+  frostEye: { name: '氷晶の魔眼', element: 'water', hp: 900,  atk: 95,  def: 40, speed: 0.4, interval: 2.0, size: 13, shape: 'eye',
+              beam: { first: 4, every: 9, charge: 3, range: 6, width: 0.6, mult: 2.2, dur: 2 } },
+  flameEye: { name: '灼熱の魔眼', element: 'fire',  hp: 1100, atk: 110, def: 50, speed: 0.4, interval: 2.0, size: 13, shape: 'eye',
+              beam: { first: 4, every: 9, charge: 3, range: 6, width: 0.6, mult: 2.3, dur: 2 } },
+  abyssEye: { name: '深淵の魔眼', element: 'dark',  hp: 1300, atk: 125, def: 60, speed: 0.4, interval: 2.0, size: 13, shape: 'eye',
+              beam: { first: 4, every: 8, charge: 3, range: 6.5, width: 0.6, mult: 2.4, dur: 2 } },
   // ---------- 第4章（紅蓮の火山） ----------
   fireImp:   { name: '炎の小鬼',     element: 'fire', hp: 560,  atk: 90,  def: 25,  speed: 0.75, interval: 1.2, size: 12, shape: 'goblin' },
   fireMage:  { name: '炎の魔導兵',   element: 'fire', hp: 560,  atk: 100, def: 15,  speed: 0.45, interval: 2.5, size: 12, shape: 'mage', ranged: 2.6 },
   fireDrake: { name: '火竜の子',     element: 'fire', hp: 520,  atk: 75,  def: 15,  speed: 0.8,  interval: 1.5, size: 12, shape: 'harpy', flying: true, ranged: 1.6 },
   lavaGolem: { name: '溶岩ゴーレム', element: 'fire', hp: 2800, atk: 175, def: 150, speed: 0.3,  interval: 2.0, size: 16, shape: 'golem' },
-  ignis:     { name: '灼炎の災厄 イグニス', element: 'fire', hp: 4200, atk: 210, def: 130, speed: 0.27, interval: 2.0, size: 22, shape: 'boss', life: 5, boss: true,
+  ignis:     { name: '灼炎の災厄 イグニス', element: 'fire', hp: 3900, atk: 210, def: 130, speed: 0.27, interval: 2.0, size: 22, shape: 'boss', life: 5, boss: true,
                aoe: { every: 10, radius: 1.6, mult: 0.3, warn: 2.0, below: 0.8 } },
   // ---------- 第5章（終章・深淵） ----------
   // 回復役：仲間を回復し、前線の後ろに控える。キャラの射程に入ると下がる
@@ -762,6 +771,7 @@ TD.STAGES = [
       { t: 36, e: 'snowWolf', n: 4, gap: 1.2, s: 0 },
       { t: 50, e: 'goblin', n: 4, gap: 1.5, s: 0 },
       { t: 52, e: 'merman', n: 3, gap: 2, s: 1 },
+      { t: 28, e: 'frostEye', n: 1, gap: 0, s: 0 },
     ],
   },
   {
@@ -792,6 +802,7 @@ TD.STAGES = [
       { t: 40, e: 'merman', n: 4, gap: 1.6, g: 1 },
       { t: 52, e: 'wraith', n: 4, gap: 1.5, g: 1 },
       { t: 56, e: 'snowWolf', n: 5, gap: 1, g: 0 },
+      { t: 26, e: 'frostEye', n: 1, gap: 0 },
     ],
   },
   {
@@ -822,6 +833,8 @@ TD.STAGES = [
       { t: 36, e: 'wraith', n: 4, gap: 1.5, s: 1, g: 0 },
       { t: 50, e: 'iceGolem', n: 1, gap: 0, s: 1, g: 0 },
       { t: 54, e: 'snowWolf', n: 6, gap: 1, s: 0, g: 1 },
+      { t: 24, e: 'frostEye', n: 1, gap: 0 },
+      { t: 52, e: 'frostEye', n: 1, gap: 0 },
     ],
   },
   {
@@ -853,6 +866,8 @@ TD.STAGES = [
       { t: 50, e: 'bogSlime', n: 4, gap: 1.5, g: 1 },
       { t: 60, e: 'snowWolf', n: 6, gap: 1, g: 0 },
       { t: 62, e: 'wraith', n: 3, gap: 1.5, g: 1 },
+      { t: 26, e: 'frostEye', n: 1, gap: 0, g: 0 },
+      { t: 40, e: 'frostEye', n: 1, gap: 0, g: 1 },
     ],
   },
   {
@@ -883,6 +898,8 @@ TD.STAGES = [
       { t: 50, e: 'glacies', n: 1, gap: 0, s: 0, g: 0 },
       { t: 54, e: 'wraith', n: 4, gap: 1.5, s: 1, g: 1 },
       { t: 64, e: 'snowWolf', n: 5, gap: 1.2, s: 1, g: 0 },
+      { t: 30, e: 'frostEye', n: 1, gap: 0, s: 1, g: 1 },
+      { t: 58, e: 'frostEye', n: 1, gap: 0, s: 0, g: 0 },
     ],
   },
   // ===================== 第4章 紅蓮の結界石（広い道：2列で並んで進む） =====================
@@ -912,6 +929,7 @@ TD.STAGES = [
       { t: 36, e: 'lavaGolem', n: 2, gap: 2, s: 'alt' },
       { t: 46, e: 'fireImp', n: 8, gap: 0.9, s: 'alt' },
       { t: 56, e: 'fireDrake', n: 4, gap: 1.5, s: 'alt' },
+      { t: 30, e: 'flameEye', n: 1, gap: 0, s: 0 },
     ],
   },
   {
@@ -941,12 +959,13 @@ TD.STAGES = [
       { t: 40, e: 'fireImp', n: 8, gap: 0.8, s: 'alt' },
       { t: 50, e: 'lavaGolem', n: 2, gap: 2.5, s: 'alt' },
       { t: 56, e: 'fireDrake', n: 4, gap: 1.2, s: 'alt' },
+      { t: 26, e: 'flameEye', n: 2, gap: 2, s: 'alt' },
     ],
   },
   {
     id: '4-3', chapter: '第4章 紅蓮の結界石', name: '二つの火口', theme: 'lava',
     brief: '広い道の途中で、左の列は左の拠点へ、右の列は右の拠点へ分かれます。守る拠点は2つです。',
-    lives: 10, mana: 19, hpScale: 2.2, reward: 60, recLv: 26,
+    lives: 10, mana: 19, hpScale: 2.1, reward: 60, recLv: 26,
     map: [
       '...SS....',
       '...ab....',
@@ -970,6 +989,7 @@ TD.STAGES = [
       { t: 42, e: 'salamander', n: 8, gap: 0.9, s: 'alt' },
       { t: 52, e: 'lavaGolem', n: 2, gap: 1, s: 'alt' },
       { t: 56, e: 'fireMage', n: 4, gap: 1.4, s: 'alt' },
+      { t: 34, e: 'flameEye', n: 1, gap: 0, s: 1 },
     ],
   },
   {
@@ -1001,12 +1021,14 @@ TD.STAGES = [
       { t: 48, e: 'fireMage', n: 4, gap: 1.4, s: 'alt' },
       { t: 56, e: 'fireImp', n: 6, gap: 1, s: 2 },
       { t: 60, e: 'fireDrake', n: 4, gap: 1.2, s: 'alt' },
+      { t: 26, e: 'flameEye', n: 1, gap: 0, s: 2 },
+      { t: 44, e: 'flameEye', n: 2, gap: 2, s: 'alt' },
     ],
   },
   {
     id: '4-5', chapter: '第4章 紅蓮の結界石', name: '紅蓮の火口', theme: 'lava',
     brief: '七つの災厄の一柱、イグニスが待ち受けています！火属性のイグニスには水属性が有効です。広い道は最後に左右の拠点へ分かれます。',
-    lives: 10, mana: 20, hpScale: 2.2, reward: 100, recLv: 30,
+    lives: 10, mana: 20, hpScale: 2.05, reward: 100, recLv: 30,
     map: [
       '...SS....',
       '...ab....',
@@ -1031,6 +1053,7 @@ TD.STAGES = [
       { t: 48, e: 'salamander', n: 8, gap: 1, s: 'alt' },
       { t: 60, e: 'lavaGolem', n: 2, gap: 2, s: 'alt' },
       { t: 64, e: 'fireImp', n: 6, gap: 1, s: 'alt' },
+      { t: 26, e: 'flameEye', n: 1, gap: 0, s: 1 },
     ],
   },
   // ===================== 第5章（終章） 原初の災厄（回復役：後方に控えて仲間を癒やす） =====================
@@ -1061,6 +1084,7 @@ TD.STAGES = [
       { t: 32, e: 'abyssPriest', n: 1, gap: 0 },
       { t: 34, e: 'abyssKnight', n: 3, gap: 2.5 },
       { t: 46, e: 'abyssHound', n: 6, gap: 0.9 },
+      { t: 28, e: 'abyssEye', n: 1, gap: 0 },
     ],
   },
   {
@@ -1091,6 +1115,7 @@ TD.STAGES = [
       { t: 40, e: 'abyssPriest', n: 2, gap: 1, s: 'alt' },
       { t: 46, e: 'abyssKnight', n: 4, gap: 1.5, s: 'alt' },
       { t: 56, e: 'abyssHound', n: 8, gap: 0.7, s: 'alt' },
+      { t: 22, e: 'abyssEye', n: 2, gap: 2, s: 'alt' },
     ],
   },
   {
@@ -1123,6 +1148,8 @@ TD.STAGES = [
       { t: 38, e: 'abyssPriest', n: 1, gap: 0, s: 1, g: 0 },
       { t: 42, e: 'lavaGolem', n: 2, gap: 3, s: 0, g: 0 },
       { t: 52, e: 'abyssHound', n: 6, gap: 0.9, s: 1, g: 1 },
+      { t: 26, e: 'abyssEye', n: 1, gap: 0, s: 0, g: 0 },
+      { t: 46, e: 'abyssEye', n: 1, gap: 0, s: 1, g: 1 },
     ],
   },
   {
@@ -1154,6 +1181,8 @@ TD.STAGES = [
       { t: 42, e: 'abyssKnight', n: 4, gap: 1.4, s: 'alt' },
       { t: 54, e: 'abyssHound', n: 8, gap: 0.7, s: 'alt' },
       { t: 58, e: 'shade', n: 4, gap: 1, s: 'alt' },
+      { t: 20, e: 'abyssEye', n: 2, gap: 2, s: 'alt' },
+      { t: 48, e: 'abyssEye', n: 2, gap: 2, s: 'alt' },
     ],
   },
   {

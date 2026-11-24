@@ -804,6 +804,21 @@ window.TD = window.TD || {};
             continue;
           }
         }
+        // ビーム：その場で力を溜め、味方1人を狙って直線上を撃ち抜く
+        if (e.def.beam && this.units.length) {
+          const bm = e.def.beam;
+          e.beamCd = (e.beamCd == null ? bm.first : e.beamCd) - dt;
+          if (e.beamCd <= 0) {
+            const tgt = this.beamTarget(e);
+            if (!tgt) e.beamCd = 0.5;
+            else {
+              e.beamCd = bm.every;
+              e.charging = bm.charge;
+              this.warns.push({ beam: true, x: e.x, y: e.y, target: tgt, t: 0, warn: bm.charge, src: e });
+              continue;
+            }
+          }
+        }
         // ボス：予兆付きの範囲攻撃
         if (e.def.aoe && this.units.length && (!e.def.aoe.below || e.hp / e.maxHp <= e.def.aoe.below)) {
           e.aoeT = (e.aoeT || 0) + dt;
@@ -976,6 +991,31 @@ window.TD = window.TD || {};
       this.fx.push({ type: 'beam', x: e.x, y: e.y, x2: tgt.x, y2: tgt.y, t: 0, dur: 0.35, color: '#9dffb8' });
     }
 
+    // ---------- ビーム ----------
+    // 射程内で一番近いキャラを狙う（隠れ身中は狙わない）
+    beamTarget(e) {
+      const R = e.def.beam.range * T;
+      let best = this.tauntUnit(e), bd = Infinity;
+      if (!best) for (const u of this.units) { if (this.pas(u, 'stealth')) continue; const d = dist(e, u); if (d <= R && d < bd) { bd = d; best = u; } }
+      return best;
+    }
+    fireBeam(w) {
+      const e = w.src, bm = e.def.beam, tg = w.target;
+      const dx = tg.x - e.x, dy = tg.y - e.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+      const len = Math.hypot(W, H), x2 = e.x + ux * len, y2 = e.y + uy * len, half = bm.width * T / 2;
+      // 発射口から先の直線上（幅 bm.width マス）にいるキャラ全員にダメージ
+      for (const u of [...this.units]) {
+        const px = u.x - e.x, py = u.y - e.y, along = px * ux + py * uy, perp = Math.abs(px * uy - py * ux);
+        if (along < 0 || perp > half + 12) continue;
+        this.hurt(e, u, e.atk * bm.mult);
+        this.fx.push({ type: 'burst', x: u.x, y: u.y, t: 0, dur: 0.7, color: '#ffb04a', big: true });
+        this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 6, r1: 34, t: 0, dur: 0.6, color: '#fff1c0', width: 7 });
+        this.fx.push({ type: 'flashDot', x: u.x, y: u.y, t: 0, dur: 0.35 });
+      }
+      this.fx.push({ type: 'laser', x: e.x, y: e.y, x2, y2, w: bm.width * T, t: 0, dur: bm.dur, color: TD.ELEMENTS[e.def.element].color });
+      this.shake(5, 0.35);
+    }
+
     castAoe(e) {
       const a = e.def.aoe, r = a.radius * T;
       // 一番多くのキャラを巻き込める位置を狙う
@@ -994,6 +1034,14 @@ window.TD = window.TD || {};
         w.t += dt;
         if (w.src.dead || w.src.leaked) { w.done = true; continue; }
         if (w.follow) { w.x = w.follow.x; w.y = w.follow.y; }
+        if (w.beam) {
+          w.x = w.src.x; w.y = w.src.y;
+          // 狙っていたキャラがいなくなったら、狙い直す（誰もいなければ中止）
+          if (w.target.removed) { const nt = this.beamTarget(w.src); if (nt) w.target = nt; else { w.done = true; w.src.charging = 0; continue; } }
+          w.src.aimAt = w.target;
+          if (w.t >= w.warn) { w.done = true; w.src.aimAt = null; this.fireBeam(w); }
+          continue;
+        }
         if (w.t >= w.warn && w.kill) {   // 即死攻撃
           w.done = true;
           for (const u of [...this.units]) {
@@ -1246,6 +1294,15 @@ window.TD = window.TD || {};
           g.beginPath(); g.ellipse(x, y, s * 0.6, s * 0.8, 0, 0, Math.PI * 2); g.fill(); g.stroke();
           break;
         }
+        case 'eye': { // 魔眼：とげのある球体に大きな一つ目
+          for (let i = 0; i < 8; i++) {
+            const a = i / 8 * Math.PI * 2 + e.walk * 0.05;
+            g.beginPath(); g.moveTo(x + Math.cos(a - 0.25) * s * 0.85, y + Math.sin(a - 0.25) * s * 0.85);
+            g.lineTo(x + Math.cos(a) * s * 1.35, y + Math.sin(a) * s * 1.35); g.lineTo(x + Math.cos(a + 0.25) * s * 0.85, y + Math.sin(a + 0.25) * s * 0.85); g.fill();
+          }
+          g.beginPath(); g.arc(x, y, s * 0.95, 0, Math.PI * 2); g.fill(); g.stroke();
+          break;
+        }
         case 'ghost': { // 氷霊：すそが揺れる幽霊
           g.globalAlpha = 0.85;
           g.beginPath(); g.arc(x, y - s * 0.2, s * 0.9, Math.PI, 0);
@@ -1303,8 +1360,15 @@ window.TD = window.TD || {};
       }
       // 目
       const eyeY = e.def.shape === 'slime' ? y - s * 0.2 : y - s * 0.15, eyeColor = e.def.boss ? '#ff3030' : '#1b1410';
-      g.fillStyle = e.def.shape === 'skeleton' ? '#2a2030' : eyeColor;
-      g.beginPath(); g.arc(x - s * 0.35, eyeY, s * 0.14 + 0.8, 0, Math.PI * 2); g.arc(x + s * 0.35, eyeY, s * 0.14 + 0.8, 0, Math.PI * 2); g.fill();
+      if (e.def.shape === 'eye') {   // 一つ目：狙っているキャラのほうを見る
+        const at = e.aimAt, ang = at ? Math.atan2(at.y - y, at.x - x) : Math.PI / 2;
+        g.fillStyle = '#fff6e8'; g.beginPath(); g.ellipse(x, y, s * 0.62, s * 0.5, 0, 0, Math.PI * 2); g.fill();
+        g.fillStyle = e.charging > 0 ? '#ff2a1a' : '#2a0a10';
+        g.beginPath(); g.arc(x + Math.cos(ang) * s * 0.22, y + Math.sin(ang) * s * 0.18, s * 0.26, 0, Math.PI * 2); g.fill();
+      } else {
+        g.fillStyle = e.def.shape === 'skeleton' ? '#2a2030' : eyeColor;
+        g.beginPath(); g.arc(x - s * 0.35, eyeY, s * 0.14 + 0.8, 0, Math.PI * 2); g.arc(x + s * 0.35, eyeY, s * 0.14 + 0.8, 0, Math.PI * 2); g.fill();
+      }
       // HP
       const bw = Math.max(22, s * 2);
       g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(x - bw / 2 - 1, e.y - s - 9, bw + 2, 5);
@@ -1322,6 +1386,25 @@ window.TD = window.TD || {};
     }
 
     drawWarn(g, w) {
+      if (w.beam) {   // ビームの照準：細い線が点滅しながら太くなり、発射口に光が集まる
+        const p = Math.min(1, w.t / w.warn), tg = w.target;
+        const dx = tg.x - w.x, dy = tg.y - w.y, L = Math.hypot(dx, dy) || 1, len = Math.hypot(W, H);
+        const x2 = w.x + dx / L * len, y2 = w.y + dy / L * len;
+        const blink = 0.45 + Math.sin(w.t * (10 + p * 20)) * 0.35;
+        g.strokeStyle = `rgba(255,70,50,${0.25 + 0.5 * blink * p + 0.1})`; g.lineWidth = 1 + p * 3; g.setLineDash([10, 6]);
+        g.beginPath(); g.moveTo(w.x, w.y); g.lineTo(x2, y2); g.stroke(); g.setLineDash([]);
+        // 狙われているキャラの照準マーク
+        g.strokeStyle = `rgba(255,60,40,${0.6 + 0.4 * blink})`; g.lineWidth = 2;
+        g.beginPath(); g.arc(tg.x, tg.y, 20 - p * 4, 0, Math.PI * 2); g.stroke();
+        g.beginPath(); g.moveTo(tg.x - 26, tg.y); g.lineTo(tg.x - 12, tg.y); g.moveTo(tg.x + 12, tg.y); g.lineTo(tg.x + 26, tg.y);
+        g.moveTo(tg.x, tg.y - 26); g.lineTo(tg.x, tg.y - 12); g.moveTo(tg.x, tg.y + 12); g.lineTo(tg.x, tg.y + 26); g.stroke();
+        // 発射口の光
+        const col = TD.ELEMENTS[w.src.def.element].color, r = 4 + p * 12;
+        const grd = g.createRadialGradient(w.x, w.y, 1, w.x, w.y, r * 1.8);
+        grd.addColorStop(0, '#ffffff'); grd.addColorStop(0.4, col); grd.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = grd; g.beginPath(); g.arc(w.x, w.y, r * 1.8, 0, Math.PI * 2); g.fill();
+        return;
+      }
       if (w.kill) {   // 即死攻撃の溜め：紫黒の円がじわじわ満ちる
         const p = Math.min(1, w.t / w.warn), blink = 0.5 + Math.sin(w.t * (8 + p * 16)) * 0.3;
         g.fillStyle = `rgba(40,0,70,${0.25 + 0.25 * p})`;
@@ -1380,6 +1463,22 @@ window.TD = window.TD || {};
             g.beginPath(); g.arc(f.x + Math.cos(a) * r, f.y + Math.sin(a) * r, (f.big ? 5 : 3) * (1 - p) + 1, 0, Math.PI * 2); g.fill();
           }
           g.globalAlpha = 1; break;
+        }
+        case 'laser': {   // ビーム本体：太い光の帯がしばらく残り、だんだん細く消える
+          const fade = p < 0.15 ? 1 : 1 - (p - 0.15) / 0.85, wd = f.w * (p < 0.1 ? 0.6 + p * 4 : fade) + Math.sin(f.t * 40) * 1.5;
+          g.save(); g.lineCap = 'round';
+          g.globalAlpha = 0.35 * fade; g.strokeStyle = f.color; g.lineWidth = wd * 1.9;
+          g.beginPath(); g.moveTo(f.x, f.y); g.lineTo(f.x2, f.y2); g.stroke();
+          g.globalAlpha = 0.85 * fade; g.lineWidth = wd;
+          g.beginPath(); g.moveTo(f.x, f.y); g.lineTo(f.x2, f.y2); g.stroke();
+          g.globalAlpha = fade; g.strokeStyle = '#fffbe8'; g.lineWidth = Math.max(1, wd * 0.35);
+          g.beginPath(); g.moveTo(f.x, f.y); g.lineTo(f.x2, f.y2); g.stroke();
+          g.restore(); g.globalAlpha = 1; break;
+        }
+        case 'flashDot': {
+          const grd = g.createRadialGradient(f.x, f.y, 1, f.x, f.y, 30);
+          grd.addColorStop(0, `rgba(255,255,255,${1 - p})`); grd.addColorStop(1, 'rgba(255,200,100,0)');
+          g.fillStyle = grd; g.beginPath(); g.arc(f.x, f.y, 30, 0, Math.PI * 2); g.fill(); break;
         }
         case 'beam':
           g.strokeStyle = f.color; g.globalAlpha = 1 - p; g.lineWidth = 3;
