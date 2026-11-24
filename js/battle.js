@@ -3,8 +3,16 @@ window.TD = window.TD || {};
 
 (function () {
   const T = 40, COLS = 9, ROWS = 13, W = COLS * T, H = ROWS * T;
-  const PATH = '#SG';
+  // 道：# は共通の道、a / b は「広い道」の左右の車線（その車線から出た敵だけが通る）
+  const PATH = '#SGab';
   const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  // ステージの見た目（theme）
+  TD.THEMES = {
+    grass: { path: ['#8a7560', '#93806a'], ground: ['#3f6b3a', '#447340'], water: ['#2f6aa8', '#3474b4'], wave: 'rgba(200,235,255,.35)', rock: ['#6d7480', '#8b939e'] },
+    snow:  { path: ['#9aa6b8', '#a4b0c2'], ground: ['#d8e2ec', '#e2eaf3'], water: ['#2f6aa8', '#3474b4'], wave: 'rgba(200,235,255,.35)', rock: ['#6d7480', '#8b939e'] },
+    lava:  { path: ['#5a4a44', '#63524b'], ground: ['#3a2622', '#412b26'], water: ['#c8461e', '#d8562a'], wave: 'rgba(255,220,120,.55)', rock: ['#2a1d1b', '#4a3632'], rocksOnly: true },
+    abyss: { path: ['#4a4060', '#52476a'], ground: ['#1f1a30', '#241e38'], water: ['#3a1060', '#451470'], wave: 'rgba(200,140,255,.4)', rock: ['#14101f', '#332a48'], rocksOnly: true },
+  };
   // '#rrggbb' → 'rgba(r,g,b,a)'
   const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
   // ★5スキルの画面の揺れの強さ
@@ -30,8 +38,9 @@ window.TD = window.TD || {};
       this.routes = spawns.map((sp, i) => this.routeFor(i));
 
       this.events = [];
+      // s: 'alt' … 出現地点を交互に使う（広い道の左右の車線に振り分ける）
       for (const w of stage.waves)
-        for (let i = 0; i < w.n; i++) this.events.push({ t: w.t + i * w.gap, e: w.e, s: w.s || 0, g: w.g });
+        for (let i = 0; i < w.n; i++) this.events.push({ t: w.t + i * w.gap, e: w.e, s: w.s === 'alt' ? i % Math.min(2, spawns.length) : (w.s || 0), g: w.g });
       this.events.sort((a, b) => a.t - b.t);
       this.evIdx = 0;
       this.totalEnemies = this.events.length;
@@ -102,15 +111,22 @@ window.TD = window.TD || {};
       const s = this.spawns[Math.min(si, this.spawns.length - 1)];
       let best = null;
       const cands = gi == null ? this.goals : [this.goals[Math.min(gi, this.goals.length - 1)]];
+      // 出現地点のとなりが車線（a / b）なら、その車線だけを通る
+      let lane = '';
+      for (const [dx, dy] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+        const c = (this.grid[s[1] + dy] || [])[s[0] + dx];
+        if (c === 'a' || c === 'b') { lane = c; break; }
+      }
+      const allow = '#SG' + (lane || 'ab');
       for (const g of cands) {
-        const r = this.findRoute(s, g);
+        const r = this.findRoute(s, g, allow);
         if (r.length && r[0].x === s[0] * T + T / 2 && r[0].y === s[1] * T + T / 2 && (!best || r.length < best.length)) best = r;
       }
       if (!best && gi != null) return (this.routeCache[key] = this.routeFor(si)); // 指定地点に届かない場合は一番近い地点へ
-      return (this.routeCache[key] = best || this.findRoute(s, this.goals[0]));
+      return (this.routeCache[key] = best || this.findRoute(s, this.goals[0], allow));
     }
 
-    findRoute(s, g) {
+    findRoute(s, g, allow = PATH) {
       const key = (x, y) => x + ',' + y;
       const prev = { [key(s[0], s[1])]: null };
       const q = [s];
@@ -120,7 +136,7 @@ window.TD = window.TD || {};
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
           const nx = x + dx, ny = y + dy;
           if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) continue;
-          if (!PATH.includes(this.grid[ny][nx])) continue;
+          if (!allow.includes(this.grid[ny][nx])) continue;
           const k = key(nx, ny);
           if (k in prev) continue;
           prev[k] = [x, y];
@@ -139,32 +155,42 @@ window.TD = window.TD || {};
       g.scale(2, 2);
       for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
         const ch = this.grid[y][x], px = x * T, py = y * T;
+        const th = TD.THEMES[this.stage.theme] || TD.THEMES.grass;
         if (PATH.includes(ch)) {
-          g.fillStyle = this.stage.theme === 'snow' ? ((x + y) % 2 ? '#9aa6b8' : '#a4b0c2') : (x + y) % 2 ? '#8a7560' : '#93806a';
+          g.fillStyle = (x + y) % 2 ? th.path[0] : th.path[1];
           g.fillRect(px, py, T, T);
           g.fillStyle = 'rgba(0,0,0,.12)';
           g.fillRect(px + 6, py + 8, 7, 4); g.fillRect(px + 24, py + 26, 9, 4);
         } else {
-          g.fillStyle = this.stage.theme === 'snow' ? ((x + y) % 2 ? '#d8e2ec' : '#e2eaf3') : (x + y) % 2 ? '#3f6b3a' : '#447340';
+          g.fillStyle = (x + y) % 2 ? th.ground[0] : th.ground[1];
           g.fillRect(px, py, T, T);
           g.fillStyle = 'rgba(255,255,255,.06)';
           g.fillRect(px + 10, py + 12, 2, 6); g.fillRect(px + 27, py + 22, 2, 6);
         }
-        if (ch === '~') { // 水辺（配置不可）
-          g.fillStyle = (x + y) % 2 ? '#2f6aa8' : '#3474b4';
+        if (ch === '~') { // 水辺・溶岩・深淵（配置不可）
+          g.fillStyle = (x + y) % 2 ? th.water[0] : th.water[1];
           g.fillRect(px, py, T, T);
-          g.strokeStyle = 'rgba(200,235,255,.35)'; g.lineWidth = 1.5;
+          g.strokeStyle = th.wave; g.lineWidth = 1.5;
           for (const oy of [12, 26]) { g.beginPath(); g.moveTo(px + 6, py + oy); g.quadraticCurveTo(px + 13, py + oy - 4, px + 20, py + oy); g.quadraticCurveTo(px + 27, py + oy + 4, px + 34, py + oy); g.stroke(); }
         }
         if (ch === 'x') {
-          if ((x * 7 + y * 3) % 2) { // 木
+          if (th.rocksOnly || !((x * 7 + y * 3) % 2)) { // 岩
+            g.fillStyle = th.rock[0]; g.beginPath(); g.ellipse(px + 20, py + 24, 15, 11, 0, 0, Math.PI * 2); g.fill();
+            g.fillStyle = th.rock[1]; g.beginPath(); g.ellipse(px + 16, py + 20, 7, 5, 0, 0, Math.PI * 2); g.fill();
+          } else { // 木
             g.fillStyle = '#5b3d22'; g.fillRect(px + 17, py + 22, 6, 12);
             g.fillStyle = '#2b5a2a'; g.beginPath(); g.arc(px + 20, py + 17, 13, 0, Math.PI * 2); g.fill();
             g.fillStyle = '#386e34'; g.beginPath(); g.arc(px + 16, py + 13, 7, 0, Math.PI * 2); g.fill();
-          } else { // 岩
-            g.fillStyle = '#6d7480'; g.beginPath(); g.ellipse(px + 20, py + 24, 15, 11, 0, 0, Math.PI * 2); g.fill();
-            g.fillStyle = '#8b939e'; g.beginPath(); g.ellipse(px + 16, py + 20, 7, 5, 0, 0, Math.PI * 2); g.fill();
           }
+        }
+        // 広い道：左右の車線の境目に白い破線
+        if (ch === 'a') for (const [dx, dy] of [[1, 0], [0, 1], [-1, 0], [0, -1]]) {
+          if ((this.grid[y + dy] || [])[x + dx] !== 'b') continue;
+          g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 2; g.setLineDash([6, 6]);
+          g.beginPath();
+          if (dx) { const lx = px + (dx > 0 ? T : 0); g.moveTo(lx, py + 4); g.lineTo(lx, py + T - 4); }
+          else { const ly = py + (dy > 0 ? T : 0); g.moveTo(px + 4, ly); g.lineTo(px + T - 4, ly); }
+          g.stroke(); g.setLineDash([]);
         }
         if (ch === 'S') {
           const grd = g.createRadialGradient(px + 20, py + 20, 2, px + 20, py + 20, 18);
@@ -259,7 +285,7 @@ window.TD = window.TD || {};
       if (this.units.some(u => u.cx === cx && u.cy === cy)) return false;
       if (this.mana < card.def.cost) return false;
       const ch = this.grid[cy][cx];
-      return TD.ROLES[card.def.role].melee ? ch === '#' : ch === '.';
+      return TD.ROLES[card.def.role].melee ? (ch === '#' || ch === 'a' || ch === 'b') : ch === '.';
     }
 
     deploy(card, cx, cy) {
@@ -760,8 +786,24 @@ window.TD = window.TD || {};
           this.checkKill(e);
           if (e.dead) continue;
         }
+        // 即死攻撃の溜め中は動かない（足止めされていても溜めは止まらない）
+        if (e.charging > 0) { e.charging -= dt; continue; }
         if (e.frozen > 0) { e.frozen -= dt; if (e.frozen <= 0) e.bound = false; continue; }
         if (e.blockedBy && e.blockedBy.removed) e.blockedBy = null;
+        // 回復役：近くの仲間を回復する
+        if (e.def.healer) this.healerHeal(e, dt);
+        // ラスボス：力を溜めて、周囲のキャラを即死させる
+        if (e.def.doom && this.units.length) {
+          const dm = e.def.doom, p2 = e.hp / e.maxHp <= dm.phase2;
+          e.doomCd = (e.doomCd == null ? dm.first : e.doomCd) - dt;
+          if (e.doomCd <= 0) {
+            e.doomCd = p2 ? dm.every2 : dm.every;
+            e.charging = dm.charge;
+            this.warns.push({ x: e.x, y: e.y, r: (p2 ? dm.radius2 : dm.radius) * T, t: 0, warn: dm.charge, kill: true, follow: e, src: e });
+            this.toast(`${e.def.name.split(' ').pop()}が力を溜めている……！`);
+            continue;
+          }
+        }
         // ボス：予兆付きの範囲攻撃
         if (e.def.aoe && this.units.length && (!e.def.aoe.below || e.hp / e.maxHp <= e.def.aoe.below)) {
           e.aoeT = (e.aoeT || 0) + dt;
@@ -790,6 +832,18 @@ window.TD = window.TD || {};
         for (const u of this.units) { const p = this.pas(u, 'slowAura'); if (p && dist(e, u) <= this.rangeOf(u) * T) slowAura = Math.min(slowAura, p.mult); }
         let move = e.def.speed * T * dt * (e.slowT > 0 ? 0.5 : 1) * slowAura * (e.slowShotT > 0 ? e.slowShotMult : 1)
           * (e.poisonT > 0 ? this.poisonSlow : 1) * this.enemySlowAll;
+        // 回復役は前に出ず、キャラの射程に入ったら下がる
+        if (e.def.healer) move = this.healerMove(e, move);
+        if (move < 0) {
+          let back = -move;
+          while (back > 0 && e.idx > 1) {
+            const tgt = e.route[e.idx - 1], dx = tgt.x - e.x, dy = tgt.y - e.y, d = Math.hypot(dx, dy);
+            if (d <= back) { e.x = tgt.x; e.y = tgt.y; e.idx--; back -= d; }
+            else { e.x += dx / d * back; e.y += dy / d * back; back = 0; }
+          }
+          e.passed.clear();
+          continue;
+        }
         while (move > 0 && e.idx < e.route.length) {
           const tgt = e.route[e.idx], dx = tgt.x - e.x, dy = tgt.y - e.y, d = Math.hypot(dx, dy);
           if (d <= move) { e.x = tgt.x; e.y = tgt.y; e.idx++; move -= d; }
@@ -881,6 +935,47 @@ window.TD = window.TD || {};
       }
     }
 
+    // ---------- 回復役の敵 ----------
+    // その位置がキャラ（回復役以外）の射程に入っているか
+    inDanger(p) {
+      return this.units.some(u => u.def.role !== 'priest' && dist(p, u) <= this.rangeOf(u) * T + 8);
+    }
+    // 道に沿って L だけ先の位置
+    pointAhead(e, L) {
+      let x = e.x, y = e.y, i = e.idx;
+      while (L > 0 && i < e.route.length) {
+        const t = e.route[i], d = Math.hypot(t.x - x, t.y - y);
+        if (d <= L) { x = t.x; y = t.y; i++; L -= d; } else { x += (t.x - x) / d * L; y += (t.y - y) / d * L; L = 0; }
+      }
+      return { x, y };
+    }
+    progressOf(e) { return (e.idx - 1 + 1 - Math.min(1, dist(e, e.route[Math.min(e.idx, e.route.length - 1)]) / T)) / e.route.length; }
+    // 戻り値：正なら前進、0 なら待機、負なら後退
+    healerMove(e, move) {
+      if (e.blockedBy) return move;
+      const others = this.enemies.filter(o => !o.dead && !o.leaked && !o.def.healer);
+      // 仲間がいなくなり、もう増援も来ないなら、覚悟を決めて前進する
+      if (!others.length && this.evIdx >= this.events.length) return move;
+      if (this.inDanger(e)) return -move * 1.2;
+      const front = others.length ? Math.max(...others.map(o => this.progressOf(o))) : 0;
+      if (this.progressOf(e) > front - e.def.healer.keep) return 0;
+      return this.inDanger(this.pointAhead(e, move + T * 0.4)) ? 0 : move;
+    }
+    healerHeal(e, dt) {
+      const h = e.def.healer;
+      e.healT = (e.healT == null ? h.every : e.healT) - dt;
+      if (e.healT > 0) return;
+      const tgt = this.enemies.filter(o => !o.dead && !o.leaked && o.hp < o.maxHp && dist(o, e) <= h.radius * T)
+        .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+      if (!tgt) { e.healT = 0.4; return; }
+      e.healT = h.every;
+      const amt = Math.round(tgt.maxHp * h.ratio * (tgt.def.boss ? 0.3 : 1));
+      tgt.hp = Math.min(tgt.maxHp, tgt.hp + amt);
+      this.pop(tgt.x, tgt.y - tgt.size - 10, '+' + amt, '#7dffa0', { size: 12 });
+      this.fx.push({ type: 'ring', x: tgt.x, y: tgt.y, r0: 4, r1: tgt.size + 8, t: 0, dur: 0.5, color: '#7dffa0', width: 3 });
+      this.fx.push({ type: 'beam', x: e.x, y: e.y, x2: tgt.x, y2: tgt.y, t: 0, dur: 0.35, color: '#9dffb8' });
+    }
+
     castAoe(e) {
       const a = e.def.aoe, r = a.radius * T;
       // 一番多くのキャラを巻き込める位置を狙う
@@ -898,6 +993,21 @@ window.TD = window.TD || {};
       for (const w of this.warns) {
         w.t += dt;
         if (w.src.dead || w.src.leaked) { w.done = true; continue; }
+        if (w.follow) { w.x = w.follow.x; w.y = w.follow.y; }
+        if (w.t >= w.warn && w.kill) {   // 即死攻撃
+          w.done = true;
+          for (const u of [...this.units]) {
+            if (dist(u, w) > w.r) continue;
+            if (u.def.unique && u.def.unique.type === 'invuln') { this.pop(u.x, u.y - 20, '無効', '#fff6c0', { size: 12 }); continue; }
+            this.removeUnit(u, false);
+            this.pop(u.x, u.y - 34, '即死', '#d070ff', { size: 14 });
+          }
+          this.fx.push({ type: 'flash', t: 0, dur: 0.7, color: 'rgba(120,20,200,' });
+          this.fx.push({ type: 'ring', x: w.x, y: w.y, r0: 10, r1: w.r, t: 0, dur: 0.6, color: '#c060ff', width: 14 });
+          this.fx.push({ type: 'burst', x: w.x, y: w.y, t: 0, dur: 0.7, color: '#7a2ad0', big: true });
+          this.shake(10, 0.6);
+          continue;
+        }
         if (w.t >= w.warn) {
           w.done = true;
           for (const u of [...this.units]) if (dist(u, w) <= w.r) this.hurt(w.src, u, w.power);
@@ -1200,6 +1310,11 @@ window.TD = window.TD || {};
       g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(x - bw / 2 - 1, e.y - s - 9, bw + 2, 5);
       g.fillStyle = e.def.boss ? '#c44dff' : '#ff5a4a';
       g.fillRect(x - bw / 2, e.y - s - 8, bw * Math.max(0, e.hp / e.maxHp), 3);
+      if (e.def.healer) {   // 回復役の印（緑の十字）
+        const cy = e.y - s - 18;
+        g.fillStyle = '#0b2a14'; g.fillRect(x - 6, cy - 6, 12, 12);
+        g.fillStyle = '#7dffa0'; g.fillRect(x - 1.5, cy - 4.5, 3, 9); g.fillRect(x - 4.5, cy - 1.5, 9, 3);
+      }
       if (e.def.boss) {
         g.fillStyle = '#fff'; g.font = 'bold 9px sans-serif'; g.textAlign = 'center';
         g.fillText('BOSS', x, e.y - s - 13);
@@ -1207,6 +1322,20 @@ window.TD = window.TD || {};
     }
 
     drawWarn(g, w) {
+      if (w.kill) {   // 即死攻撃の溜め：紫黒の円がじわじわ満ちる
+        const p = Math.min(1, w.t / w.warn), blink = 0.5 + Math.sin(w.t * (8 + p * 16)) * 0.3;
+        g.fillStyle = `rgba(40,0,70,${0.25 + 0.25 * p})`;
+        g.beginPath(); g.arc(w.x, w.y, w.r, 0, Math.PI * 2); g.fill();
+        g.fillStyle = `rgba(190,80,255,${0.3 * blink + 0.1})`;
+        g.beginPath(); g.arc(w.x, w.y, w.r * p, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = '#d070ff'; g.lineWidth = 3; g.setLineDash([8, 5]);
+        g.beginPath(); g.arc(w.x, w.y, w.r, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+        g.font = 'bold 14px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        const ly = Math.max(12, Math.min(H - 12, w.y - w.r + 14)), lt = `即死 ${Math.max(0, w.warn - w.t).toFixed(1)}`;
+        g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.8)'; g.strokeText(lt, w.x, ly);
+        g.fillStyle = '#f0c8ff'; g.fillText(lt, w.x, ly);
+        return;
+      }
       const p = Math.min(1, w.t / w.warn), blink = 0.5 + Math.sin(w.t * 18) * 0.25;
       g.fillStyle = `rgba(255,60,40,${0.12 + 0.18 * p})`;
       g.beginPath(); g.arc(w.x, w.y, w.r, 0, Math.PI * 2); g.fill();
@@ -1252,6 +1381,10 @@ window.TD = window.TD || {};
           }
           g.globalAlpha = 1; break;
         }
+        case 'beam':
+          g.strokeStyle = f.color; g.globalAlpha = 1 - p; g.lineWidth = 3;
+          g.beginPath(); g.moveTo(f.x, f.y); g.lineTo(f.x2, f.y2); g.stroke();
+          g.globalAlpha = 1; break;
         case 'slash':
           g.strokeStyle = '#fff'; g.lineWidth = 3 * (1 - p); g.globalAlpha = 1 - p;
           g.beginPath(); g.arc(f.x, f.y, 12, f.a - 2.2, f.a - 0.6); g.stroke();
