@@ -695,7 +695,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="cd-stats"><span>HP<b>${d.hp}${up('hp')}</b></span><span>${base.role === 'priest' ? '回復' : '攻撃'}<b>${dps(d.atk)}${next ? `<em>→${dps(next.atk)}</em>` : ''}</b></span><span>防御<b>${d.def}${up('def')}</b></span>` +
       `<span>コスト<b>${d.cost}</b></span><span>射程<b>${pv && pv.type === 'range' ? `${+(d.range * pv.mult).toFixed(1)}<small>(${d.range}×${pv.mult})</small>` : d.range}</b></span>` +
       (d.splash ? `<span>範囲<b>${pv && pv.type === 'splash' ? `${+(d.splash * pv.mult).toFixed(2)}マス<small>(${d.splash}×${pv.mult})</small>` : d.splash + 'マス'}</b></span>` : '') +
-      (r.melee ? `<span>ブロック<b>${pv && (pv.type === 'blockMult' || pv.blockMult) ? (m => `${Math.floor(d.block * m)}<small>(${d.block}×${m})</small>`)(pv.type === 'blockMult' ? pv.mult : pv.blockMult) : d.block}</b></span>` : '') +
+      (r.melee ? `<span>ブロック<b>${(b => b ? `${d.block + b}<small>(${d.block}+${b})</small>` : d.block)(TD.blockBonus(d, save.party))}</b></span>` : '') +
       `<span class="${r.melee || d.splash ? 'wide' : 'wide2'}">再配置<b>${Math.round(TD.redeployTime(d))}秒<small>（撤退時 ${TD.RETREAT.minCooldown}〜${Math.round(TD.redeployTime(d))}秒）</small></b></span></div>` +
       sortieHTML() +
       `<div class="cd-levelup"><div class="cd-own"><i class="expbook"></i> 経験の書 <b>${save.crystals}</b></div>` +

@@ -90,9 +90,10 @@ TD.CHARS = {
     lines: { deploy: '風が騒いでる……来るぞ', skill: '吹き荒れろ、天嵐の矢雨！' },
   },
   blaire: {
-    name: 'ブレア', title: '紅蓮の拳闘士', rarity: 4, kind: 'power', element: 'fire', role: 'sword',
-    cost: 11, hp: 1644, atk: 140, def: 68, interval: 0.9, range: 1.6, block: 1, redeploy: 25,
-    passive: { name: '連撃', type: 'ramp', step: 0.05, max: 0.5, desc: '攻撃するたびに攻撃速度+5%（最大+50%）。撤退すると元に戻る' },
+    name: 'ブレア', title: '紅蓮の拳闘士', rarity: 4, kind: 'power', element: 'fire', role: 'shield',
+    cost: 12, hp: 2450, atk: 92, def: 140, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
+    profile: '籠手で敵の刃を受け止め、そのまま殴り返す拳闘士。殴るほどに拳は速くなる。',
+    passive: { name: '連撃', type: 'ramp', step: 0.05, max: 0.5, blockAdd: 1, desc: 'ブロック数+1。攻撃するたびに攻撃速度+5%（最大+50%）。撤退すると元に戻る' },
     lines: { deploy: 'さぁ、かかってきな！', skill: '燃え上がれ！烈火連撃！' },
   },
   rune: {
@@ -136,8 +137,8 @@ TD.CHARS = {
   kagura: {
     name: 'カグラ', title: '紅鎖の星姫', rarity: 5, element: 'fire', role: 'shield',
     cost: 17, hp: 4252, atk: 137, def: 227, interval: 1.4, range: 1.3, block: 4, redeploy: 35,
-    profile: '星の鎖を操る巫女。ブロック数4はゲーム中で最多。',
-    passive: { name: '紅鎖の陣', type: 'blockMult', mult: 1.5, beamImmune: true, desc: 'ブロック数が1.5倍になる（4→6）。ビームが効かない' },
+    profile: '星の鎖を操る巫女。紅い鎖で6体もの敵を同時に食い止める。',
+    passive: { name: '紅鎖の陣', type: 'block', add: 2, beamImmune: true, desc: 'ブロック数+2（4→6）。ビームが効かない' },
     lines: { deploy: '……この先へは、行かせません', skill: '星よ、鎖となりて縛めよ' },
   },
   nereia: {
@@ -151,7 +152,7 @@ TD.CHARS = {
   },
   akane: {
     name: 'アカネ', title: '異界の剣道少女', rarity: 4, kind: 'tech', element: 'wind', role: 'sword',
-    unique: { name: '異界の剣気', type: 'duo', partner: 'shizuku', count: 2, desc: 'シズクと共に編成されている場合、アカネの攻撃は2体に当たるようになる' },
+    unique: { name: '異界の剣気', type: 'duo', partner: 'shizuku', count: 2, atk: 0.2, desc: 'シズクと共に編成されている場合、アカネの攻撃+20%、攻撃が2体に当たるようになる' },
     cost: 8, hp: 1089, atk: 138, def: 40, interval: 0.9, range: 1.6, block: 1, redeploy: 20,
     profile: '召喚の儀のはずみで、異世界の学校から呼ばれてしまった剣道部員。',
     skill: { name: '一閃・疾風', type: 'execute', sp: 15, mult: 6, mana: 6,
@@ -160,8 +161,8 @@ TD.CHARS = {
   },
   shizuku: {
     name: 'シズク', title: '腹ペコ弓道少女', rarity: 4, kind: 'tech', element: 'fire', role: 'archer',
-    unique: { name: '腹ペコの絆', type: 'duo', partner: 'akane', count: 2, desc: 'アカネと共に編成されている場合、シズクの攻撃は2体に当たるようになる' },
-    cost: 8, hp: 678, atk: 82, def: 13, interval: 1.0, range: 3.4, redeploy: 20,
+    unique: { name: '腹ペコの絆', type: 'duo', partner: 'akane', count: 2, atk: 0.2, desc: 'アカネと共に編成されている場合、シズクの攻撃+20%、攻撃が2体に当たるようになる' },
+    cost: 8, hp: 678, atk: 100, def: 13, interval: 1.0, range: 3.4, redeploy: 20,
     profile: 'アカネと一緒に異世界から呼ばれた弓道部員。肉まんがあれば戦える。',
     skill: { name: '肉まん配給', type: 'battery', sp: 20, amount: 10,
              desc: '配置中の味方全員の発動スキルのゲージを10増やす' },
@@ -179,7 +180,7 @@ TD.CHARS = {
     name: 'セイラ', title: '蒼波の剣聖', rarity: 5, element: 'water', role: 'sword',
     cost: 15, hp: 2410, atk: 168, def: 100, interval: 0.9, range: 1.6, block: 2, redeploy: 30,
     profile: '水の都の剣術道場を継ぐ剣聖。受けた刃をそのまま返す「水鏡」の使い手。',
-    passive: { name: '常時水鏡', type: 'reflect', ratio: 0.5, defMult: 1.2, blockMult: 1.5, desc: '受けたダメージの50%を常に相手に返す。防御+20%。ブロック数1.5倍' },
+    passive: { name: '常時水鏡', type: 'reflect', ratio: 0.5, defMult: 1.2, blockAdd: 1, desc: '受けたダメージの50%を常に相手に返す。防御+20%。ブロック数+1' },
     lines: { deploy: '参ります。……お覚悟を', skill: '水鏡に映るは、あなた自身の刃' },
   },
   xeno: {
@@ -233,7 +234,8 @@ TD.CHARS = {
   ciel: {
     name: 'シエル', title: '王城の星詠みメイド', rarity: 4, kind: 'tech', eventOnly: true, element: 'light', role: 'mage',
     cost: 13, hp: 820, atk: 120, def: 15, interval: 1.9, range: 2.6, splash: 0.9, redeploy: 30,
-    unique: { name: 'メイド長の段取り', type: 'startSp', party: true, short: '開始時ゲージ半分', desc: '味方全員の発動スキルのゲージが、半分たまった状態で配置される（各キャラの最初の配置のみ）' },
+    unique: { name: '星詠みの光線', type: 'duoBeam', partner: 'chloe', every: 3, mult: 2.5, width: 0.6,
+              desc: 'クロエと共に編成されている場合、通常攻撃3回に1回が、直線上の敵全員を貫くビーム（攻撃力250%）になる' },
     profile: '王城メイド隊の副メイド長。紫水晶の杖で星の魔法を操り、仕事も戦いも段取りが命。',
     skill: { name: '星屑の箒星', type: 'flash', sp: 26, radius: 1.8, stun: 2, mult: 3,
              desc: '周囲の敵を2秒間気絶させ、攻撃力300%のダメージ' },
@@ -242,7 +244,8 @@ TD.CHARS = {
   chloe: {
     name: 'クロエ', title: '黒薔薇の護衛メイド', rarity: 4, kind: 'tech', eventOnly: true, element: 'dark', role: 'shield',
     cost: 13, hp: 2450, atk: 75, def: 150, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
-    unique: { name: 'お嬢様の盾', type: 'retreatRefund', rate: 0.75, party: true, short: '撤退マナ75%', desc: '撤退したときに戻るマナが、半分から75%になる' },
+    unique: { name: 'お嬢様の盾', type: 'duoGuard', partner: 'ciel', blockAdd: 1, hp: 0.25, def: 0.25,
+              desc: 'シエルと共に編成されている場合、ブロック数+1、最大HP・防御+25%' },
     profile: '王城メイド隊の護衛担当。黒薔薇の大盾で、主も仲間も守り抜く。',
     skill: { name: '黒薔薇の誓い', type: 'guard', sp: 28, dur: 10,
              desc: '10秒間、防御2倍・ブロック数+2。HPを50%回復' },
@@ -318,7 +321,7 @@ TD.CHARS = {
     name: 'グレン', title: '墓守の大男', rarity: 3, element: 'dark', role: 'shield',
     unique: { name: '墓守の呪毒', type: 'darkPoison', stacks: 1, sub: 'maxStacks', max: 7, desc: '攻撃するたびに敵に毒を1つためる。さらに毒の最大数が5→7になる' },
     cost: 12, hp: 2000, atk: 42, def: 105, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
-    passive: { name: '巨躯', type: 'blockMult', mult: 1.5, desc: 'ブロック数が1.5倍になる（2→3）' },
+    passive: { name: '巨躯', type: 'block', add: 1, desc: 'ブロック数+1（2→3）' },
     lines: { deploy: '……眠りを妨げる者は、通さん', skill: 'ぬうぅん！' },
   },
   luna: {
@@ -1589,7 +1592,16 @@ TD.partyEffects = function (party, def) {
       fx[p.type] += p.add;
     }
   }
+  // 相方と共に編成されている時の強化（アカネ・シズク、シエル・クロエ）
+  const du = def && def.unique;
+  if (du && du.partner && party.includes(du.partner)) { fx.atk += du.atk || 0; fx.hp += du.hp || 0; fx.def += du.def || 0; }
   return fx;
+};
+// 常時スキル・相方の効果で増えるブロック数
+TD.blockBonus = function (d, party) {
+  const pv = d.passive, du = d.unique;
+  return (pv ? (pv.type === 'block' ? pv.add : 0) + (pv.blockAdd || 0) : 0)
+    + (du && du.type === 'duoGuard' && party && party.includes(du.partner) ? du.blockAdd : 0);
 };
 TD.partyEffectsText = function (party) {
   const a = [], names = { atk: '攻撃', def: '防御', hp: '最大HP' };

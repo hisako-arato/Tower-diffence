@@ -632,9 +632,7 @@ window.TD = window.TD || {};
       return null;
     }
     blockOf(u) {
-      const pv = u.def.passive;
-      const bmul = pv ? (pv.type === 'blockMult' ? pv.mult : pv.blockMult || 1) : 1;
-      return Math.floor((u.def.block || 0) * bmul) + (u.buff && u.buff.type === 'guard' && !u.buff.noBlock ? 2 : 0);
+      return (u.def.block || 0) + TD.blockBonus(u.def, this.cards.map(c => c.id)) + (u.buff && u.buff.type === 'guard' && !u.buff.noBlock ? 2 : 0);
     }
     rateOf(u) {
       let r = u.buff && u.buff.rate ? u.buff.rate : 1;
@@ -942,6 +940,9 @@ window.TD = window.TD || {};
             .sort((a, b) => (b.idx * 1000 - dist(b, b.route[Math.min(b.idx, b.route.length - 1)])) - (a.idx * 1000 - dist(a, a.route[Math.min(a.idx, a.route.length - 1)])));
           targets.push(...extra.slice(0, mp.count - 1));
         }
+        // シエル：クロエと共に編成されていると、3回に1回の攻撃がビームになる
+        const db = du && du.type === 'duoBeam' && this.cards.some(c => c.id === du.partner) ? du : null;
+        if (db && (u.beamN = (u.beamN || 0) + 1) % db.every === 0) { this.unitBeam(u, target, db); continue; }
         for (const tg of targets) {
           if (u.melee) {
             this.hit(u, tg, this.atkOf(u));
@@ -996,6 +997,20 @@ window.TD = window.TD || {};
       this.pop(tgt.x, tgt.y - tgt.size - 10, '+' + amt, '#7dffa0', { size: 12 });
       this.fx.push({ type: 'ring', x: tgt.x, y: tgt.y, r0: 4, r1: tgt.size + 8, t: 0, dur: 0.5, color: '#7dffa0', width: 3 });
       this.fx.push({ type: 'beam', x: e.x, y: e.y, x2: tgt.x, y2: tgt.y, t: 0, dur: 0.35, color: '#9dffb8' });
+    }
+
+    // 味方のビーム：狙った敵の方向へ、直線上の敵全員を貫く
+    unitBeam(u, tg, db) {
+      const dx = tg.x - u.x, dy = tg.y - u.y, L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L;
+      const len = Math.hypot(W, H), half = db.width * T / 2;
+      for (const e of this.enemies) {
+        if (e.dead) continue;
+        const px = e.x - u.x, py = e.y - u.y, along = px * ux + py * uy, perp = Math.abs(px * uy - py * ux);
+        if (along < 0 || perp > half + e.size * 0.5) continue;
+        this.hit(u, e, this.atkOf(u) * db.mult);
+        this.fx.push({ type: 'burst', x: e.x, y: e.y, t: 0, dur: 0.45, color: '#fff3a0' });
+      }
+      this.fx.push({ type: 'laser', x: u.x, y: u.y, x2: u.x + ux * len, y2: u.y + uy * len, w: db.width * T * 0.8, t: 0, dur: 0.7, color: '#ffe066' });
     }
 
     // ---------- 流星雨 ----------
