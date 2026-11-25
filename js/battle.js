@@ -667,8 +667,8 @@ window.TD = window.TD || {};
       const du = src.def && src.def.unique && src.def.unique.type === 'darkPoison' ? src.def.unique : null;
       if (du && du.sub === 'hunter' && e.poisonT > 0) power *= du.mult;
       const cp = src.def && src.def.passive && src.def.passive.type === 'crit' ? src.def.passive : null;
-      // ノクス（トリオ）：凍結中の敵はクリティカル率50%、秘薬の効果中はクリティカル3倍
-      const nt = src.def && src.def.trioOn && src.def.trio.frozenCrit ? src.def.trio : null;
+      // ノクス：凍結中の敵はクリティカル率50%、カリンの秘薬の効果中はクリティカル3倍
+      const nt = src.def && src.def.unique && src.def.unique.type === 'frostCrit' ? src.def.unique : null;
       let critMult = 0;
       if (cp && Math.random() < (nt && e.frozen > 0 ? Math.max(cp.chance, nt.frozenCrit) : cp.chance)) {
         critMult = nt && this.elixirT > 0 ? nt.elixirCritMult : cp.mult;

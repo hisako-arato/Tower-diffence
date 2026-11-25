@@ -62,8 +62,8 @@ TD.CHARS = {
   },
   nox: {
     name: 'ノクス', title: '影の剣士', rarity: 4, kind: 'power', element: 'dark', role: 'sword',
-    trio: { id: 'frostflame', name: '影氷の断罪', frozenCrit: 0.5, elixirCritMult: 3,
-            desc: 'セレス・カリンと共に編成されている場合、凍結中の敵へのクリティカル率が50%になり、カリンの炎の秘薬の効果中はクリティカルのダメージが3倍になる' },
+    unique: { name: '影氷の断罪', type: 'frostCrit', frozenCrit: 0.5, elixirCritMult: 3,
+              desc: '凍結中の敵へのクリティカル率が50%になり、カリンの炎の秘薬の効果中はクリティカルのダメージが3倍になる' },
     cost: 11, hp: 1507, atk: 135, def: 60, interval: 0.9, range: 1.6, block: 1, redeploy: 25,
     passive: { name: '影の刃', type: 'crit', chance: 0.25, mult: 2, desc: '攻撃の25%が2倍ダメージ（クリティカル）になる' },
     lines: { deploy: '……斬るだけだ', skill: '影に沈め。影縫い' },
@@ -1628,10 +1628,6 @@ TD.partyEffectsText = function (party) {
     else a.push(`${who ? who + 'の' : ''}${label || names[type]}+${Math.round(v * 100)}%`);
   }
   for (const id of party) { const u = TD.CHARS[id] && TD.CHARS[id].unique; if (u && u.party) a.push(u.short); }
-  for (const [tid, t] of Object.entries(TD.TRIOS)) {
-    const n = t.members.filter(m => party.includes(m)).length;
-    if (n) a.push(`トリオ「${t.name}」${n}/${t.members.length}${n === t.members.length ? '（発動中）' : ''}`);
-  }
   const dark = party.filter(id => TD.CHARS[id] && TD.CHARS[id].unique && TD.CHARS[id].unique.type === 'darkPoison');
   if (dark.length) a.push(`毒（${dark.map(id => TD.CHARS[id].name).join('・')}）`);
   return a.join('・');
