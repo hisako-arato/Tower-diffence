@@ -71,6 +71,15 @@ window.TD = window.TD || {};
       this.pops = [];
       // party: [{ id, def }]（def は育成状態を反映済みのステータス）
       this.cards = party.map(p => ({ id: p.id, def: p.def, state: 'ready', cd: 0, unit: null }));
+      // トリオ：3人そろっていれば有効。カリンの秘薬は必要ゲージが減る
+      const ids = party.map(p => p.id);
+      for (const c of this.cards) {
+        c.def.trioOn = TD.trioActive(c.def, ids);
+        if (c.def.trioOn && c.def.trio.spMult && c.def.skill) c.def = Object.assign({}, c.def, { skill: Object.assign({}, c.def.skill, { sp: Math.round(c.def.skill.sp * c.def.trio.spMult) }) });
+      }
+      this.elixirT = 0;   // カリンの炎の秘薬の効果時間（トリオの強化条件）
+      const rg = this.cards.find(c => c.def.trioOn && c.def.trio.regen);
+      if (rg) { this.regenIds = new Set(rg.def.trio.regenFor); this.regenRate = rg.def.trio.regen; }
       this.selected = null;
       this.menuUnit = null;
       this.speed = 1;
@@ -389,10 +398,17 @@ window.TD = window.TD || {};
           for (const e of alive) this.hit(u, e, this.atkOf(u) * s.mult);
           this.fx.push({ type: 'flash', t: 0, dur: 0.5, color: 'rgba(255,240,170,' });
           break;
-        case 'freeze':
-          for (const e of alive) if (dist(e, u) <= s.radius * T) { e.frozen = s.dur; this.hit(u, e, this.atkOf(u) * s.mult); }
-          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 10, r1: s.radius * T, t: 0, dur: 0.6, color: '#bfe8ff', width: 6 });
+        case 'freeze': {
+          // トリオ（秘薬の効果中）：範囲1.5倍・凍結6秒（ボスは3分の1）
+          const tr = d.trioOn && this.elixirT > 0 && d.trio.skillRadius ? d.trio : null;
+          const R = s.radius * (tr ? tr.skillRadius : 1) * T;
+          for (const e of alive) if (dist(e, u) <= R) {
+            e.frozen = tr ? tr.skillDur / (e.def.boss ? 3 : 1) : s.dur; e.bound = false;
+            this.hit(u, e, this.atkOf(u) * s.mult);
+          }
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 10, r1: R, t: 0, dur: 0.6, color: '#bfe8ff', width: tr ? 10 : 6 });
           break;
+        }
         case 'reflect':
         case 'taunt':
           if (s.type === 'taunt') this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 8, r1: s.radius * T, t: 0, dur: 0.7, color: '#ff4a6a', width: 6 });
@@ -452,6 +468,7 @@ window.TD = window.TD || {};
           }
           break;
         case 'rally':
+          this.elixirT = Math.max(this.elixirT, s.dur);
           for (const a of this.units) {
             a.atkUpT = s.dur; a.atkUpMult = s.atkMult;
             const h = a.maxHp * s.ratio; a.hp = Math.min(a.maxHp, a.hp + h);
@@ -650,7 +667,13 @@ window.TD = window.TD || {};
       const du = src.def && src.def.unique && src.def.unique.type === 'darkPoison' ? src.def.unique : null;
       if (du && du.sub === 'hunter' && e.poisonT > 0) power *= du.mult;
       const cp = src.def && src.def.passive && src.def.passive.type === 'crit' ? src.def.passive : null;
-      if (cp && Math.random() < cp.chance) { power *= cp.mult; crit = true; }
+      // ノクス（トリオ）：凍結中の敵はクリティカル率50%、秘薬の効果中はクリティカル3倍
+      const nt = src.def && src.def.trioOn && src.def.trio.frozenCrit ? src.def.trio : null;
+      let critMult = 0;
+      if (cp && Math.random() < (nt && e.frozen > 0 ? Math.max(cp.chance, nt.frozenCrit) : cp.chance)) {
+        critMult = nt && this.elixirT > 0 ? nt.elixirCritMult : cp.mult;
+        power *= critMult; crit = true;
+      }
       const raw = power * m;
       const pc = src.def && src.def.passive && src.def.passive.type === 'pierce' ? src.def.passive : null;
       const edef = e.def.def * (e.defDownT > 0 ? e.defDownMult : 1) * (pc ? 1 - pc.ratio : 1);
@@ -663,7 +686,12 @@ window.TD = window.TD || {};
         bb.total += d; bb.n++;
         this.pop(e.x, e.y - e.size - 8 - (bb.n % 3) * 9, d.toLocaleString(), '#ffe066', { size: m > 1 ? 22 : 19, weak: m > 1, dur: 1.1, big: true });
       } else this.pop(e.x + (Math.random() * 10 - 5), e.y - e.size - 6, String(d), crit ? '#ff8a3a' : color, { size: crit || m > 1 ? 15 : 12, weak: m > 1 });
-      if (crit) this.pop(e.x, e.y - e.size - 20, 'CRITICAL', '#ff8a3a', { size: 9 });
+      if (crit) this.pop(e.x, e.y - e.size - 20, critMult >= 3 ? 'CRITICAL ×3' : 'CRITICAL', critMult >= 3 ? '#ff5a2a' : '#ff8a3a', { size: critMult >= 3 ? 11 : 9 });
+      // セレス（トリオ）：秘薬の効果中、通常攻撃が当たった敵を短く凍結（凍結中の敵には重ねない・ボスは3分の1）
+      const ct = src.def && src.def.trioOn && src.def.trio.freezeOnHit ? src.def.trio : null;
+      if (ct && this.elixirT > 0 && !e.dead && !(e.frozen > 0) && !this._burst) {
+        e.frozen = ct.freezeOnHit / (e.def.boss ? 3 : 1); e.bound = false;
+      }
       if (du && !e.dead) this.addPoison(e, du.stacks);
       this.checkKill(e);
     }
@@ -751,6 +779,7 @@ window.TD = window.TD || {};
       for (const f of this.fx) f.t += dt;
       this.fx = this.fx.filter(f => f.t < f.dur);
       if (this.glow && (this.glow.t += dt) >= this.glow.dur) this.glow = null;
+      if (this.elixirT > 0) this.elixirT -= dt;
       for (const p of this.pops) p.t += dt;
       this.pops = this.pops.filter(p => p.t < p.dur);
       this.enemies = this.enemies.filter(e => !e.dead && !e.leaked);
@@ -896,6 +925,8 @@ window.TD = window.TD || {};
           if (u.hp <= 0) { this.removeUnit(u, false); continue; }
         }
         if (u.atkUpT > 0) u.atkUpT -= dt;
+        // カリン（トリオ）：カリンとノクスは毎秒最大HPの2%回復
+        if (u.hp < u.maxHp && this.regenIds && this.regenIds.has(u.card.id)) u.hp = Math.min(u.maxHp, u.hp + u.maxHp * this.regenRate * dt);
         if (u.hasteT > 0) u.hasteT -= dt;
         if (u.shieldT > 0) u.shieldT -= dt;
         if (u.buff) { u.buffT -= dt; if (u.buffT <= 0) { u.buff = null; } }
