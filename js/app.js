@@ -40,7 +40,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     if (id === 'screen-stages') renderStages();
     if (id !== 'screen-party') $('#char-sheet').classList.remove('show');
     if (id === 'screen-party') renderParty();
-    if (id === 'screen-summon') renderSummon();
+    if (id === 'screen-summon') { summonFeat = null; renderSummon(); }
     if (id === 'screen-story') renderStoryList();
     if (id === 'screen-mission') renderMissions();
   }
@@ -752,14 +752,17 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   }
 
   // ---------- 召喚 ----------
-  let bannerIdx = 0;
+  let bannerIdx = 0, summonFeat = null;
   function renderSummon() {
     updateCurrency();
     const banners = TD.GACHA.banners, bn = banners[bannerIdx];
     if (bannerIdx >= banners.length) bannerIdx = 0;
     $('#banner-tabs').innerHTML = banners.length > 1 ? banners.map((b, i) => `<button class="${i === bannerIdx ? 'on' : ''}" data-bi="${i}">${esc(b.name)}</button>`).join('') : '';
     $('#banner-tabs').querySelectorAll('[data-bi]').forEach(b => b.onclick = () => { bannerIdx = +b.dataset.bi; renderSummon(); });
-    const feat = bn.pickup.length ? bn.pickup : TD.Gacha.pool(5);
+    // 召喚陣には★5の英雄をランダムに1人だけ大きく映す（召喚画面を開くたびに選び直す）
+    const cand = bn.pickup.length ? bn.pickup : TD.Gacha.pool(5);
+    if (!cand.includes(summonFeat)) summonFeat = cand[Math.floor(Math.random() * cand.length)];
+    const feat = [summonFeat];
     $('#banner').className = `banner el-${bn.element}`;
     $('#banner').innerHTML =
       `<div class="bn-circle"></div>` +

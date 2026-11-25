@@ -899,3 +899,8 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .set-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, .05); border: 1px solid var(--line); font-size: 14px; font-weight: 700; }
 .set-toggle small { display: block; font-size: 11px; font-weight: 500; color: var(--muted); margin-top: 2px; }
 .set-toggle input { width: 22px; height: 22px; accent-color: var(--gold); flex-shrink: 0; }
+
+/* 召喚陣：★5を1人だけ大きく */
+.bn-feat:not(.multi) .full-art { width: 290px; height: 400px; display: flex; align-items: center; justify-content: center; animation: bnFeatIn .6s ease both; }
+.bn-feat:not(.multi) .full-art img.char-img.full { max-height: 400px; max-width: 290px; filter: drop-shadow(0 0 18px var(--ec)); }
+@keyframes bnFeatIn { from { opacity: 0; transform: scale(.92) translateY(10px); } to { opacity: 1; transform: none; } }
