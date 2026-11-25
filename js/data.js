@@ -41,7 +41,7 @@ TD.CHARS = {
   celes: {
     name: 'セレス', title: '氷華の魔女', rarity: 4, kind: 'power', element: 'water', role: 'mage',
     trio: { id: 'frostflame', name: '氷華の共鳴', freezeOnHit: 0.8, skillRadius: 1.5, skillDur: 6,
-            desc: 'カリンの炎の秘薬の効果中、通常攻撃が当たった敵を0.8秒凍結させる。氷華結界の範囲が1.5倍・凍結時間が6秒になる（ボスへの凍結は3分の1）' },
+            desc: 'ノクス・カリンと共に編成されている場合、カリンの炎の秘薬の効果中は、通常攻撃が当たった敵を0.8秒凍結させ、氷華結界の範囲が1.5倍・凍結時間が6秒になる（ボスへの凍結は3分の1）' },
     cost: 12, hp: 891, atk: 127, def: 15, interval: 1.9, range: 2.6, splash: 0.9, redeploy: 30,
     skill: { name: '氷華結界', type: 'freeze', sp: 30, mult: 2, radius: 2.6, dur: 4,
              desc: '周囲の敵を4秒間凍結し、攻撃力200%のダメージ' },
@@ -63,7 +63,7 @@ TD.CHARS = {
   nox: {
     name: 'ノクス', title: '影の剣士', rarity: 4, kind: 'power', element: 'dark', role: 'sword',
     trio: { id: 'frostflame', name: '影氷の断罪', frozenCrit: 0.5, elixirCritMult: 3,
-            desc: '凍結中の敵へのクリティカル率が50%になる。カリンの炎の秘薬の効果中は、クリティカルのダメージが3倍になる' },
+            desc: 'セレス・カリンと共に編成されている場合、凍結中の敵へのクリティカル率が50%になり、カリンの炎の秘薬の効果中はクリティカルのダメージが3倍になる' },
     cost: 11, hp: 1507, atk: 135, def: 60, interval: 0.9, range: 1.6, block: 1, redeploy: 25,
     passive: { name: '影の刃', type: 'crit', chance: 0.25, mult: 2, desc: '攻撃の25%が2倍ダメージ（クリティカル）になる' },
     lines: { deploy: '……斬るだけだ', skill: '影に沈め。影縫い' },
@@ -199,8 +199,7 @@ TD.CHARS = {
   karin: {
     name: 'カリン', title: '火守りの薬師', rarity: 4, kind: 'tech', element: 'fire', role: 'priest',
     trio: { id: 'frostflame', name: '紅蓮の絆', spMult: 0.5, regen: 0.02, regenFor: ['karin', 'nox'],
-            desc: '炎の秘薬に必要なゲージが半分になる。さらにカリンとノクスは毎秒最大HPの2%回復する' },
-    unique: { name: '火守りの薬', type: 'poisonImmune', party: true, short: '毒無効', desc: '出撃メンバーにいると、味方全員が毒にかからない' },
+            desc: 'セレス・ノクスと共に編成されている場合、炎の秘薬に必要なゲージが半分になり、カリンとノクスは毎秒最大HPの2%回復する' },
     cost: 8, hp: 678, atk: 80, def: 11, interval: 1.6, range: 2.6, redeploy: 20,
     profile: '火山のふもとで薬屋を営む薬師。調合した秘薬は、飲めば力が湧いてくる。',
     skill: { name: '炎の秘薬', type: 'rally', sp: 24, dur: 10, atkMult: 1.3, ratio: 0.2,
@@ -1653,7 +1652,7 @@ TD.TRIOS = {
 TD.trioActive = (d, party) => !!(d && d.trio && TD.TRIOS[d.trio.id].members.every(m => party.includes(m)));
 TD.uniquesOf = function (d) {
   const a = [];
-  if (d.trio) { const t = TD.TRIOS[d.trio.id]; a.push({ name: d.trio.name, desc: d.trio.desc, note: `トリオ「${t.name}」：${t.members.map(m => TD.CHARS[m].name).join('・')}の3人を編成した時のみ` }); }
+  if (d.trio) a.push({ name: d.trio.name, desc: d.trio.desc, note: '' });
   if (d.partyFx) a.push({ name: d.partyFx.name, desc: d.partyFx.desc, note: '重ねがけ可' });
   for (const k of d.traits || []) if (TD.TRAITS[k]) a.push({ name: TD.TRAITS[k].name, icon: TD.TRAITS[k].icon, desc: TD.TRAITS[k].desc, note: '' });
   if (d.unique) a.push({ name: d.unique.name, desc: d.unique.desc, note: '' });
@@ -1668,7 +1667,7 @@ TD.DEBUG_COMMANDS = true;
 // ★4は「力型（power）」か「技型（tech）」のどちらか。技型はユニークスキルを持つ
 for (const [id, d] of Object.entries(TD.CHARS)) {
   if (d.rarity === 4 && !['power', 'tech'].includes(d.kind)) console.warn(`[データ] ★4の${d.name}（${id}）に kind（power/tech）がありません`);
-  if (d.kind === 'tech' && !d.unique && !d.partyFx) console.warn(`[データ] 技型の${d.name}（${id}）にユニークスキルがありません`);
+  if (d.kind === 'tech' && !d.unique && !d.partyFx && !d.trio) console.warn(`[データ] 技型の${d.name}（${id}）にユニークスキルがありません`);
 }
 TD.KIND_LABEL = { power: '力型', tech: '技型' };
 
