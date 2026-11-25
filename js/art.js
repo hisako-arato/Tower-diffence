@@ -18,6 +18,7 @@ TD.CUSTOM_ART = {
   xeno:     { src: 'assets/chars/xeno.webp',     ratio: 0.942, face: [0.47, 0.15, 0.28] },
   karin:    { src: 'assets/chars/karin.webp',    ratio: 0.953, face: [0.36, 0.26, 0.32] },
   celes:    { src: 'assets/chars/celes.webp',    ratio: 1.152, face: [0.49, 0.19, 0.24] },
+  nox:      { src: 'assets/chars/nox.webp',      ratio: 1.549, face: [0.48, 0.15, 0.24] },
   lydia:    { src: 'assets/chars/lydia.webp',    ratio: 1.000, face: [0.52, 0.14, 0.24] },
   soyo:     { src: 'assets/chars/soyo.webp',     ratio: 1.000, face: [0.44, 0.17, 0.26] },
   hayate:   { src: 'assets/chars/hayate.webp',   ratio: 0.887, face: [0.58, 0.11, 0.22] },
