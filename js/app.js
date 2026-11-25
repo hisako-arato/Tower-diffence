@@ -460,7 +460,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       const def = TD.charStats(id, save.chars[id]);
       if (i === 0) { // 副官補正
         const m = TD.ADJUTANT.statMult;
-        Object.assign(def, { hp: Math.round(def.hp * m), atk: Math.round(def.atk * m), def: Math.round(def.def * m), adjutant: true });
+        Object.assign(def, { hp: Math.round(def.hp * m), atk: Math.round(def.atk * m), def: Math.round(def.def * m), cost: Math.max(1, def.cost - TD.ADJUTANT.costDown), adjutant: true });
       }
       return { id, def };
     });
@@ -693,7 +693,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       (base.profile ? `<div class="cd-profile">${base.profile}</div>` : '') +
       `<div class="cd-role">${r.desc}</div>` +
       `<div class="cd-stats"><span>HP<b>${d.hp}${up('hp')}</b></span><span>${base.role === 'priest' ? '回復' : '攻撃'}<b>${dps(d.atk)}${next ? `<em>→${dps(next.atk)}</em>` : ''}</b></span><span>防御<b>${d.def}${up('def')}</b></span>` +
-      `<span>コスト<b>${d.cost}</b></span><span>射程<b>${pv && pv.type === 'range' ? `${+(d.range * pv.mult).toFixed(1)}<small>(${d.range}×${pv.mult})</small>` : d.range}</b></span>` +
+      `<span>コスト<b>${save.party[0] === id ? `${Math.max(1, d.cost - TD.ADJUTANT.costDown)}<small>(${d.cost}-${TD.ADJUTANT.costDown})</small>` : d.cost}</b></span><span>射程<b>${pv && pv.type === 'range' ? `${+(d.range * pv.mult).toFixed(1)}<small>(${d.range}×${pv.mult})</small>` : d.range}</b></span>` +
       (d.splash ? `<span>範囲<b>${pv && pv.type === 'splash' ? `${+(d.splash * pv.mult).toFixed(2)}マス<small>(${d.splash}×${pv.mult})</small>` : d.splash + 'マス'}</b></span>` : '') +
       (r.melee ? `<span>ブロック<b>${(b => b ? `${d.block + b}<small>(${d.block}+${b})</small>` : d.block)(TD.blockBonus(d, save.party))}</b></span>` : '') +
       `<span class="${r.melee || d.splash ? 'wide' : 'wide2'}">再配置<b>${Math.round(TD.redeployTime(d))}秒<small>（撤退時 ${TD.RETREAT.minCooldown}〜${Math.round(TD.redeployTime(d))}秒）</small></b></span></div>` +
@@ -709,7 +709,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       '';
     // 副官・編成ボタンは画面下に固定（キャラを切り替えても位置が変わらない）
     $('#sheet-foot').innerHTML = `<div class="btn-row party-btns">` +
-      (save.party[0] === id ? `<div class="adj-now">👑 副官に任命中<small>HP・攻撃・防御 +${Math.round((TD.ADJUTANT.statMult - 1) * 100)}%</small></div>` : `<button class="btn ghost" id="btn-adjutant">👑 副官に任命</button>`) +
+      (save.party[0] === id ? `<div class="adj-now">👑 副官に任命中<small>HP・攻撃・防御 +${Math.round((TD.ADJUTANT.statMult - 1) * 100)}%・コスト-${TD.ADJUTANT.costDown}</small></div>` : `<button class="btn ghost" id="btn-adjutant">👑 副官に任命</button>`) +
       `<button class="btn ${inParty ? 'ghost' : 'primary'}" id="btn-toggle-party">${inParty ? '編成から外す' : '編成に加える'}</button></div>`;
     box.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => {
       const to = +b.dataset.lv, cost = lvUpCost(prog.lv, to);

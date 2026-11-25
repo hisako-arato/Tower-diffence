@@ -78,6 +78,8 @@ window.TD = window.TD || {};
         if (c.def.trioOn && c.def.trio.spMult && c.def.skill) c.def = Object.assign({}, c.def, { skill: Object.assign({}, c.def.skill, { sp: Math.round(c.def.skill.sp * c.def.trio.spMult) }) });
       }
       this.elixirT = 0;   // カリンの炎の秘薬の効果時間（トリオの強化条件）
+      // ★5のカットイン用の立ち絵を先に読み込んでおく（初回の発動で絵が間に合わないのを防ぐ）
+      for (const c of this.cards) if (c.def.rarity === 5 && TD.CUSTOM_ART && TD.CUSTOM_ART[c.id]) { const im = new Image(); im.src = TD.CUSTOM_ART[c.id].src; }
       const rg = this.cards.find(c => c.def.trioOn && c.def.trio.regen);
       if (rg) { this.regenIds = new Set(rg.def.trio.regenFor); this.regenRate = rg.def.trio.regen; }
       this.selected = null;
@@ -586,7 +588,7 @@ window.TD = window.TD || {};
       c.className = `cutin el-${d.element}${star5 ? ' star5' : ''}`;
       c.innerHTML = star5
         ? `<div class="ci-band"></div><div class="ci-shine"></div>` +
-          `<div class="ci-art">${TD.fullArtHTML(u.card.id)}</div>` +
+          `<div class="ci-art">${TD.fullArtHTML(u.card.id).replace('loading="lazy"', 'loading="eager"')}</div>` +
           `<div class="ci-text"><div class="ci-stars">★★★★★</div><div class="ci-skill">${d.skill.name}</div><div class="ci-line">「${d.lines.skill}」</div></div>`
         : `<div class="ci-band"></div>` +
           `<div class="ci-face">${TD.portraitHTML(u.card.id, true)}</div>` +

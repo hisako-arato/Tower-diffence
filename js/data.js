@@ -33,7 +33,7 @@ TD.ROLES = {
 TD.CHARS = {
   lydia: {
     name: 'リディア', title: '聖剣の騎士姫', rarity: 5, element: 'light', role: 'sword',
-    cost: 14, hp: 2268, atk: 166, def: 85, interval: 0.9, range: 1.6, block: 2, redeploy: 30,
+    cost: 14, hp: 2268, atk: 166, def: 85, interval: 0.9, range: 1.6, block: 1, redeploy: 30,
     skill: { name: '天穹断', type: 'allStrike', sp: 30, mult: 5,
              desc: 'フィールド上の全ての敵に攻撃力500%の光属性ダメージ' },
     lines: { deploy: '聖剣の名にかけて！', skill: '天よ、裂けよ――天穹断！' },
@@ -56,7 +56,7 @@ TD.CHARS = {
   gald: {
     name: 'ガルド', title: '鉄壁の守護者', rarity: 3, element: 'light', role: 'shield',
     partyFx: { name: '守備隊の構え', type: 'def', add: 0.15, desc: '味方全員の防御+15%' },
-    cost: 15, hp: 2600, atk: 50, def: 140, interval: 1.4, range: 1.3, block: 3, redeploy: 30,
+    cost: 15, hp: 2600, atk: 50, def: 140, interval: 1.4, range: 1.3, block: 2, redeploy: 30,
     passive: { name: '隊長の号令', type: 'adjAtk', mult: 1.2, desc: '隣接するマスの味方の攻撃力+20%' },
     lines: { deploy: 'ここは一歩も通さん', skill: '我が盾は砕けぬ！不動の誓い！' },
   },
@@ -140,9 +140,9 @@ TD.CHARS = {
   },
   kagura: {
     name: 'カグラ', title: '紅鎖の星姫', rarity: 5, element: 'fire', role: 'shield',
-    cost: 17, hp: 4252, atk: 137, def: 227, interval: 1.4, range: 1.3, block: 4, redeploy: 35,
-    profile: '星の鎖を操る巫女。紅い鎖で6体もの敵を同時に食い止める。',
-    passive: { name: '紅鎖の陣', type: 'block', add: 2, beamImmune: true, desc: 'ブロック数+2（4→6）。ビームが効かない' },
+    cost: 17, hp: 4252, atk: 137, def: 227, interval: 1.4, range: 1.3, block: 2, redeploy: 35,
+    profile: '星の鎖を操る巫女。紅い鎖で4体もの敵を同時に食い止める。',
+    passive: { name: '紅鎖の陣', type: 'block', add: 2, beamImmune: true, desc: 'ブロック数+2（2→4）。ビームが効かない' },
     lines: { deploy: '……この先へは、行かせません', skill: '星よ、鎖となりて縛めよ' },
   },
   nereia: {
@@ -182,7 +182,7 @@ TD.CHARS = {
   },
   seira: {
     name: 'セイラ', title: '蒼波の剣聖', rarity: 5, element: 'water', role: 'sword',
-    cost: 15, hp: 2410, atk: 168, def: 100, interval: 0.9, range: 1.6, block: 2, redeploy: 30,
+    cost: 15, hp: 2410, atk: 168, def: 100, interval: 0.9, range: 1.6, block: 1, redeploy: 30,
     profile: '水の都の剣術道場を継ぐ剣聖。受けた刃をそのまま返す「水鏡」の使い手。',
     passive: { name: '常時水鏡', type: 'reflect', ratio: 0.5, defMult: 1.2, blockAdd: 1, desc: '受けたダメージの50%を常に相手に返す。防御+20%。ブロック数+1' },
     lines: { deploy: '参ります。……お覚悟を', skill: '水鏡に映るは、あなた自身の刃' },
@@ -1575,7 +1575,7 @@ TD.retreatCooldown = function (def, hpRatio) {
 // ========== 副官 ==========
 // 出撃メンバーの1人目は「召喚士の副官」。ステータス補正を受け、ホーム画面に表示される。
 // 副官以外のメンバーは、★の合計が starCap 以下になるようにしか編成できない。
-TD.ADJUTANT = { statMult: 1.2, starCap: 22 };
+TD.ADJUTANT = { statMult: 1.2, costDown: 5, starCap: 22 };
 TD.partyStars = party => party.slice(1).reduce((a, id) => a + (TD.CHARS[id] ? TD.CHARS[id].rarity : 0), 0);
 TD.partyValid = party => party.length > 0 && TD.partyStars(party) <= TD.ADJUTANT.starCap;
 
