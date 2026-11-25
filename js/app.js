@@ -791,17 +791,37 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   function openSecretMenu() {
     const body = modal(
       `<div class="pause-title">テスト用メニュー</div>` +
-      `<p class="small" style="text-align:center">召喚のテストプレイ用です</p>` +
+      `<p class="small" style="text-align:center">テストプレイ用です</p>` +
       `<div class="btn-col">` +
       `<button class="btn primary" data-dbg="stones">魔晶石 +3000</button>` +
       `<button class="btn ghost" data-dbg="stones30k">魔晶石 +30000</button>` +
       `<button class="btn ghost" data-dbg="books">経験の書 +10000</button>` +
+      `<button class="btn primary" data-dbg="allChars">全キャラを入手（イベント限定も含む）</button>` +
+      `<div class="brief-sec">所持キャラのレベルをまとめて変更</div>` +
+      `<div class="btn-row"><button class="btn ghost" data-dbg-lv="1">Lv1</button><button class="btn ghost" data-dbg-lv="30">Lv30</button><button class="btn ghost" data-dbg-lv="60">Lv60</button></div>` +
+      `<p class="small" style="text-align:center">レベル上限に足りない分は限界突破も上がります（Lv30＝突破1回、Lv60＝突破4回）</p>` +
       `<button class="btn danger" data-dbg="resetFrag">英雄の欠片をリセット（初期の5人だけに戻す）</button>` +
       `<button class="btn ghost" data-dbg="close">閉じる</button></div>`);
     const done = text => { persist(); updateCurrency(); renderSummon(); toast(text); };
     body.querySelector('[data-dbg=stones]').onclick = () => { save.stones += 3000; done('魔晶石 +3000'); };
     body.querySelector('[data-dbg=stones30k]').onclick = () => { save.stones += 30000; done('魔晶石 +30000'); };
     body.querySelector('[data-dbg=books]').onclick = () => { save.crystals += 10000; done('経験の書 +10000'); };
+    body.querySelector('[data-dbg=allChars]').onclick = () => {
+      let n = 0;
+      for (const id of Object.keys(TD.CHARS)) if (!save.owned.includes(id)) { save.owned.push(id); save.chars[id] = { lv: 1, lb: 0 }; n++; }
+      done(n ? `${n}人の英雄が仲間になりました（全${save.owned.length}人）` : 'すでに全員そろっています');
+      renderParty();
+    };
+    body.querySelectorAll('[data-dbg-lv]').forEach(b => b.onclick = () => {
+      const lv = +b.dataset.dbgLv;
+      for (const id of save.owned) {
+        const c = save.chars[id] || (save.chars[id] = { lv: 1, lb: 0 });
+        c.lb = Math.max(c.lb, Math.min(TD.GROWTH.maxLB, Math.ceil((lv - TD.GROWTH.baseMaxLv) / TD.GROWTH.lvPerLB)));
+        c.lv = Math.min(lv, TD.maxLv(c.lb));
+      }
+      done(`所持キャラ${save.owned.length}人をLv${lv}にしました`);
+      renderParty(); renderHome();
+    });
     body.querySelector('[data-dbg=resetFrag]').onclick = () => {
       if (!confirm('仲間と限界突破をリセットして、初期の5人だけに戻します。よろしいですか？')) return;
       const d = TD.Save.defaults();
