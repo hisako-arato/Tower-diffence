@@ -29,13 +29,15 @@
 | seira.webp | セイラ（★5 水・剣） | AI生成（背景除去：BiRefNet） |
 | xeno.webp | ゼノ（★4 闇・盾） | AI生成（背景除去：BiRefNet） |
 | karin.webp | カリン（★4 火・癒） | AI生成（背景除去：BiRefNet） |
-| shigure.webp | シグレ（★4 水・弓） | AI生成・オリジナル（背景除去：isnet-anime） |
 | lydia.webp | リディア（★5 光・剣） | AI生成（背景除去：BiRefNet） |
 | soyo.webp | ソヨ（★3 風・癒） | AI生成（背景除去：isnet-anime） |
 | hayate.webp | ハヤテ（★3 風・剣） | AI生成（背景除去：BiRefNet） |
 | zephyr.webp | ゼファー（★4 風・弓） | AI生成（背景除去：isnet-anime） |
 | viola.webp | ヴィオラ（★3 闇・魔） | AI生成（背景除去：BiRefNet） |
 | aster.webp | アステル（★4 光・盾） | AI生成（背景除去：BiRefNet） |
-| minamo.webp | ミナモ（★5 水・弓） | AI生成（背景除去：BiRefNet） |
+| minamo.webp | ミナモ（★5 水・弓） | AI生成・オリジナル（背景除去：isnet-anime。元はシグレ用の絵） |
+| celes.webp | セレス（★4 水・魔導士） | AI生成（背景除去：BiRefNet） |
 | ciel.webp | シエル（★4 光・魔導士、イベント限定） | AI生成（背景除去：BiRefNet） |
 | chloe.webp | クロエ（★4 闇・盾、イベント限定） | AI生成（背景除去：BiRefNet） |
+
+シグレ（★4 水・弓）は画像を使わず、SVGのオリジナルアート（番傘・雨）で描画しています。

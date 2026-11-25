@@ -17,14 +17,14 @@ TD.CUSTOM_ART = {
   seira:    { src: 'assets/chars/seira.webp',    ratio: 0.860, face: [0.46, 0.20, 0.26] },
   xeno:     { src: 'assets/chars/xeno.webp',     ratio: 0.942, face: [0.47, 0.15, 0.28] },
   karin:    { src: 'assets/chars/karin.webp',    ratio: 0.953, face: [0.36, 0.26, 0.32] },
-  shigure:  { src: 'assets/chars/shigure.webp',  ratio: 1.094, face: [0.40, 0.14, 0.32] },
+  celes:    { src: 'assets/chars/celes.webp',    ratio: 1.152, face: [0.49, 0.19, 0.24] },
   lydia:    { src: 'assets/chars/lydia.webp',    ratio: 1.000, face: [0.52, 0.14, 0.24] },
   soyo:     { src: 'assets/chars/soyo.webp',     ratio: 1.000, face: [0.44, 0.17, 0.26] },
   hayate:   { src: 'assets/chars/hayate.webp',   ratio: 0.887, face: [0.58, 0.11, 0.22] },
   zephyr:   { src: 'assets/chars/zephyr.webp',   ratio: 1.190, face: [0.55, 0.23, 0.32] },
   viola:    { src: 'assets/chars/viola.webp',    ratio: 1.024, face: [0.46, 0.27, 0.34] },
   aster:    { src: 'assets/chars/aster.webp',    ratio: 0.790, face: [0.48, 0.47, 0.30] },
-  minamo:   { src: 'assets/chars/minamo.webp',   ratio: 1.503, face: [0.47, 0.17, 0.30] },
+  minamo:   { src: 'assets/chars/minamo.webp',   ratio: 1.094, face: [0.40, 0.14, 0.32] },
   ciel:     { src: 'assets/chars/ciel.webp',     ratio: 1.860, face: [0.59, 0.13, 0.42] },
   chloe:    { src: 'assets/chars/chloe.webp',    ratio: 1.443, face: [0.59, 0.12, 0.30] },
 };
@@ -45,6 +45,11 @@ TD.ART = {
     skin: '#fff0ea', hair: ['#e6f4ff', '#8fb8e8'], hairStyle: 'long', bangs: 'side', eyes: '#6a5cff', eyeShape: 'cool', mouth: 'neutral',
     outfit: { type: 'gown', main: '#2a4aa0', sub: '#bfe8ff', trim: '#e8f6ff' },
     head: 'icecrown', weapon: 'icestaff', cape: ['#7fc4ff', '#2a5aa8'], aura: '#7fdcff', particles: 'ice',
+  },
+  shigure: {
+    skin: '#f6dcc8', hair: ['#3a4a72', '#151c30'], hairStyle: 'ponytail', bangs: 'covereye', eyes: '#4aa8ff', eyeShape: 'cool', mouth: 'smirk',
+    outfit: { type: 'coat', main: '#22345e', sub: '#6ab0e0', trim: '#d8e6f2' },
+    weapon: 'umbrella', aura: '#7ad8ff', particles: 'rain',
   },
   zephyr: {
     skin: '#fde3d0', hair: ['#6fe0c0', '#1f8a78'], hairStyle: 'wild', bangs: 'spiky', eyes: '#e0a020', eyeShape: 'sharp', mouth: 'smirk',
@@ -204,6 +209,7 @@ TD.ART = {
     pts.forEach(([x, y], i) => {
       const an = anim ? `<animate attributeName="opacity" values="0;1;0" dur="${2 + (i % 3) * .7}s" begin="${i * .35}s" repeatCount="indefinite"/>` : '';
       if (a.particles === 'feather') s += `<g transform="translate(${x} ${y}) rotate(${i * 40})" opacity=".9"><path d="M0 -9 Q6 -2 0 9 Q-6 -2 0 -9Z" fill="#fff"/><path d="M0 -8 L0 8" stroke="#f2c94c" stroke-width=".8"/>${an}</g>`;
+      else if (a.particles === 'rain') s += `<g transform="translate(${x} ${y}) rotate(14)"><path d="M0 -8 L0 8" stroke="#9fd8ff" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>${an}</g>`;
       else if (a.particles === 'ice') s += `<g transform="translate(${x} ${y}) rotate(${i * 25})"><path d="M0 -8 L4 0 L0 8 L-4 0Z" fill="#dff6ff" stroke="#7fdcff" stroke-width=".8"/>${an}</g>`;
       else s += `<g transform="translate(${x} ${y}) rotate(${i * 50})"><path d="M0 -7 Q7 0 0 7 Q-3 0 0 -7Z" fill="#8affc0" stroke="#1d6a4a" stroke-width=".6"/>${an}</g>`;
     });
@@ -428,6 +434,18 @@ TD.ART = {
       case 'bow':
         return `<g transform="translate(150 160)"><path d="M0 -56 Q30 0 0 56" fill="none" stroke="#8a5a2a" stroke-width="5" stroke-linecap="round"/><path d="M0 -56 L0 56" stroke="#e8e0d0" stroke-width="1"/>` +
           (r >= 4 ? `<circle cx="14" cy="0" r="4" fill="#5fd68a" stroke="#d8dde6" stroke-width="1.5"/>` : '') + `</g>`;
+      case 'umbrella': {   // 番傘（蛇の目）：肩にかついだ大きな和傘。柄の先は仕込み銃
+        const c1 = a.outfit.main, ring = '#f4f1e8';
+        const ribs = [-50, -34, -18, 0, 18, 34, 50].map(x => `<path d="M0 -34 L${x} ${-Math.round(Math.sqrt(Math.max(0, 1 - (x / 60) ** 2)) * 4)}" stroke="#1a2236" stroke-width=".8" opacity=".55"/>`).join('');
+        return `<g transform="translate(146 96) rotate(22)">` +
+          `<path d="M0 -36 L0 104" stroke="#6a4a2a" stroke-width="4" stroke-linecap="round"/>` +
+          `<path d="M-60 0 Q-46 -30 0 -36 Q46 -30 60 0 Q30 -6 0 -6 Q-30 -6 -60 0Z" fill="${c1}" stroke="#0e1424" stroke-width="1.5"/>` +
+          `<path d="M-42 -12 Q-30 -26 0 -28 Q30 -26 42 -12 Q22 -18 0 -18 Q-22 -18 -42 -12Z" fill="${ring}" opacity=".95"/>` +
+          `<path d="M-30 -18 Q-20 -24 0 -25 Q20 -24 30 -18 Q16 -21 0 -21 Q-16 -21 -30 -18Z" fill="${c1}"/>` + ribs +
+          `<circle cx="0" cy="-36" r="3.5" fill="#1a2236"/>` +
+          `<rect x="-3.5" y="70" width="7" height="30" rx="2" fill="#2a1a10"/><path d="M-3.5 76 h7 M-3.5 84 h7 M-3.5 92 h7" stroke="#c8a060" stroke-width="1.2"/>` +
+          (r >= 4 ? `<rect x="-2" y="100" width="4" height="12" fill="#8a96aa"/>` : '') + `</g>`;
+      }
       case 'crossbow':
         return `<g transform="translate(140 186)"><rect x="-4" y="-30" width="8" height="40" rx="2" fill="#6a4a2a"/><path d="M-26 -22 Q0 -34 26 -22" fill="none" stroke="#5a5a5a" stroke-width="5"/><path d="M-26 -22 L26 -22" stroke="#ddd" stroke-width="1"/><path d="M0 -40 L0 -14" stroke="#c8c8c8" stroke-width="2"/></g>`;
       case 'towershield':
