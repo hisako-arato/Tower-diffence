@@ -346,7 +346,8 @@ TD.CHARS = {
     name: 'ルナ', title: '月影の狩人', rarity: 3, element: 'dark', role: 'archer',
     unique: { name: '月下の呪毒', type: 'darkPoison', stacks: 1, sub: 'slow', mult: 0.8, desc: '攻撃するたびに敵に毒を1つためる。さらに毒状態の敵の移動速度-20%' },
     cost: 9, hp: 580, atk: 66, def: 12, interval: 1.0, range: 3.2, redeploy: 20,
-    passive: { name: '鈍化の矢', type: 'slowShot', mult: 0.7, dur: 3, desc: '攻撃した敵の移動速度を3秒間30%下げる' },
+    skill: { name: '月下の千矢', type: 'poisonVolley', sp: 26, base: 1.5, perStack: 0.35, addStacks: 1,
+             desc: 'フィールド上の毒状態の敵全員に矢を放つ。攻撃力150%＋毒1つにつき35%のダメージ（猛毒なら500%）を与え、さらに毒を1つためる' },
     lines: { deploy: '月が綺麗な夜ね', skill: '月の光は、外れない' },
   },
   viola: {
@@ -1615,11 +1616,11 @@ TD.ancientLb = frags => TD.ANCIENT.need.slice(1).filter(n => frags >= n).length;
 
 // ========== 状態異常：毒 ==========
 // 敵の毒：たまった数で段階が変わる（ボスも同じ。毒は防御を無視する）
-//   1〜4   毒   ：毎秒 最大HP × 0.1% × 毒の数
-//   5〜9   伝染 ：毎秒 最大HP × 0.15% × 毒の数。さらに毎秒、周り spreadRange マスの敵に毒を1つうつす
-//   10     猛毒 ：毎秒 最大HP × 1.5%（伝染も続く）
+//   1〜4   毒   ：毎秒 最大HP × 0.07% × 毒の数
+//   5〜9   伝染 ：毎秒 最大HP × 0.1% × 毒の数。さらに毎秒、周り spreadRange マスの敵に毒を1つうつす
+//   10     猛毒 ：毎秒 最大HP × 1%（伝染も続く）
 // 攻撃が途切れて dur 秒たつと、毒はすべて消える
-TD.POISON = { maxStacks: 10, dur: 5, spreadAt: 5, toxicAt: 10, rate: 0.001, spreadRate: 0.0015, toxicRate: 0.015, spreadRange: 1, spreadEvery: 1 };
+TD.POISON = { maxStacks: 10, dur: 5, spreadAt: 5, toxicAt: 10, rate: 0.0007, spreadRate: 0.001, toxicRate: 0.01, spreadRange: 1, spreadEvery: 1 };
 TD.poisonRate = n => n >= TD.POISON.toxicAt ? TD.POISON.toxicRate : n >= TD.POISON.spreadAt ? TD.POISON.spreadRate * n : TD.POISON.rate * n;
 // ========== ユニークスキル（編成）：出撃メンバーにいるだけで有効・重ねがけ可 ==========
 // filter（属性・職業）つきの効果は、当てはまる味方にだけ効く

@@ -396,6 +396,16 @@ window.TD = window.TD || {};
       const star5 = d.rarity >= 5;
       if (star5) this._burst = { src: u, total: 0, n: 0, x: 0, y: 0 };
       switch (s.type) {
+        case 'poisonVolley': {   // ルナ：毒状態の敵全員へ矢（毒が多いほど痛い）
+          const targets = alive.filter(e => e.poisonT > 0 && e.poison > 0);
+          for (const e of targets) {
+            const power = this.atkOf(u) * (s.base + s.perStack * e.poison);
+            this.shots.push({ x: u.x, y: u.y, target: e, power, src: u, speed: 700, color: '#c060ff', kind: 'archer', addPoison: s.addStacks });
+          }
+          if (!targets.length) this.pop(u.x, u.y - 26, '毒状態の敵がいない', '#c8a8ff', { size: 10 });
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 6, r1: 30, t: 0, dur: 0.5, color: '#c060ff', width: 5 });
+          break;
+        }
         case 'ancientStrike': {   // 英雄王リン：全ての敵に黒い斬撃＋味方全員を回復（限界突破で強くなる）
           const lb = Math.min(d.lb || 0, s.multByLb.length - 1);
           for (const e of alive) {
@@ -1233,6 +1243,7 @@ window.TD = window.TD || {};
             this.fx.push({ type: 'ring', x: t.x, y: t.y, r0: 4, r1: s.splash * T, t: 0, dur: 0.3, color: s.color });
           } else {
             this.hit(s.src, t, s.power, s.burst);
+            if (s.addPoison && !t.dead) this.addPoison(t, s.addPoison);
             if (s.burst) { this.finishBurst(s.burst, s.burst.shake); this.fx.push({ type: 'burst', x: t.x, y: t.y, t: 0, dur: 0.6, color: s.color, big: true }); }
             const sl = s.src.def && s.src.def.passive && s.src.def.passive.type === 'slowShot' ? s.src.def.passive : null;
             if (sl && !t.dead) { t.slowShotT = sl.dur; t.slowShotMult = sl.mult; }
