@@ -246,7 +246,7 @@ TD.CHARS = {
     unique: { name: '王の剣圧', type: 'cleave', count: 3, radius: 1,
               desc: '攻撃した敵の周り1マスにいる敵、最大3体にも同じダメージを与える' },
     skill: { name: '黒天・終焉斬', type: 'ancientStrike', sp: 30, multByLb: [3, 4, 5, 6, 7], healByLb: [0.2, 0.275, 0.35, 0.425, 0.5],
-             desc: 'フィールド上の全ての敵に攻撃力300〜700%の闇ダメージを与え、味方全員のHPを20〜50%回復（限界突破で強くなる）' },
+             desc: 'フィールド上の全ての敵に攻撃力300〜700%の闇ダメージを与え、味方全員のHPを20〜50%回復（本来の力を取り戻すほど強くなる）' },
     lines: { deploy: '……下がっていろ。ここから先は、王の戦場だ', skill: '天よ、地よ、ひれ伏せ――黒天・終焉斬' },
   },
   ciel: {
@@ -1289,7 +1289,7 @@ TD.ACHIEVEMENTS = [
   { id: 'a-own8',  name: '英雄を8人仲間にする',           goal: 8,  progress: s => s.owned.length, reward: { stones: 100 } },
   { id: 'a-own13', name: '英雄を13人仲間にする',          goal: 13, progress: s => s.owned.length, reward: { stones: 300 } },
   { id: 'a-lv20',  name: 'いずれかのキャラをLv20にする',   goal: 20, progress: s => Math.max(...Object.values(s.chars).map(c => c.lv)), reward: { stones: 50 } },
-  { id: 'a-lb',    name: 'キャラを限界突破する',           goal: 1,  progress: s => Math.max(...Object.values(s.chars).map(c => c.lb)), reward: { stones: 50 } },
+  { id: 'a-lb',    name: '英雄に本来の力を取り戻させる',           goal: 1,  progress: s => Math.max(...Object.values(s.chars).map(c => c.lb)), reward: { stones: 50 } },
   { id: 'a-win30', name: 'バトルに通算30回勝利する',        goal: 30, progress: s => s.stats.wins, reward: { stones: 100 } },
   { id: 'a-kill500', name: '敵を通算500体倒す',            goal: 500, progress: s => s.stats.kills, reward: { stones: 100 } },
   { id: 'a-login7', name: '通算7日ログインする',           goal: 7,  progress: s => s.login.total, reward: { stones: 100 } },
@@ -1400,7 +1400,7 @@ TD.EVENT = {
   ],
   // 交換所（limit = 期間中の交換上限）
   shop: [
-    { id: 'rune',  name: '★4 ルーン（加入 or 限界突破）', char: 'rune', cost: 300, limit: 2 },
+    { id: 'rune',  name: '★4 ルーン（加入／本来の力を取り戻す）', char: 'rune', cost: 300, limit: 2 },
     { id: 'st100', name: '魔晶石 ×100', reward: { stones: 100 }, cost: 120, limit: 5 },
     { id: 'cr1k',  name: '経験の書 ×1000', reward: { crystals: 1000 }, cost: 40, limit: 10 },
     { id: 'st30',  name: '魔晶石 ×30', reward: { stones: 30 }, cost: 40, limit: 99 },
@@ -1475,7 +1475,7 @@ TD.EVENT_MAID = {
     },
   ],
   shop: [
-    { id: 'ciel',  name: '★4 シエルの欠片（加入 or 限界突破）', char: 'ciel', cost: 200, limit: 5 },
+    { id: 'ciel',  name: '★4 シエルの欠片（加入／本来の力を取り戻す）', char: 'ciel', cost: 200, limit: 5 },
     { id: 'st100', name: '魔晶石 ×100', reward: { stones: 100 }, cost: 120, limit: 5 },
     { id: 'bk1k',  name: '経験の書 ×1000', reward: { crystals: 1000 }, cost: 40, limit: 10 },
   ],
@@ -1551,7 +1551,7 @@ TD.EVENT_MAID2 = {
     },
   ],
   shop: [
-    { id: 'chloe', name: '★4 クロエの欠片（加入 or 限界突破）', char: 'chloe', cost: 200, limit: 5 },
+    { id: 'chloe', name: '★4 クロエの欠片（加入／本来の力を取り戻す）', char: 'chloe', cost: 200, limit: 5 },
     { id: 'st100', name: '魔晶石 ×100', reward: { stones: 100 }, cost: 120, limit: 5 },
     { id: 'bk1k',  name: '経験の書 ×1000', reward: { crystals: 1000 }, cost: 40, limit: 10 },
   ],
@@ -1594,7 +1594,7 @@ TD.partyStars = party => party.slice(1).reduce((a, id) => a + (TD.CHARS[id] ? TD
 TD.partyValid = party => party.length > 0 && TD.partyStars(party) <= TD.ADJUTANT.starCap;
 
 // ========== 古代の英雄の欠片 ==========
-// 勝利したステージで落ちる。後半のステージほど多い。30個で召喚、50/70/90/100個で限界突破1〜4
+// 勝利したステージで落ちる。後半のステージほど多い。30個で召喚、50/70/90/100個で顕現1〜4（召喚の儀で選んだ時に進む）
 TD.ANCIENT = {
   hero: 'rin',
   need: [30, 50, 70, 90, 100],     // [加入, 突破1, 突破2, 突破3, 突破4]

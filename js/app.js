@@ -220,6 +220,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
 
   function storyUnlockHint(id) {
     if (id === 'rin-join') return '古代の英雄を召喚すると解放';
+    if (id.startsWith('rin-awaken-')) return `リンが本来の力を取り戻すと解放（顕現${id.slice(-1)}）`;
     if (id.startsWith('event-')) return 'クエスト＞イベントから見られます（開催期間中）';
     const [a, b, kind] = id.split('-');
     return kind === 'pre' ? `ステージ${a}-${b}に挑戦すると解放` : `ステージ${a}-${b}クリアで解放`;
@@ -401,7 +402,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
         const it = ev.shop.find(x => x.id === b.dataset.shop), r = TD.Live.exchange(save, it, ev);
         if (!r) return;
         persist(); renderStages();
-        if (it.char) toast(r.isNew ? `${TD.CHARS[it.char].name}が仲間になった！` : r.limitBreak ? `${TD.CHARS[it.char].name}が限界突破 ${r.limitBreak}！` : `魔晶石 ×${r.converted} に変換されました`);
+        if (it.char) toast(r.isNew ? `${TD.CHARS[it.char].name}が仲間になった！` : r.limitBreak ? `${TD.CHARS[it.char].name}が本来の力を取り戻した！（顕現 ${r.limitBreak}）` : `魔晶石 ×${r.converted} に変換されました`);
         else toast(`${TD.Live.rewardText(it.reward)} を受け取りました`);
       });
       add(box);
@@ -692,7 +693,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="cd-head"><div class="cd-full">${TD.fullArtHTML(id)}</div><div><div class="cd-title">${base.title}</div>` +
       `<div class="cd-name">${base.name}</div>${TD.starsHTML(base.rarity, 0)} ${TD.elemChip(base.element)}<span class="chip role">${r.name}</span></div></div>` +
       `<div class="cd-grow"><div class="cd-lv">Lv <b>${prog.lv}</b><small>/${maxLv}</small></div>` +
-      `<div class="cd-lb">限界突破 ${TD.lbHTML(prog.lb)}<small>${prog.lb < TD.GROWTH.maxLB ? (base.ancient ? `古代の英雄の欠片${TD.ANCIENT.need[prog.lb + 1]}個で突破` : '同じ英雄の欠片を召喚すると突破') : '欠片がすべて集まりました'}</small></div></div>` +
+      `<div class="cd-lb">顕現 ${TD.lbHTML(prog.lb)}<small>${prog.lb < TD.GROWTH.maxLB ? (base.ancient ? `古代の英雄の欠片${TD.ANCIENT.need[prog.lb + 1]}個で、召喚の儀から力を取り戻せる` : '同じ英雄の欠片を召喚すると、本来の力を取り戻す') : '本来の力をすべて取り戻しました'}</small></div></div>` +
       (base.profile ? `<div class="cd-profile">${base.profile}</div>` : '') +
       `<div class="cd-role">${r.desc}</div>` +
       `<div class="cd-stats"><span>HP<b>${d.hp}${up('hp')}</b></span><span>${base.role === 'priest' ? '回復' : '攻撃'}<b>${dps(d.atk)}${next ? `<em>→${dps(next.atk)}</em>` : ''}</b></span><span>防御<b>${d.def}${up('def')}</b></span>` +
@@ -704,7 +705,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="cd-levelup"><div class="cd-own"><i class="expbook"></i> 経験の書 <b>${save.crystals}</b></div>` +
       (prog.lv < maxLv
         ? `<div class="lv-row">${lvBtn('+1', prog.lv + 1)}${lvBtn('+5', prog.lv + 5)}${lvBtn('最大', Math.max(affordable, prog.lv + 1))}</div>`
-        : `<div class="lv-max">${prog.lb < TD.GROWTH.maxLB ? 'レベル上限です。限界突破で上限が上がります' : 'これ以上は上げられません'}</div>`) +
+        : `<div class="lv-max">${prog.lb < TD.GROWTH.maxLB ? 'レベル上限です。本来の力を取り戻すと上限が上がります' : 'これ以上は上げられません'}</div>`) +
       `</div>` +
       (base.skill ? `<div class="cd-skill"><div class="cd-skill-name">発動スキル「${base.skill.name}」<small>SP ${base.skill.sp}・タップで発動</small></div><div>${base.skill.desc}</div></div>` : '') +
       (base.passive ? `<div class="cd-skill passive"><div class="cd-skill-name">常時スキル「${base.passive.name}」<small>配置中ずっと有効</small></div><div>${base.passive.desc}</div></div>` : '') +
@@ -755,7 +756,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   }
 
   // ---------- 古代の英雄（英雄王リン） ----------
-  // 欠片を加える。加入済みなら限界突破を進め、100個を超えた分は魔晶石に変える
+  // 欠片を加える（本来の力を取り戻すのは召喚の儀で選んだ時）。100個を超えた分は魔晶石に変える
   function gainAncient(n) {
     const A = TD.ANCIENT, a = save.ancient, before = a.frags, max = A.need[A.need.length - 1];
     a.frags += n;
@@ -763,8 +764,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     if (before < max && a.frags > max) { const over = a.frags - max; save.stones += over * A.overflowStones; note = `余った欠片は魔晶石 +${over * A.overflowStones}`; }
     else if (before >= max) { save.stones += n * A.overflowStones; note = `魔晶石 +${n * A.overflowStones} に変換`; }
     if (owns(A.hero)) {
-      const c = save.chars[A.hero], lb = TD.ancientLb(a.frags);
-      if (lb > c.lb) { c.lb = lb; note = `${TD.CHARS[A.hero].title}${TD.CHARS[A.hero].name}が限界突破 ${lb}！`; }
+      const c = save.chars[A.hero];
+      if (c.lb < TD.ancientLb(a.frags) && TD.ancientLb(before) <= c.lb) note = `${TD.CHARS[A.hero].name}が本来の力を取り戻せます（召喚画面へ）`;
     } else if (before < A.need[0] && a.frags >= A.need[0]) note = '古代の英雄を召喚できます（召喚画面へ）';
     return { n, note };
   }
@@ -773,24 +774,45 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const next = A.need.find(x => x > f);
     $('#ancient-panel').innerHTML =
       `<div class="an-face">${TD.portraitHTML(id, false, !have)}</div>` +
-      `<div class="an-body"><div class="an-title">${have ? `${esc(d.title)}${esc(d.name)}` : '古代の英雄'}<small>${have ? `限界突破 ${save.chars[id].lb}/${TD.GROWTH.maxLB}` : '???'}</small></div>` +
+      `<div class="an-body"><div class="an-title">${have ? `${esc(d.title)}${esc(d.name)}` : '古代の英雄'}<small>${have ? `顕現 ${save.chars[id].lb}/${TD.GROWTH.maxLB}` : '???'}</small></div>` +
       `<div class="an-bar"><i style="width:${Math.min(100, f / max * 100)}%"></i>${A.need.map(x => `<em style="left:${x / max * 100}%"></em>`).join('')}</div>` +
-      `<div class="an-sub">古代の英雄の欠片 <b>${Math.min(f, max)}</b> / ${max}${next ? `・次は${next}個で${next === A.need[0] ? '召喚' : '限界突破'}` : '・すべて集まりました'}</div></div>` +
-      (!have && f >= A.need[0] ? `<button class="btn primary an-btn" data-ancient>古代の召喚</button>` : '');
+      `<div class="an-sub">古代の英雄の欠片 <b>${Math.min(f, max)}</b> / ${max}${next ? `・次は${next}個で${next === A.need[0] ? '召喚' : '力を取り戻せる'}` : '・すべて集まりました'}</div></div>` +
+      (!have && f >= A.need[0] ? `<button class="btn primary an-btn" data-ancient>古代の召喚</button>` : '') +
+      (have && save.chars[id].lb < TD.ancientLb(f) ? `<button class="btn primary an-btn" data-awaken>力を取り戻す</button>` : '');
     const b = $('#ancient-panel [data-ancient]');
     if (b) b.onclick = summonAncient;
+    const w = $('#ancient-panel [data-awaken]');
+    if (w) w.onclick = awakenAncient;
   }
   function summonAncient() {
     const A = TD.ANCIENT, id = A.hero;
     if (owns(id) || save.ancient.frags < A.need[0]) return;
     playStory('rin-join', () => {
       save.owned.push(id);
-      save.chars[id] = { lv: 1, lb: TD.ancientLb(save.ancient.frags) };
+      save.chars[id] = { lv: 1, lb: 0 };   // 力を取り戻すのは、召喚の儀で選んだ時だけ
       persist(); renderSummon();
       const d = TD.CHARS[id];
       const body = modal(`<div class="ancient-reveal"><div class="ar-art">${TD.fullArtHTML(id)}</div><div class="ar-stars">${'★'.repeat(d.rarity)}</div>` +
         `<div class="ar-name"><small>${esc(d.title)}</small>${esc(d.name)}</div><p>「${esc(d.lines.deploy)}」</p>` +
-        (save.chars[id].lb ? `<div class="ar-lb">集めた欠片で限界突破 ${save.chars[id].lb} の状態で加入しました</div>` : '') +
+        (TD.ancientLb(save.ancient.frags) ? `<div class="ar-lb">集めた欠片で、本来の力を取り戻せます。召喚の儀から「力を取り戻す」を選んでください</div>` : '') +
+        `<div class="btn-row"><button class="btn primary">閉じる</button></div></div>`, 'locked');
+      body.querySelector('button').onclick = closeModal;
+    });
+  }
+
+  // リンが本来の力を取り戻す（1段階ずつ。毎回ショートストーリーが流れる）
+  function awakenAncient() {
+    const A = TD.ANCIENT, id = A.hero, c = save.chars[id];
+    if (!c || c.lb >= TD.ancientLb(save.ancient.frags)) return;
+    const lb = c.lb + 1;
+    playStory(`rin-awaken-${lb}`, () => {
+      c.lb = lb;
+      persist(); renderSummon();
+      const d = TD.CHARS[id], st = TD.charStats(id, c);
+      const body = modal(`<div class="ancient-reveal"><div class="ar-art">${TD.fullArtHTML(id)}</div><div class="ar-stars">${'★'.repeat(d.rarity)}</div>` +
+        `<div class="ar-name"><small>${esc(d.title)}</small>${esc(d.name)}</div>` +
+        `<div class="ar-lb">本来の力を取り戻した！　顕現 ${TD.lbHTML(lb)}</div>` +
+        `<p class="small">レベル上限 ${TD.maxLv(lb)}・発動スキルの威力 ${Math.round(d.skill.multByLb[lb] * 100)}%</p>` +
         `<div class="btn-row"><button class="btn primary">閉じる</button></div></div>`, 'locked');
       body.querySelector('button').onclick = closeModal;
     });
@@ -849,7 +871,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<button class="btn ghost" data-dbg="ancient">古代の英雄の欠片 +30</button>` +
       `<div class="brief-sec">所持キャラのレベルをまとめて変更</div>` +
       `<div class="btn-row"><button class="btn ghost" data-dbg-lv="1">Lv1</button><button class="btn ghost" data-dbg-lv="30">Lv30</button><button class="btn ghost" data-dbg-lv="60">Lv60</button></div>` +
-      `<p class="small" style="text-align:center">レベル上限に足りない分は限界突破も上がります（Lv30＝突破1回、Lv60＝突破4回）</p>` +
+      `<p class="small" style="text-align:center">レベル上限に足りない分は顕現も進みます（Lv30＝顕現1、Lv60＝顕現4）</p>` +
       `<button class="btn danger" data-dbg="resetFrag">英雄の欠片をリセット（初期の5人だけに戻す）</button>` +
       `<button class="btn ghost" data-dbg="close">閉じる</button></div>`);
     const done = text => { persist(); updateCurrency(); renderSummon(); toast(text); };
@@ -874,7 +896,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       renderParty(); renderHome();
     });
     body.querySelector('[data-dbg=resetFrag]').onclick = () => {
-      if (!confirm('仲間と限界突破をリセットして、初期の5人だけに戻します。よろしいですか？')) return;
+      if (!confirm('仲間と顕現をリセットして、初期の5人だけに戻します。よろしいですか？')) return;
       const d = TD.Save.defaults();
       save.owned = [...d.owned];
       save.chars = JSON.parse(JSON.stringify(d.chars));
@@ -895,7 +917,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="pause-title">召喚の理</div><div class="small" style="text-align:center">英雄の欠片の呼び寄せやすさ</div>` +
       `<div class="rate-sum"><span>★5 ${sum(5)}</span><span>★4 ${sum(4)}</span><span>★3 ${sum(3)}</span></div>` +
       (rows.length ? `<table class="rate-table">${rows.map(r => `<tr><td>${TD.starsHTML(r.rarity, 0)}</td><td>${TD.CHARS[r.id].name}<small class="frag">残り欠片 ${TD.Gacha.fragmentsLeftOf(save, r.id)}</small></td><td>${(r.rate * 100).toFixed(2)}%</td></tr>`).join('')}</table>` : `<p class="small" style="text-align:center">すべての英雄の欠片が集まりました。</p>`) +
-      `<p class="small">・召喚陣は、大陸に散った<b>英雄の魂の欠片</b>を呼び寄せます。<br>・はじめての欠片はその英雄の姿となって仲間になり、2つ目からは英雄の力を高めます（限界突破・最大${TD.GROWTH.maxLB}回）。<br>・欠片がすべて集まった英雄は、もう召喚陣に現れません。同じ★の他の英雄が現れやすくなります。${maxedNames.length ? `<br>　欠片が集まりきった英雄：${maxedNames.map(esc).join('、')}` : ''}<br>・ある★の英雄の欠片がすべて集まると、その★はもう現れず、残りの★で呼び寄せやすさを分け合います。<br>・10回召喚では、★4以上の欠片が残っていれば、必ず1つ含まれます。<br>・すべての欠片が集まると、召喚はできなくなります。<br>・魔晶石はゲーム内で入手できるアイテムです。現実のお金は使いません。</p>` +
+      `<p class="small">・召喚陣は、大陸に散った<b>英雄の魂の欠片</b>を呼び寄せます。<br>・はじめての欠片はその英雄の姿となって仲間になり、2つ目からは英雄が本来の力を取り戻していきます（顕現・最大${TD.GROWTH.maxLB}段階）。<br>・欠片がすべて集まった英雄は、もう召喚陣に現れません。同じ★の他の英雄が現れやすくなります。${maxedNames.length ? `<br>　欠片が集まりきった英雄：${maxedNames.map(esc).join('、')}` : ''}<br>・ある★の英雄の欠片がすべて集まると、その★はもう現れず、残りの★で呼び寄せやすさを分け合います。<br>・10回召喚では、★4以上の欠片が残っていれば、必ず1つ含まれます。<br>・すべての欠片が集まると、召喚はできなくなります。<br>・魔晶石はゲーム内で入手できるアイテムです。現実のお金は使いません。</p>` +
       `<div class="btn-row"><button class="btn primary" onclick="document.getElementById('modal').classList.remove('show')">閉じる</button></div>`);
   });
 
@@ -932,7 +954,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       box.innerHTML = results.map((r, i) => {
         if (!r.id) return `<div class="sf-card r${r.rarity}" style="animation-delay:${results.length === 1 ? 0 : i * 0.12}s"><i class="gem big"></i><em class="conv">魔晶石+${r.converted}</em><div class="sf-name">魔晶石</div>${TD.starsHTML(r.rarity, 0)}</div>`;
         const d = TD.CHARS[r.id];
-        const tag = r.isNew ? '<em class="new">新たな英雄</em>' : r.limitBreak ? `<em class="lbup">限界突破${r.limitBreak}</em>` : `<em class="conv">魔晶石+${r.converted}</em>`;
+        const tag = r.isNew ? '<em class="new">新たな英雄</em>' : r.limitBreak ? `<em class="lbup">顕現${r.limitBreak}</em>` : `<em class="conv">魔晶石+${r.converted}</em>`;
         return `<div class="sf-card r${r.rarity}" style="animation-delay:${results.length === 1 ? 0 : i * 0.12}s">` +
           `${results.length === 1 ? TD.fullArtHTML(r.id) : TD.portraitHTML(r.id, true)}${tag}<div class="sf-name">${d.name}</div>${TD.starsHTML(r.rarity, 0)}` +
           (results.length === 1 ? `<div class="sf-title">${d.title}</div><div class="sf-line">「${d.lines.deploy}」</div>` : '') + `</div>`;
