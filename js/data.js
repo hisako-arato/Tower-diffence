@@ -337,7 +337,7 @@ TD.CHARS = {
   },
   glen: {
     name: 'グレン', title: '墓守の大男', rarity: 3, element: 'dark', role: 'shield',
-    unique: { name: '墓守の呪毒', type: 'darkPoison', stacks: 1, sub: 'maxStacks', max: 7, desc: '攻撃するたびに敵に毒を1つためる。さらに毒の最大数が5→7になる' },
+    unique: { name: '墓守の呪毒', type: 'darkPoison', stacks: 1, sub: 'spread', range: 1.5, desc: '攻撃するたびに敵に毒を1つためる。さらに毒が伝染する範囲が1.5マスに広がる' },
     cost: 12, hp: 2000, atk: 42, def: 105, interval: 1.4, range: 1.3, block: 2, redeploy: 25,
     passive: { name: '巨躯', type: 'block', add: 1, desc: 'ブロック数+1（2→3）' },
     lines: { deploy: '……眠りを妨げる者は、通さん', skill: 'ぬうぅん！' },
@@ -1614,8 +1614,13 @@ TD.ancientDrop = function (st, stars) {
 TD.ancientLb = frags => TD.ANCIENT.need.slice(1).filter(n => frags >= n).length;
 
 // ========== 状態異常：毒 ==========
-// 敵の毒：1つごとに毎秒、最大HPの perStack 分のダメージ。ボスは bossMult 倍。
-TD.POISON = { perStack: 0.01, maxStacks: 5, dur: 5, bossMult: 1 / 3 };
+// 敵の毒：たまった数で段階が変わる（ボスも同じ。毒は防御を無視する）
+//   1〜4   毒   ：毎秒 最大HP × 0.1% × 毒の数
+//   5〜9   伝染 ：毎秒 最大HP × 0.15% × 毒の数。さらに毎秒、周り spreadRange マスの敵に毒を1つうつす
+//   10     猛毒 ：毎秒 最大HP × 1.5%（伝染も続く）
+// 攻撃が途切れて dur 秒たつと、毒はすべて消える
+TD.POISON = { maxStacks: 10, dur: 5, spreadAt: 5, toxicAt: 10, rate: 0.001, spreadRate: 0.0015, toxicRate: 0.015, spreadRange: 1, spreadEvery: 1 };
+TD.poisonRate = n => n >= TD.POISON.toxicAt ? TD.POISON.toxicRate : n >= TD.POISON.spreadAt ? TD.POISON.spreadRate * n : TD.POISON.rate * n;
 // ========== ユニークスキル（編成）：出撃メンバーにいるだけで有効・重ねがけ可 ==========
 // filter（属性・職業）つきの効果は、当てはまる味方にだけ効く
 // filter.role / filter.element は1つ、または配列（いずれかに当てはまれば対象）

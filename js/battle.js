@@ -53,11 +53,11 @@ window.TD = window.TD || {};
       for (const p of party) { const u = p.def.unique; if (u && u.party) this.puniq[u.type] = u; }
       // 闇★3の毒：全体効果
       const P = TD.POISON;
-      this.poisonMax = P.maxStacks; this.poisonDur = P.dur; this.poisonSlow = 1;
+      this.poisonMax = P.maxStacks; this.poisonDur = P.dur; this.poisonSlow = 1; this.poisonSpread = P.spreadRange;
       for (const p of party) {
         const u = p.def.unique; if (!u || u.type !== 'darkPoison') continue;
         if (u.sub === 'duration') this.poisonDur = P.dur * u.mult;
-        if (u.sub === 'maxStacks') this.poisonMax = Math.max(this.poisonMax, u.max);
+        if (u.sub === 'spread') this.poisonSpread = Math.max(this.poisonSpread, u.range);
         if (u.sub === 'slow') this.poisonSlow = Math.min(this.poisonSlow, u.mult);
       }
       // 敵全体の移動速度ダウン（重ねがけ）
@@ -827,7 +827,16 @@ window.TD = window.TD || {};
         if (e.slowShotT > 0) e.slowShotT -= dt;
         if (e.poisonT > 0) {
           e.poisonT -= dt;
-          const P = TD.POISON, dmg = e.maxHp * P.perStack * e.poison * dt * (e.def.boss ? P.bossMult : 1);
+          const P = TD.POISON, dmg = e.maxHp * TD.poisonRate(e.poison) * dt;
+          // 伝染：毒が一定数たまった敵は、毎秒まわりの敵に毒を1つうつす（上限なし・ボスも同じ）
+          if (e.poison >= P.spreadAt && (e.spreadT = (e.spreadT == null ? P.spreadEvery : e.spreadT) - dt) <= 0) {
+            e.spreadT = P.spreadEvery;
+            for (const o of this.enemies) {
+              if (o === e || o.dead || o.leaked || dist(o, e) > this.poisonSpread * T) continue;
+              this.addPoison(o, 1);
+              this.fx.push({ type: 'beam', x: e.x, y: e.y, x2: o.x, y2: o.y, t: 0, dur: 0.35, color: '#c060ff' });
+            }
+          }
           e.hp -= dmg; e.poisonAcc = (e.poisonAcc || 0) + dmg;
           if (e.poisonAcc >= 1 && (e.poisonPopT = (e.poisonPopT || 0) - dt) <= 0) {
             this.pop(e.x + 6, e.y - e.size - 4, String(Math.round(e.poisonAcc)), '#b070ff', { size: 10 });
@@ -1481,9 +1490,16 @@ window.TD = window.TD || {};
           break;
         }
       }
-      if (e.poisonT > 0) { // 毒（つぶの数＝たまった数）
-        g.fillStyle = '#b060ff';
-        for (let i = 0; i < e.poison; i++) { g.beginPath(); g.arc(x - s + i * 5, e.y - s - 14, 2, 0, Math.PI * 2); g.fill(); }
+      if (e.poisonT > 0 && e.poison > 0) { // 毒：たまった数。段階で色が変わる（毒＝紫／伝染＝明るい紫＋輪／猛毒＝黒紫＋光）
+        const P = TD.POISON, tier = e.poison >= P.toxicAt ? 2 : e.poison >= P.spreadAt ? 1 : 0;
+        const bx = x - s - 4, by = e.y - s - 16;
+        g.fillStyle = ['#9a50e0', '#d050ff', '#2a0040'][tier];
+        if (tier === 2) { g.shadowColor = '#c040ff'; g.shadowBlur = 8; }
+        g.beginPath(); g.arc(bx, by, 6.5, 0, Math.PI * 2); g.fill(); g.shadowBlur = 0;
+        if (tier >= 1) { g.strokeStyle = tier === 2 ? '#e080ff' : '#fff'; g.lineWidth = 1.2; g.beginPath(); g.arc(bx, by, 8.5, 0, Math.PI * 2); g.stroke(); }
+        g.fillStyle = '#fff'; g.font = 'bold 8px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.fillText(tier === 2 ? '猛' : String(e.poison), bx, by + 0.5);
+        if (tier >= 1) { g.globalAlpha = 0.25 + 0.15 * Math.sin(e.walk * 2); g.fillStyle = tier === 2 ? '#40006a' : '#c060ff'; g.beginPath(); g.arc(x, y, s + 3, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1; }
       }
       if (e.slowShotT > 0) { g.strokeStyle = 'rgba(160,220,255,.8)'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, s + 2, 0.3, 1.3); g.stroke(); }
       if (e.defDownT > 0) { // 防御ダウン中
