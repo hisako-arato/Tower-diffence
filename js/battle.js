@@ -993,14 +993,22 @@ window.TD = window.TD || {};
         if (db && (u.beamN = (u.beamN || 0) + 1) % db.every === 0) { this.unitBeam(u, target, db); continue; }
         for (const tg of targets) {
           if (u.melee) {
-            this.hit(u, tg, this.atkOf(u));
-            // 英雄王リン「王の剣圧」：周り1マスの敵、最大3体にも同じダメージ（黒い斬撃）
+            // 英雄王リン「王の剣圧」：4回の追撃（黒い斬撃）
+            //   周りに敵がいない → 攻撃した敵へ50%×4連撃（合計200%）
+            //   周りに敵がいる   → 攻撃した敵へ100%、周りの敵へ100%ずつ、余った追撃は攻撃した敵へ25%ずつ
             if (du && du.type === 'cleave') {
-              this.fx.push({ type: 'blackSlash', x: tg.x, y: tg.y, t: 0, dur: 0.3, a: Math.atan2(tg.y - u.y, tg.x - u.x) });
               const around = this.enemies.filter(e => !e.dead && e !== tg && dist(e, tg) <= du.radius * T + 4).sort((a, b) => dist(a, tg) - dist(b, tg)).slice(0, du.count);
-              for (const e of around) { this.hit(u, e, this.atkOf(u)); this.fx.push({ type: 'blackSlash', x: e.x, y: e.y, t: 0, dur: 0.25, a: Math.random() * Math.PI, small: true }); }
+              const slash = (e, i, small) => this.fx.push({ type: 'blackSlash', x: e.x + (i - 1.5) * 5, y: e.y - (i - 1.5) * 4, t: -0.07 * i, dur: 0.3, a: Math.atan2(e.y - u.y, e.x - u.x) + (i % 2 ? 0.8 : -0.4), small });
+              if (!around.length) {
+                for (let i = 0; i < du.count && !tg.dead; i++) { this.hit(u, tg, this.atkOf(u) * du.soloMult); slash(tg, i, i > 0); }
+              } else {
+                this.hit(u, tg, this.atkOf(u)); slash(tg, 0, false);
+                for (const e of around) { this.hit(u, e, this.atkOf(u)); slash(e, 0, true); }
+                for (let i = around.length; i < du.count && !tg.dead; i++) { this.hit(u, tg, this.atkOf(u) * du.leftoverMult); slash(tg, i - around.length + 1, true); }
+              }
               continue;
             }
+            this.hit(u, tg, this.atkOf(u));
             this.fx.push({ type: 'slash', x: tg.x, y: tg.y, t: 0, dur: 0.2, color: TD.ELEMENTS[d.element].color, a: Math.atan2(tg.y - u.y, tg.x - u.x) });
           } else {
             this.shots.push({ x: u.x, y: u.y, target: tg, power: this.atkOf(u), src: u, splash: this.splashOf(u), speed: d.role === 'archer' ? 520 : 330,
@@ -1578,6 +1586,7 @@ window.TD = window.TD || {};
     }
 
     drawFx(g, f) {
+      if (f.t < 0) return;   // 少し遅れて出るエフェクト（連撃）
       const p = Math.max(0, Math.min(1, f.t / f.dur));   // 進行度は0〜1に収める（半径が負にならないように）
       switch (f.type) {
         case 'ring':
