@@ -239,12 +239,12 @@ TD.CHARS = {
   // ★6 古代の英雄：召喚の儀には出ず、全ステージで落ちる「古代の英雄の欠片」で加入・限界突破する
   rin: {
     name: 'リン', title: '英雄王', rarity: 6, ancient: true, element: 'dark', role: 'sword',
-    cost: 18, hp: 3190, atk: 236, def: 119, interval: 0.9, range: 1.6, block: 1, redeploy: 40,
-    // 限界突破ごとのステータス倍率（突破0回は★3より弱く、2回で★4、4回で★5を超える）
-    lbMult: [0.27, 0.45, 0.56, 0.8, 1],
+    cost: 18, hp: 4150, atk: 307, def: 155, interval: 0.9, range: 1.6, block: 1, redeploy: 40,
+    // 顕現ごとのステータス倍率（顕現0は★3より弱く、2で★4を超え、3で★5を超え、4で★5の約1.7倍）
+    lbMult: [0.21, 0.4, 0.52, 0.8, 1],
     profile: '千年前、召喚士と共に七つの災厄を封じた英雄たちの王。漆黒の剣は、天も地も等しく断つ。',
-    unique: { name: '王の剣圧', type: 'cleave', count: 3, radius: 1,
-              desc: '攻撃した敵の周り1マスにいる敵、最大3体にも同じダメージを与える' },
+    unique: { name: '王の剣圧', type: 'cleave', count: 4, radius: 1,
+              desc: '攻撃した敵の周り1マスにいる敵、最大4体にも同じダメージを与える' },
     skill: { name: '黒天・終焉斬', type: 'ancientStrike', sp: 30, multByLb: [3, 4, 5, 6, 7], healByLb: [0.2, 0.275, 0.35, 0.425, 0.5],
              desc: 'フィールド上の全ての敵に攻撃力300〜700%の闇ダメージを与え、味方全員のHPを20〜50%回復（本来の力を取り戻すほど強くなる）' },
     lines: { deploy: '……下がっていろ。ここから先は、王の戦場だ', skill: '天よ、地よ、ひれ伏せ――黒天・終焉斬' },
