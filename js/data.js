@@ -236,6 +236,19 @@ TD.CHARS = {
   },
 
   // ---------- イベント入手キャラ（召喚には出ない） ----------
+  // ★6 古代の英雄：召喚の儀には出ず、全ステージで落ちる「古代の英雄の欠片」で加入・限界突破する
+  rin: {
+    name: 'リン', title: '英雄王', rarity: 6, ancient: true, element: 'dark', role: 'sword',
+    cost: 18, hp: 3190, atk: 236, def: 119, interval: 0.9, range: 1.6, block: 1, redeploy: 40,
+    // 限界突破ごとのステータス倍率（突破0回は★3より弱く、2回で★4、4回で★5を超える）
+    lbMult: [0.27, 0.45, 0.56, 0.8, 1],
+    profile: '千年前、召喚士と共に七つの災厄を封じた英雄たちの王。漆黒の剣は、天も地も等しく断つ。',
+    unique: { name: '王の剣圧', type: 'cleave', count: 3, radius: 1,
+              desc: '攻撃した敵の周り1マスにいる敵、最大3体にも同じダメージを与える' },
+    skill: { name: '黒天・終焉斬', type: 'ancientStrike', sp: 30, multByLb: [3, 4, 5, 6, 7], healByLb: [0.2, 0.275, 0.35, 0.425, 0.5],
+             desc: 'フィールド上の全ての敵に攻撃力300〜700%の闇ダメージを与え、味方全員のHPを20〜50%回復（限界突破で強くなる）' },
+    lines: { deploy: '……下がっていろ。ここから先は、王の戦場だ', skill: '天よ、地よ、ひれ伏せ――黒天・終焉斬' },
+  },
   ciel: {
     name: 'シエル', title: '王城の星詠みメイド', rarity: 4, kind: 'tech', eventOnly: true, element: 'light', role: 'mage',
     cost: 13, hp: 820, atk: 120, def: 15, interval: 1.9, range: 2.6, splash: 0.9, redeploy: 30,
@@ -367,7 +380,7 @@ TD.GROWTH = {
   lvPerLB: 10,        // 限界突破1回ごとのレベル上限アップ
   maxLB: 4,           // 限界突破の最大回数
   statPerLv: 0.02,    // 1レベルごとのHP/攻撃/防御の上昇率
-  statPerLvByRarity: { 5: 0.025 },  // ★5は育てるほど大きく伸びる
+  statPerLvByRarity: { 5: 0.025, 6: 0.025 },  // ★5は育てるほど大きく伸びる
   statPerLB: 0.05,    // 限界突破1回ごとの上昇率
   expCost: lv => 40 + lv * 15,                  // Lv → Lv+1 に必要な経験の書
   dupStones: { 3: 5, 4: 20, 5: 60 },            // 限界突破上限を超えた重複の変換量
@@ -377,7 +390,8 @@ TD.maxLv = lb => TD.GROWTH.baseMaxLv + TD.GROWTH.lvPerLB * lb;
 TD.charStats = function (id, prog) {
   const d = TD.CHARS[id], p = prog || { lv: 1, lb: 0 }, G = TD.GROWTH;
   const perLv = (G.statPerLvByRarity && G.statPerLvByRarity[d.rarity]) || G.statPerLv;
-  const m = 1 + (p.lv - 1) * perLv + p.lb * G.statPerLB;
+  const m = d.lbMult ? (1 + (p.lv - 1) * perLv) * d.lbMult[Math.min(p.lb, d.lbMult.length - 1)]   // 古代の英雄：限界突破で大きく伸びる
+    : 1 + (p.lv - 1) * perLv + p.lb * G.statPerLB;
   return Object.assign({}, d, { hp: Math.round(d.hp * m), atk: Math.round(d.atk * m), def: Math.round(d.def * m), lv: p.lv, lb: p.lb });
 };
 
@@ -1578,6 +1592,26 @@ TD.retreatCooldown = function (def, hpRatio) {
 TD.ADJUTANT = { statMult: 1.2, costDown: 5, starCap: 22 };
 TD.partyStars = party => party.slice(1).reduce((a, id) => a + (TD.CHARS[id] ? TD.CHARS[id].rarity : 0), 0);
 TD.partyValid = party => party.length > 0 && TD.partyStars(party) <= TD.ADJUTANT.starCap;
+
+// ========== 古代の英雄の欠片 ==========
+// 勝利したステージで落ちる。後半のステージほど多い。30個で召喚、50/70/90/100個で限界突破1〜4
+TD.ANCIENT = {
+  hero: 'rin',
+  need: [30, 50, 70, 90, 100],     // [加入, 突破1, 突破2, 突破3, 突破4]
+  overflowStones: 5,              // 100個を超えた分は1個につき魔晶石5
+  // 章ごとの基本の落ちる数 [最小, 最大]。第1・2章は50%の確率で1個
+  byChapter: { 1: [0, 1], 2: [0, 1], 3: [1, 2], 4: [1, 2], 5: [2, 3] },
+};
+TD.ancientDrop = function (st, stars) {
+  const ch = +String(st.id)[0];
+  let [lo, hi] = TD.ANCIENT.byChapter[ch] || [1, 2];   // デイリー・イベントは1〜2個
+  let n = lo + Math.floor(Math.random() * (hi - lo + 1));
+  if (st.waves && st.waves.some(w => TD.ENEMIES[w.e].boss)) n++;   // ボス戦 +1
+  if (stars === 3) n++;                                             // ★3クリア +1
+  return n;
+};
+// 集めた数から、加入済みなら到達している限界突破の回数
+TD.ancientLb = frags => TD.ANCIENT.need.slice(1).filter(n => frags >= n).length;
 
 // ========== 状態異常：毒 ==========
 // 敵の毒：1つごとに毎秒、最大HPの perStack 分のダメージ。ボスは bossMult 倍。

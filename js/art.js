@@ -47,6 +47,11 @@ TD.ART = {
     outfit: { type: 'gown', main: '#2a4aa0', sub: '#bfe8ff', trim: '#e8f6ff' },
     head: 'icecrown', weapon: 'icestaff', cape: ['#7fc4ff', '#2a5aa8'], aura: '#7fdcff', particles: 'ice',
   },
+  rin: {   // 立ち絵が届くまでの仮の絵（既存の部品の組み合わせ）
+    skin: '#f2e0d6', hair: ['#2a2238', '#0c0814'], hairStyle: 'long', bangs: 'covereye', eyes: '#b050ff', eyeShape: 'sharp', mouth: 'neutral',
+    outfit: { type: 'armor', main: '#1a1424', sub: '#6a2aa8', trim: '#c8a0ff' },
+    head: 'tiara', weapon: 'katana', cape: ['#2a1040', '#0c0418'], aura: '#a050ff',
+  },
   shigure: {
     skin: '#f6dcc8', hair: ['#3a4a72', '#151c30'], hairStyle: 'ponytail', bangs: 'covereye', eyes: '#4aa8ff', eyeShape: 'cool', mouth: 'smirk',
     outfit: { type: 'coat', main: '#22345e', sub: '#6ab0e0', trim: '#d8e6f2' },

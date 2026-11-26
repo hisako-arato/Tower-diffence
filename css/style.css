@@ -904,3 +904,28 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .bn-feat:not(.multi) .full-art { width: 290px; height: 400px; display: flex; align-items: center; justify-content: center; animation: bnFeatIn .6s ease both; }
 .bn-feat:not(.multi) .full-art img.char-img.full { max-height: 400px; max-width: 290px; filter: drop-shadow(0 0 18px var(--ec)); }
 @keyframes bnFeatIn { from { opacity: 0; transform: scale(.92) translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* ========== ★6 古代の英雄 ========== */
+.pt.r6 { border-color: #b070ff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .6), 0 0 12px rgba(160, 80, 255, .9); }
+.char-card.r6 { border-color: #9a50ff; background: linear-gradient(180deg, rgba(120, 40, 200, .3), var(--panel) 60%); }
+.full-art.r6 { filter: drop-shadow(0 0 12px rgba(160, 80, 255, .7)); }
+.ancient-panel { display: flex; align-items: center; gap: 10px; margin: 6px 16px 10px; padding: 8px 10px; border-radius: 12px; border: 1px solid #6a3aa8; background: linear-gradient(90deg, rgba(60, 20, 100, .6), rgba(20, 10, 40, .6)); }
+.ancient-panel .an-face .pt { width: 44px; height: 44px; }
+.an-body { flex: 1; min-width: 0; }
+.an-title { font-size: 13px; font-weight: 900; color: #e8d0ff; }
+.an-title small { margin-left: 6px; font-size: 10px; color: var(--muted); font-weight: 600; }
+.an-bar { position: relative; height: 6px; margin: 5px 0 4px; border-radius: 3px; background: rgba(255, 255, 255, .1); overflow: visible; }
+.an-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: linear-gradient(90deg, #6a2aa8, #c070ff); }
+.an-bar em { position: absolute; top: -2px; width: 2px; height: 10px; margin-left: -1px; background: #f0d8ff; opacity: .7; }
+.an-sub { font-size: 10px; color: var(--muted); }
+.an-sub b { color: #e0b8ff; }
+.an-btn { min-height: 38px; padding: 6px 12px; font-size: 13px; white-space: nowrap; }
+.res-ancient { color: #e0b8ff; }
+.res-ancient b { display: block; font-size: 12px; color: #f0d0ff; }
+.ancient-frag { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; transform: rotate(45deg); background: linear-gradient(135deg, #e8c8ff, #6a2aa8); box-shadow: 0 0 6px #a050ff; }
+.ancient-reveal { text-align: center; }
+.ancient-reveal .ar-art .full-art { width: 220px; margin: 0 auto; display: block; }
+.ar-stars { color: #c890ff; letter-spacing: .12em; text-shadow: 0 0 8px #a050ff; }
+.ar-name { font-size: 26px; font-weight: 900; }
+.ar-name small { display: block; font-size: 12px; color: #c8a8ff; }
+.ar-lb { font-size: 12px; color: #e0b8ff; margin: 6px 0; }

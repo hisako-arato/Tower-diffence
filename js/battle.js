@@ -16,7 +16,7 @@ window.TD = window.TD || {};
   // '#rrggbb' → 'rgba(r,g,b,a)'
   const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
   // ★5スキルの画面の揺れの強さ
-  TD.STAR5_SHAKE = { allStrike: 7, drainHeal: 5, tidal: 7, vortex: 6, snipe: 9, meteor: 4 };
+  TD.STAR5_SHAKE = { ancientStrike: 11, allStrike: 7, drainHeal: 5, tidal: 7, vortex: 6, snipe: 9, meteor: 4 };
 
   class Battle {
     constructor(stage, party, els, onEnd) {
@@ -79,7 +79,7 @@ window.TD = window.TD || {};
       }
       this.elixirT = 0;   // カリンの炎の秘薬の効果時間（トリオの強化条件）
       // ★5のカットイン用の立ち絵を先に読み込んでおく（初回の発動で絵が間に合わないのを防ぐ）
-      for (const c of this.cards) if (c.def.rarity === 5 && TD.CUSTOM_ART && TD.CUSTOM_ART[c.id]) { const im = new Image(); im.src = TD.CUSTOM_ART[c.id].src; }
+      for (const c of this.cards) if (c.def.rarity >= 5 && TD.CUSTOM_ART && TD.CUSTOM_ART[c.id]) { const im = new Image(); im.src = TD.CUSTOM_ART[c.id].src; }
       const rg = this.cards.find(c => c.def.trioOn && c.def.trio.regen);
       if (rg) { this.regenIds = new Set(rg.def.trio.regenFor); this.regenRate = rg.def.trio.regen; }
       this.selected = null;
@@ -393,9 +393,24 @@ window.TD = window.TD || {};
       const alive = this.enemies.filter(e => !e.dead);
       const col = TD.ELEMENTS[d.element].color;
       // ★5の発動スキル：ダメージを大きく表示し、合計を集計する
-      const star5 = d.rarity === 5;
+      const star5 = d.rarity >= 5;
       if (star5) this._burst = { src: u, total: 0, n: 0, x: 0, y: 0 };
       switch (s.type) {
+        case 'ancientStrike': {   // 英雄王リン：全ての敵に黒い斬撃＋味方全員を回復（限界突破で強くなる）
+          const lb = Math.min(d.lb || 0, s.multByLb.length - 1);
+          for (const e of alive) {
+            this.hit(u, e, this.atkOf(u) * s.multByLb[lb]);
+            this.fx.push({ type: 'blackSlash', x: e.x, y: e.y, t: 0, dur: 0.6, a: Math.random() * Math.PI, big: true });
+          }
+          for (const a of this.units) {
+            const h = a.maxHp * s.healByLb[lb];
+            a.hp = Math.min(a.maxHp, a.hp + h);
+            this.pop(a.x, a.y - 18, '+' + Math.round(h), '#c8a8ff', { size: 12 });
+            this.fx.push({ type: 'ring', x: a.x, y: a.y, r0: 4, r1: 24, t: 0, dur: 0.5, color: '#b070ff' });
+          }
+          this.fx.push({ type: 'flash', t: 0, dur: 0.7, color: 'rgba(30,0,50,' });
+          break;
+        }
         case 'allStrike':
           for (const e of alive) this.hit(u, e, this.atkOf(u) * s.mult);
           this.fx.push({ type: 'flash', t: 0, dur: 0.5, color: 'rgba(255,240,170,' });
@@ -584,12 +599,12 @@ window.TD = window.TD || {};
     showCutin(u) {
       const d = u.def, c = this.els.cutin;
       if (TD.prefs && TD.prefs.cutin === false) return;   // 設定でカットインを省略
-      const star5 = d.rarity === 5;
+      const star5 = d.rarity >= 5;
       c.className = `cutin el-${d.element}${star5 ? ' star5' : ''}`;
       c.innerHTML = star5
         ? `<div class="ci-band"></div><div class="ci-shine"></div>` +
           `<div class="ci-art">${TD.fullArtHTML(u.card.id).replace('loading="lazy"', 'loading="eager"')}</div>` +
-          `<div class="ci-text"><div class="ci-stars">★★★★★</div><div class="ci-skill">${d.skill.name}</div><div class="ci-line">「${d.lines.skill}」</div></div>`
+          `<div class="ci-text"><div class="ci-stars">${'★'.repeat(d.rarity)}</div><div class="ci-skill">${d.skill.name}</div><div class="ci-line">「${d.lines.skill}」</div></div>`
         : `<div class="ci-band"></div>` +
           `<div class="ci-face">${TD.portraitHTML(u.card.id, true)}</div>` +
           `<div class="ci-text"><div class="ci-skill">${d.skill.name}</div><div class="ci-line">「${d.lines.skill}」</div></div>`;
@@ -979,6 +994,13 @@ window.TD = window.TD || {};
         for (const tg of targets) {
           if (u.melee) {
             this.hit(u, tg, this.atkOf(u));
+            // 英雄王リン「王の剣圧」：周り1マスの敵、最大3体にも同じダメージ（黒い斬撃）
+            if (du && du.type === 'cleave') {
+              this.fx.push({ type: 'blackSlash', x: tg.x, y: tg.y, t: 0, dur: 0.3, a: Math.atan2(tg.y - u.y, tg.x - u.x) });
+              const around = this.enemies.filter(e => !e.dead && e !== tg && dist(e, tg) <= du.radius * T + 4).sort((a, b) => dist(a, tg) - dist(b, tg)).slice(0, du.count);
+              for (const e of around) { this.hit(u, e, this.atkOf(u)); this.fx.push({ type: 'blackSlash', x: e.x, y: e.y, t: 0, dur: 0.25, a: Math.random() * Math.PI, small: true }); }
+              continue;
+            }
             this.fx.push({ type: 'slash', x: tg.x, y: tg.y, t: 0, dur: 0.2, color: TD.ELEMENTS[d.element].color, a: Math.atan2(tg.y - u.y, tg.x - u.x) });
           } else {
             this.shots.push({ x: u.x, y: u.y, target: tg, power: this.atkOf(u), src: u, splash: this.splashOf(u), speed: d.role === 'archer' ? 520 : 330,
@@ -1335,7 +1357,7 @@ window.TD = window.TD || {};
       TD.drawCharBust(g, u.card.id, u.x - 15, u.y - 15, 30);
       if (u.flash > 0) { g.fillStyle = 'rgba(255,80,80,.55)'; g.fillRect(u.x - 15, u.y - 15, 30, 30); }
       g.restore();
-      const rc = u.def.rarity === 5 ? '#f2c94c' : u.def.rarity === 4 ? '#c8a8ff' : '#e8e8f0';
+      const rc = u.def.rarity === 6 ? '#c070ff' : u.def.rarity === 5 ? '#f2c94c' : u.def.rarity === 4 ? '#c8a8ff' : '#e8e8f0';
       g.strokeStyle = '#1b1410'; g.lineWidth = 3.5;
       g.beginPath(); g.arc(u.x, u.y, 15, 0, Math.PI * 2); g.stroke();
       g.strokeStyle = rc; g.lineWidth = 2; g.stroke();
@@ -1571,6 +1593,18 @@ window.TD = window.TD || {};
             g.beginPath(); g.arc(f.x + Math.cos(a) * r, f.y + Math.sin(a) * r, (f.big ? 5 : 3) * (1 - p) + 1, 0, Math.PI * 2); g.fill();
           }
           g.globalAlpha = 1; break;
+        }
+        case 'blackSlash': {   // 黒い斬撃：紫に縁取られた漆黒の三日月が走る
+          const R = f.big ? 26 : f.small ? 11 : 17, n = f.small ? 1 : 3, a0 = f.a - 2.3 + p * 0.6;
+          g.save(); g.globalAlpha = 1 - p; g.lineCap = 'round';
+          for (let i = 0; i < n; i++) {
+            const off = (i - (n - 1) / 2) * 6;
+            g.strokeStyle = '#a050ff'; g.lineWidth = (f.big ? 9 : 6) * (1 - p * 0.5);
+            g.beginPath(); g.arc(f.x + off, f.y - off, R, a0, a0 + 1.9); g.stroke();
+            g.strokeStyle = '#0a0410'; g.lineWidth = (f.big ? 5 : 3.5) * (1 - p * 0.5);
+            g.beginPath(); g.arc(f.x + off, f.y - off, R, a0, a0 + 1.9); g.stroke();
+          }
+          g.restore(); g.globalAlpha = 1; break;
         }
         case 'laser': {   // ビーム本体：太い光の帯がしばらく残り、だんだん細く消える
           const fade = p < 0.15 ? 1 : 1 - (p - 0.15) / 0.85, wd = f.w * (p < 0.1 ? 0.6 + p * 4 : fade) + Math.sin(f.t * 40) * 1.5;

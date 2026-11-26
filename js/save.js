@@ -25,7 +25,8 @@ TD.Save = {
       achieved: {},       // 受け取り済みの通常ミッション
       login: { last: '', day: 0, total: 0 },              // ログイン記録（7日周期の何日目か）
       events: {},         // イベントごとの状態 { starfest: { pts, shop } }
-      opts: { cutin: true },   // 設定（cutin: スキルのカットインを表示する）
+      opts: { cutin: true },
+      ancient: { frags: 0 },   // 古代の英雄の欠片   // 設定（cutin: スキルのカットインを表示する）
     };
   },
 
@@ -40,6 +41,7 @@ TD.Save = {
     out.achieved = out.achieved || {};
     out.story = out.story || {};
     out.opts = Object.assign({ cutin: true }, s && s.opts);
+    out.ancient = Object.assign({ frags: 0 }, s && s.ancient);
     // ステージ構成の変更（旧1-4のボス戦 → 1-5）に合わせてデータを移す
     if (!(s && s.stageVer >= 2)) {
       if (out.cleared['1-4']) out.cleared['1-5'] = out.cleared['1-4'];
