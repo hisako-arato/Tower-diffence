@@ -37,6 +37,7 @@
 | aster.webp | アステル（★4 光・盾） | AI生成（背景除去：BiRefNet） |
 | minamo.webp | ミナモ（★5 水・弓） | AI生成・オリジナル（背景除去：isnet-anime。元はシグレ用の絵） |
 | celes.webp | セレス（★4 水・魔導士） | AI生成（背景除去：BiRefNet） |
+| rin.webp | リン（★6 闇・剣士） | AI生成（背景除去：BiRefNet-general） |
 | nox.webp | ノクス（★4 闇・剣士） | AI生成（背景除去：BiRefNet-general、短剣は元画像から手作業で復元） |
 | ciel.webp | シエル（★4 光・魔導士、イベント限定） | AI生成（背景除去：BiRefNet） |
 | chloe.webp | クロエ（★4 闇・盾、イベント限定） | AI生成（背景除去：BiRefNet） |

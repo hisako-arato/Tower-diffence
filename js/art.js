@@ -19,6 +19,7 @@ TD.CUSTOM_ART = {
   karin:    { src: 'assets/chars/karin.webp',    ratio: 0.953, face: [0.36, 0.26, 0.32] },
   celes:    { src: 'assets/chars/celes.webp',    ratio: 1.152, face: [0.49, 0.19, 0.24] },
   nox:      { src: 'assets/chars/nox.webp',      ratio: 1.549, face: [0.48, 0.15, 0.24] },
+  rin:      { src: 'assets/chars/rin.webp',      ratio: 1.043, face: [0.475, 0.2, 0.17] },
   lydia:    { src: 'assets/chars/lydia.webp',    ratio: 1.000, face: [0.52, 0.14, 0.24] },
   soyo:     { src: 'assets/chars/soyo.webp',     ratio: 1.000, face: [0.44, 0.17, 0.26] },
   hayate:   { src: 'assets/chars/hayate.webp',   ratio: 0.887, face: [0.58, 0.11, 0.22] },
@@ -47,7 +48,7 @@ TD.ART = {
     outfit: { type: 'gown', main: '#2a4aa0', sub: '#bfe8ff', trim: '#e8f6ff' },
     head: 'icecrown', weapon: 'icestaff', cape: ['#7fc4ff', '#2a5aa8'], aura: '#7fdcff', particles: 'ice',
   },
-  rin: {   // 立ち絵が届くまでの仮の絵（既存の部品の組み合わせ）
+  rin: {   // 画像が読み込めない時の予備の絵
     skin: '#f2e0d6', hair: ['#2a2238', '#0c0814'], hairStyle: 'long', bangs: 'covereye', eyes: '#b050ff', eyeShape: 'sharp', mouth: 'neutral',
     outfit: { type: 'armor', main: '#1a1424', sub: '#6a2aa8', trim: '#c8a0ff' },
     head: 'tiara', weapon: 'katana', cape: ['#2a1040', '#0c0418'], aura: '#a050ff',
