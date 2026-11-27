@@ -131,8 +131,8 @@ window.TD = window.TD || {};
       if (!force && now - (this._lastCardRefresh || 0) < 100) return;
       this._lastCardRefresh = now;
       for (const c of this.mcards || []) {
-        const out = c.limit && c.used >= c.limit;
-        c.el.classList.toggle('cooling', c.cdLeft > 0 || out);
+        const out = !!(c.limit && c.used >= c.limit);
+        c.el.classList.toggle('cooling', c.cdLeft > 0 || out);   // 第2引数は必ず真偽値に（undefined だと切り替わり続けてチカチカする）
         c.el.classList.toggle('nomana', this.mana < c.cost);
         c.coolEl.textContent = out ? '済' : c.cdLeft > 0 ? Math.ceil(c.cdLeft) : '';
       }
@@ -154,6 +154,14 @@ window.TD = window.TD || {};
     }
   }
   TD.ReverseBattle = ReverseBattle;
+
+  // 攻守反転のステージは、魔物が「下から上へ」攻め上がる向きにする（マップと英雄の配置を上下反転）
+  function flipStage(st) {
+    const rows = st.map.length;
+    st.map = st.map.slice().reverse();
+    for (const h of st.reverse.heroes) h.at = [h.at[0], rows - 1 - h.at[1]];
+    return st;
+  }
 
   // ---------- 試作ステージ ----------
   TD.REVERSE_STAGES = [
@@ -202,5 +210,5 @@ window.TD = window.TD || {};
       ],
       waves: [],
     },
-  ];
+  ].map(flipStage);
 })();
