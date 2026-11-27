@@ -14,10 +14,10 @@ TD.SPEAKERS = {
   seira:   { char: 'seira' },
   celes:   { char: 'celes' },
   shigure: { char: 'shigure' },
-  leviath: { name: 'リヴァイア', enemy: true },
+  leviath: { name: 'リヴァイア', art: 'leviath', title: '氷鱗の災厄' },
   glacies: { name: 'グラキエス', enemy: true },
   ignis:   { name: 'イグニス', enemy: true },
-  ordra:   { name: 'オルドラ', enemy: true },
+  ordra:   { name: 'オルドラ', art: 'ordra', title: '原初の災厄' },
   rin:     { char: 'rin' },
   // 第二部：まだ英雄として登場しない者は、art（TD.CUSTOM_ART のキー）と title で立ち絵を出す
   lumina_god: { name: 'ルミナ', art: 'lumina_god', title: '生命の循環の神' },

@@ -23,6 +23,8 @@ TD.CUSTOM_ART = {
   lumina_god: { src: 'assets/chars/lumina_god.webp', ratio: 0.989, face: [0.49, 0.15, 0.12] },
   astrea:     { src: 'assets/chars/astrea.webp',     ratio: 1.475, face: [0.57, 0.11, 0.16] },
   argos:      { src: 'assets/chars/argos.webp',      ratio: 1.021, face: [0.49, 0.15, 0.11] },
+  leviath:    { src: 'assets/chars/leviath.webp',    ratio: 1.36,  face: [0.47, 0.17, 0.14] },
+  ordra:      { src: 'assets/chars/ordra.webp',      ratio: 1.387, face: [0.47, 0.25, 0.13] },
   verumina:   { src: 'assets/chars/verumina.webp',   ratio: 1.346, face: [0.35, 0.14, 0.17] },
   rin:      { src: 'assets/chars/rin.webp',      ratio: 1.043, face: [0.475, 0.2, 0.17] },
   lydia:    { src: 'assets/chars/lydia.webp',    ratio: 1.000, face: [0.52, 0.14, 0.24] },

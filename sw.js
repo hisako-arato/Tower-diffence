@@ -1,6 +1,6 @@
 // オフライン対応用サービスワーカー
 // ファイルを更新したら VERSION を上げると、古いキャッシュが入れ替わる。
-const VERSION = 'v12.3.2';
+const VERSION = 'v12.3.3';
 const CACHE = 'kekkai-' + VERSION;
 const ASSETS = [
   './',
@@ -36,6 +36,8 @@ const ASSETS = [
   './assets/chars/astrea.webp',
   './assets/chars/argos.webp',
   './assets/chars/verumina.webp',
+  './assets/chars/leviath.webp',
+  './assets/chars/ordra.webp',
   './assets/chars/lydia.webp',
   './assets/chars/soyo.webp',
   './assets/chars/hayate.webp',

@@ -40,6 +40,8 @@
 | lumina_god.webp | ルミナ（神の姿・第二部） | AI生成（背景除去：BiRefNet-general） |
 | astrea.webp | 天秤の災厄 アストレア（第二部） | AI生成（背景除去：BiRefNet-general。左上の文字は消去） |
 | argos.webp | 千眼の災厄 アルゴス（第二部） | AI生成（背景除去：BiRefNet-general） |
+| leviath.webp | 氷鱗の災厄 リヴァイア（第一部の敵・第二部） | AI生成（背景除去：BiRefNet-general） |
+| ordra.webp | 原初の災厄 オルドラ（第一部の敵・第二部） | AI生成（背景除去：BiRefNet-general） |
 | verumina.webp | 腐蝕の災厄 ヴェルミナ（第二部） | AI生成（背景除去：BiRefNet-general） |
 | rin.webp | リン（★6 闇・剣士） | AI生成（背景除去：BiRefNet-general） |
 | nox.webp | ノクス（★4 闇・剣士） | AI生成（背景除去：BiRefNet-general、短剣は元画像から手作業で復元） |
