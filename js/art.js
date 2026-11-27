@@ -19,6 +19,11 @@ TD.CUSTOM_ART = {
   karin:    { src: 'assets/chars/karin.webp',    ratio: 0.953, face: [0.36, 0.26, 0.32] },
   celes:    { src: 'assets/chars/celes.webp',    ratio: 1.152, face: [0.49, 0.19, 0.24] },
   nox:      { src: 'assets/chars/nox.webp',      ratio: 1.549, face: [0.48, 0.15, 0.24] },
+  // 第二部の登場人物（まだ英雄としては登場しない。ストーリーの立ち絵に使う）
+  lumina_god: { src: 'assets/chars/lumina_god.webp', ratio: 0.989, face: [0.49, 0.15, 0.12] },
+  astrea:     { src: 'assets/chars/astrea.webp',     ratio: 1.475, face: [0.57, 0.11, 0.16] },
+  argos:      { src: 'assets/chars/argos.webp',      ratio: 1.021, face: [0.49, 0.15, 0.11] },
+  verumina:   { src: 'assets/chars/verumina.webp',   ratio: 1.346, face: [0.35, 0.14, 0.17] },
   rin:      { src: 'assets/chars/rin.webp',      ratio: 1.043, face: [0.475, 0.2, 0.17] },
   lydia:    { src: 'assets/chars/lydia.webp',    ratio: 1.000, face: [0.52, 0.14, 0.24] },
   soyo:     { src: 'assets/chars/soyo.webp',     ratio: 1.000, face: [0.44, 0.17, 0.26] },

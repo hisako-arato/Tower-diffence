@@ -19,6 +19,11 @@ TD.SPEAKERS = {
   ignis:   { name: 'イグニス', enemy: true },
   ordra:   { name: 'オルドラ', enemy: true },
   rin:     { char: 'rin' },
+  // 第二部：まだ英雄として登場しない者は、art（TD.CUSTOM_ART のキー）と title で立ち絵を出す
+  lumina_god: { name: 'ルミナ', art: 'lumina_god', title: '生命の循環の神' },
+  astrea:   { name: 'アストレア', art: 'astrea', title: '天秤の災厄' },
+  argos:    { name: 'アルゴス', art: 'argos', title: '千眼の災厄' },
+  verumina: { name: 'ヴェルミナ', art: 'verumina', title: '腐蝕の災厄' },
   blaire:  { char: 'blaire' },
   karin:   { char: 'karin' },
   meltia:  { char: 'meltia' },
@@ -530,6 +535,9 @@ TD.CHAPTERS = { 1: '第1章 結界のほころび', 2: '第2章 蒼の結界石'
     if (sp.char) {
       const d = TD.CHARS[sp.char];
       return `<div class="stand-char">${TD.fullArtHTML(sp.char)}<div class="stand-title">${d.title}</div></div>`;
+    }
+    if (sp.art && TD.CUSTOM_ART[sp.art]) {
+      return `<div class="stand-char"><span class="full-art"><img class="char-img full" src="${TD.CUSTOM_ART[sp.art].src}" alt="${sp.name}"></span><div class="stand-title">${sp.title || ''}</div></div>`;
     }
     if (sp.enemy) return `<div class="stand-enemy"><span class="se-body"><i></i><i></i></span></div>`;
     return '';
