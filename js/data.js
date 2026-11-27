@@ -440,6 +440,17 @@ TD.ENEMIES = {
   tideMage: { name: '潮の魔導士',   element: 'water', hp: 450,  atk: 85,  def: 10,  speed: 0.45, interval: 2.6, size: 12, shape: 'mage', ranged: 2.6 },
   leviath:  { name: '氷鱗の災厄 リヴァイア', element: 'water', hp: 4300, atk: 180, def: 110, speed: 0.27, interval: 2.0, size: 22, shape: 'boss', life: 5, boss: true,
               aoe: { every: 12, radius: 1.5, mult: 0.25, warn: 2.0, below: 0.7 } },
+  // ---------- 第二部 第1章（災厄の残響：黒い靄をまとい半ば透けた姿。倒すと魂が光となって還る） ----------
+  echoWolf:   { name: '残響の魔狼',   element: 'dark', hp: 420,  atk: 80,  def: 15,  speed: 1.2,  interval: 1.0, size: 12, shape: 'wolf', echo: true },
+  echoGoblin: { name: '残響の小鬼',   element: 'dark', hp: 600,  atk: 95,  def: 30,  speed: 0.7,  interval: 1.2, size: 12, shape: 'goblin', echo: true },
+  echoKnight: { name: '残響の骸騎士', element: 'dark', hp: 1800, atk: 170, def: 120, speed: 0.4,  interval: 1.8, size: 14, shape: 'skeleton', echo: true },
+  echoMage:   { name: '残響の魔導兵', element: 'dark', hp: 620,  atk: 105, def: 20,  speed: 0.45, interval: 2.5, size: 12, shape: 'mage', ranged: 2.6, echo: true },
+  echoShade:  { name: '残響の亡霊',   element: 'dark', hp: 560,  atk: 75,  def: 10,  speed: 0.95, interval: 1.5, size: 11, shape: 'ghost', flying: true, ranged: 1.5, echo: true },
+  vargEcho:    { name: '災厄の残響 ヴァルグ', element: 'dark', hp: 6000, atk: 220, def: 100, speed: 0.45, interval: 1.6, size: 22, shape: 'boss', life: 5, boss: true, echo: true, soul: true },
+  glaciesEcho: { name: '凍嵐の残響 グラキエス', element: 'wind', hp: 5200, atk: 190, def: 110, speed: 0.28, interval: 2.0, size: 22, shape: 'boss', life: 5, boss: true, echo: true, soul: true,
+                 aoe: { every: 11, radius: 1.5, mult: 0.25, warn: 2.0 }, blizzard: { first: 6, every: 14, dur: 6, mult: 0.7 } },
+  ignisEcho:   { name: '灼炎の残響 イグニス', element: 'fire', hp: 5600, atk: 230, def: 130, speed: 0.27, interval: 2.0, size: 22, shape: 'boss', life: 5, boss: true, echo: true, soul: true,
+                 aoe: { every: 10, radius: 1.6, mult: 0.3, warn: 2.0 }, burnOnDeath: 10 },
   // ---------- ビームを撃つ敵（第3章以降） ----------
   // beam: first 最初の発射までの秒数 / every 間隔 / charge 溜め秒数（その場に留まる）/ range 狙える距離（マス）
   //       width ビームの幅（マス）/ mult 攻撃力の倍率 / dur ビームの見た目が残る秒数
@@ -1239,6 +1250,88 @@ TD.STAGES = [
   },
 ];
 
+// ===================== 第二部 第1章 ほころぶ記憶（第一部の地を逆にたどる。マップは第一部のものを使う） =====================
+(function () {
+  const C = '第二部 第1章 ほころぶ記憶', mapOf = id => TD.STAGES.find(s => s.id === id).map.slice();
+  TD.STAGES.push(
+    {
+      id: 'Ⅱ1-1', chapter: C, name: '平和の夢', part: 2,
+      brief: '大結界が戻って半年。王都郊外の街道に、黒い靄をまとった魔狼が現れました。最後に、討たれたはずのヴァルグの残響が現れます。とても素早いので注意してください。',
+      lives: 10, mana: 22, hpScale: 3.7, reward: 120, recLv: 50, map: mapOf('1-1'),
+      waves: [
+        { t: 3, e: 'echoWolf', n: 6, gap: 1 },
+        { t: 14, e: 'echoGoblin', n: 6, gap: 1.2 },
+        { t: 26, e: 'echoShade', n: 4, gap: 1.4 },
+        { t: 36, e: 'echoKnight', n: 2, gap: 3 },
+        { t: 46, e: 'echoWolf', n: 8, gap: 0.8 },
+        { t: 58, e: 'vargEcho', n: 1, gap: 0 },
+        { t: 62, e: 'echoWolf', n: 6, gap: 1 },
+      ],
+    },
+    {
+      id: 'Ⅱ1-2', chapter: C, name: '凍らない湖', part: 2,
+      brief: 'かつてリヴァイアが眠っていた湖。氷は溶け、湖面は静かに凪いでいます。残響の群れが湖畔の道を進んできます。',
+      lives: 10, mana: 22, hpScale: 3.9, reward: 120, recLv: 52, map: mapOf('2-1'),
+      waves: [
+        { t: 3, e: 'echoGoblin', n: 6, gap: 1.1 },
+        { t: 12, e: 'echoMage', n: 4, gap: 1.6 },
+        { t: 22, e: 'echoKnight', n: 3, gap: 2.5 },
+        { t: 32, e: 'echoShade', n: 6, gap: 1.2 },
+        { t: 42, e: 'abyssEye', n: 2, gap: 2 },
+        { t: 48, e: 'echoWolf', n: 8, gap: 0.8 },
+        { t: 58, e: 'echoKnight', n: 3, gap: 2 },
+      ],
+    },
+    {
+      id: 'Ⅱ1-3', chapter: C, name: '凍嵐の残響', part: 2, theme: 'snow',
+      brief: '白銀の古城に、グラキエスの残響が現れます。吹雪が吹き荒れると、しばらくの間、味方全員の射程が縮みます。守る拠点は2つです。',
+      lives: 10, mana: 23, hpScale: 4.0, reward: 120, recLv: 54, map: mapOf('3-5'),
+      waves: [
+        { t: 3, e: 'echoWolf', n: 4, gap: 1.2, s: 0, g: 0 },
+        { t: 5, e: 'echoShade', n: 3, gap: 1.6, s: 1, g: 1 },
+        { t: 16, e: 'echoKnight', n: 2, gap: 3, s: 0, g: 1 },
+        { t: 22, e: 'echoMage', n: 3, gap: 2, s: 1, g: 0 },
+        { t: 34, e: 'frostEye', n: 2, gap: 2, s: 'alt' },
+        { t: 46, e: 'glaciesEcho', n: 1, gap: 0, s: 0, g: 0 },
+        { t: 50, e: 'echoShade', n: 4, gap: 1.4, s: 1, g: 1 },
+        { t: 62, e: 'echoWolf', n: 5, gap: 1.1, s: 1, g: 0 },
+      ],
+    },
+    {
+      id: 'Ⅱ1-4', chapter: C, name: '喰らう炎', part: 2, theme: 'lava',
+      brief: '紅蓮の火口に、イグニスの残響が現れます。イグニスがいる間に倒された味方の場所は燃え上がり、しばらく配置できません。',
+      lives: 10, mana: 23, hpScale: 3.6, reward: 120, recLv: 56, map: mapOf('4-5'),
+      waves: [
+        { t: 3, e: 'echoGoblin', n: 6, gap: 1, s: 'alt' },
+        { t: 12, e: 'echoMage', n: 4, gap: 1.5, s: 'alt' },
+        { t: 22, e: 'echoKnight', n: 2, gap: 1, s: 'alt' },
+        { t: 30, e: 'flameEye', n: 1, gap: 0, s: 1 },
+        { t: 40, e: 'ignisEcho', n: 1, gap: 0, s: 0 },
+        { t: 44, e: 'echoWolf', n: 8, gap: 1, s: 'alt' },
+        { t: 56, e: 'echoKnight', n: 2, gap: 2, s: 'alt' },
+        { t: 60, e: 'echoGoblin', n: 6, gap: 1, s: 'alt' },
+      ],
+    },
+    {
+      id: 'Ⅱ1-5', chapter: C, name: '原初の玉座跡', part: 2, theme: 'abyss',
+      brief: 'オルドラが倒れた深淵の最奥。黒い結晶を守るように、残響の大群が押し寄せます。最後まで拠点を守り抜きましょう。',
+      lives: 10, mana: 24, hpScale: 4.3, reward: 150, recLv: 58, map: mapOf('5-1'),
+      waves: [
+        { t: 3, e: 'echoWolf', n: 8, gap: 0.8 },
+        { t: 12, e: 'echoKnight', n: 3, gap: 2 },
+        { t: 20, e: 'abyssPriest', n: 1, gap: 0 },
+        { t: 22, e: 'echoMage', n: 4, gap: 1.4 },
+        { t: 32, e: 'echoShade', n: 6, gap: 1 },
+        { t: 40, e: 'abyssEye', n: 2, gap: 2 },
+        { t: 46, e: 'abyssKnight', n: 3, gap: 2 },
+        { t: 54, e: 'abyssPriest', n: 1, gap: 0 },
+        { t: 56, e: 'echoWolf', n: 10, gap: 0.6 },
+        { t: 64, e: 'echoKnight', n: 4, gap: 1.5 },
+      ],
+    },
+  );
+})();
+
 // ホーム画面の精霊ルミナのセリフ
 TD.NAVI_LINES = [
   'おかえりなさい、{name}さま！',
@@ -1601,10 +1694,10 @@ TD.ANCIENT = {
   need: [30, 50, 70, 90, 100],     // [加入, 突破1, 突破2, 突破3, 突破4]
   overflowStones: 5,              // 100個を超えた分は1個につき魔晶石5
   // 章ごとの基本の落ちる数 [最小, 最大]。第1・2章は50%の確率で1個
-  byChapter: { 1: [0, 1], 2: [0, 1], 3: [1, 2], 4: [1, 2], 5: [2, 3] },
+  byChapter: { 1: [0, 1], 2: [0, 1], 3: [1, 2], 4: [1, 2], 5: [2, 3], 6: [2, 3] },   // 6＝第二部
 };
 TD.ancientDrop = function (st, stars) {
-  const ch = +String(st.id)[0];
+  const ch = st.part === 2 ? 6 : +String(st.id)[0];
   let [lo, hi] = TD.ANCIENT.byChapter[ch] || [1, 2];   // デイリー・イベントは1〜2個
   let n = lo + Math.floor(Math.random() * (hi - lo + 1));
   if (st.waves && st.waves.some(w => TD.ENEMIES[w.e].boss)) n++;   // ボス戦 +1

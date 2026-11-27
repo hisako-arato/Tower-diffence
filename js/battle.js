@@ -89,6 +89,8 @@ window.TD = window.TD || {};
       this.slowT = 0;
       this.shakeT = 0; this.shakeMag = 0;   // 画面の揺れ
       this.showers = [];                    // 流星雨（降っている最中のスキル）
+      this.blizzardT = 0; this.blizzardMult = 1;   // 吹雪：味方の射程が縮む
+      this.burnTiles = [];                  // 燃えているマス（配置できない）
       this.meteors = [];                    // 落下中の隕石
       this.glow = null;                     // ★5スキル後の属性色の残光
       this._burst = null;                   // ★5スキルのダメージ集計
@@ -296,6 +298,7 @@ window.TD = window.TD || {};
     canDeploy(card, cx, cy) {
       if (cx < 0 || cy < 0 || cx >= COLS || cy >= ROWS) return false;
       if (this.units.some(u => u.cx === cx && u.cy === cy)) return false;
+      if (this.burnTiles.some(b => b.cx === cx && b.cy === cy)) return false;   // 燃えているマス
       if (this.mana < card.def.cost) return false;
       const ch = this.grid[cy][cx];
       return TD.ROLES[card.def.role].melee ? (ch === '#' || ch === 'a' || ch === 'b') : ch === '.';
@@ -337,6 +340,9 @@ window.TD = window.TD || {};
         this.pop(u.x, u.y - 20, `撤退 +${refund}`, '#9be7ff', { size: 12 });
       } else {
         card.cd = TD.redeployTime(card.def) * (this.puniq.deathRedeploy ? this.puniq.deathRedeploy.mult : 1);
+        // イグニスの残響：倒れたキャラのいたマスが燃え、しばらく配置できない
+        const burner = this.enemies.find(e => !e.dead && e.def.burnOnDeath);
+        if (burner) this.burnTiles.push({ cx: u.cx, cy: u.cy, t: burner.def.burnOnDeath });
         this.fx.push({ type: 'burst', x: u.x, y: u.y, t: 0, dur: 0.5, color: '#ff8a8a' });
         this.pop(u.x, u.y - 20, '戦闘不能', '#ff8a8a', { size: 12 });
       }
@@ -652,7 +658,7 @@ window.TD = window.TD || {};
     // ---------- ステータス ----------
     // 常時スキル
     pas(u, type) { const p = u.def.passive; return p && p.type === type ? p : null; }
-    rangeOf(u) { const p = this.pas(u, 'range'); return u.def.range * (p ? p.mult : 1); }
+    rangeOf(u) { const p = this.pas(u, 'range'); return u.def.range * (p ? p.mult : 1) * (this.blizzardT > 0 ? this.blizzardMult : 1); }   // blizzard：グラキエスの吹雪
     splashOf(u) { const p = this.pas(u, 'splash'); return u.def.splash ? u.def.splash * (p ? p.mult : 1) : 0; }
     atkOf(u) {
       let a = u.def.atk * (u.buff && u.buff.atk ? u.buff.atk : 1) * (u.atkUpT > 0 ? u.atkUpMult : 1);
@@ -729,6 +735,8 @@ window.TD = window.TD || {};
         this.killed++;
         this.fx.push({ type: 'burst', x: e.x, y: e.y, t: 0, dur: 0.45, color: TD.ELEMENTS[e.def.element].color, big: e.def.boss });
         if (e.def.boss) this.fx.push({ type: 'flash', t: 0, dur: 0.8, color: 'rgba(255,255,255,' });
+        // 災厄の残響：魂が光となって空へ還る（輪廻へ）
+        if (e.def.soul) this.fx.push({ type: 'soulRise', x: e.x, y: e.y, t: 0, dur: 3, seed: Math.random() * 100 });
       }
     }
 
@@ -807,6 +815,8 @@ window.TD = window.TD || {};
       this.fx = this.fx.filter(f => f.t < f.dur);
       if (this.glow && (this.glow.t += dt) >= this.glow.dur) this.glow = null;
       if (this.elixirT > 0) this.elixirT -= dt;
+      if (this.blizzardT > 0) this.blizzardT -= dt;
+      if (this.burnTiles.length) { for (const b of this.burnTiles) b.t -= dt; this.burnTiles = this.burnTiles.filter(b => b.t > 0); }
       for (const p of this.pops) p.t += dt;
       this.pops = this.pops.filter(p => p.t < p.dur);
       this.enemies = this.enemies.filter(e => !e.dead && !e.leaked);
@@ -877,6 +887,15 @@ window.TD = window.TD || {};
             this.warns.push({ x: e.x, y: e.y, r: (p2 ? dm.radius2 : dm.radius) * T, t: 0, warn: dm.charge, kill: true, follow: e, src: e });
             this.toast(`${e.def.name.split(' ').pop()}が力を溜めている……！`);
             continue;
+          }
+        }
+        // 吹雪（グラキエスの残響）：一定時間ごとに、味方全員の射程を縮める
+        if (e.def.blizzard) {
+          const bz = e.def.blizzard;
+          if ((e.blizT = (e.blizT == null ? bz.first : e.blizT) - dt) <= 0) {
+            e.blizT = bz.every; this.blizzardT = bz.dur; this.blizzardMult = bz.mult;
+            this.toast('吹雪が吹き荒れる……！ 射程が縮んだ');
+            this.fx.push({ type: 'flash', t: 0, dur: 0.6, color: 'rgba(220,240,255,' });
           }
         }
         // ビーム：その場で力を溜め、味方1人を狙って直線上を撃ち抜く
@@ -1332,6 +1351,12 @@ window.TD = window.TD || {};
       for (const e of [...this.enemies].sort((a, b) => a.y - b.y)) this.drawEnemy(g, e);
       for (const w of this.warns) this.drawWarn(g, w);
       for (const s of this.shots) this.drawShot(g, s);
+      for (const b of this.burnTiles) {   // 燃えているマス
+        const k = 0.5 + Math.sin(performance.now() / 120 + b.cx) * 0.2;
+        g.fillStyle = `rgba(255,${80 + 40 * k},30,${0.35 + 0.2 * k})`; g.fillRect(b.cx * T + 3, b.cy * T + 3, T - 6, T - 6);
+        g.fillStyle = '#ffd060'; g.font = 'bold 14px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('🔥', b.cx * T + T / 2, b.cy * T + T / 2);
+      }
+      if (this.blizzardT > 0) { g.fillStyle = 'rgba(230,245,255,.18)'; g.fillRect(0, 0, W, H); }
       for (const m of this.meteors) this.drawMeteor(g, m);
       for (const f of this.fx) this.drawFx(g, f);
       if (this.glow) this.drawGlow(g, this.glow);
@@ -1420,6 +1445,12 @@ window.TD = window.TD || {};
 
     drawEnemy(g, e) {
       const el = TD.ELEMENTS[e.def.element], s = e.size, bob = Math.sin(e.walk) * 1.5;
+      if (e.def.echo) {   // 残響：黒い靄をまとい、半ば透けている
+        const grd = g.createRadialGradient(e.x, e.y, 2, e.x, e.y, s * 1.9);
+        grd.addColorStop(0, 'rgba(20,0,30,.55)'); grd.addColorStop(1, 'rgba(20,0,30,0)');
+        g.fillStyle = grd; g.beginPath(); g.arc(e.x, e.y, s * 1.9, 0, Math.PI * 2); g.fill();
+        g.globalAlpha = 0.72;
+      }
       const fly = e.def.flying ? 9 + Math.sin(e.walk * 0.6) * 2 : 0;
       const x = e.x, y = e.y - fly + (e.blockedBy || e.frozen > 0 ? 0 : bob);
       g.fillStyle = 'rgba(0,0,0,.3)';
@@ -1539,6 +1570,7 @@ window.TD = window.TD || {};
         g.fillStyle = e.def.shape === 'skeleton' ? '#2a2030' : eyeColor;
         g.beginPath(); g.arc(x - s * 0.35, eyeY, s * 0.14 + 0.8, 0, Math.PI * 2); g.arc(x + s * 0.35, eyeY, s * 0.14 + 0.8, 0, Math.PI * 2); g.fill();
       }
+      g.globalAlpha = 1;
       // HP
       const bw = Math.max(22, s * 2);
       g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(x - bw / 2 - 1, e.y - s - 9, bw + 2, 5);
@@ -1634,6 +1666,20 @@ window.TD = window.TD || {};
             g.beginPath(); g.arc(f.x + Math.cos(a) * r, f.y + Math.sin(a) * r, (f.big ? 5 : 3) * (1 - p) + 1, 0, Math.PI * 2); g.fill();
           }
           g.globalAlpha = 1; break;
+        }
+        case 'soulRise': {   // 光の粒が、ゆっくり空へ昇っていく
+          g.save();
+          for (let i = 0; i < 22; i++) {
+            const k = (p * 1.3 - i * 0.025), q = Math.max(0, Math.min(1, k));
+            if (q <= 0) continue;
+            const sx = f.x + Math.sin(f.seed + i * 1.7 + q * 4) * (10 + i * 1.2), sy = f.y - q * (f.y + 40);
+            g.globalAlpha = (1 - q) * 0.9;
+            g.fillStyle = i % 3 ? '#fff6d0' : '#bfe8ff';
+            g.beginPath(); g.arc(sx, sy, 2.5 + (i % 4) * 0.6, 0, Math.PI * 2); g.fill();
+          }
+          g.globalAlpha = Math.max(0, 0.5 - p) ; g.fillStyle = '#fffbe8';
+          g.beginPath(); g.arc(f.x, f.y, 26 * (1 - p), 0, Math.PI * 2); g.fill();
+          g.restore(); g.globalAlpha = 1; break;
         }
         case 'blackSlash': {   // 黒い斬撃：紫に縁取られた漆黒の三日月が走る
           const R = f.big ? 26 : f.small ? 11 : 17, n = f.small ? 1 : 3, a0 = f.a - 2.3 + p * 0.6;

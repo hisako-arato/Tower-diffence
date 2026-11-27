@@ -234,7 +234,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       html += `<button class="story-item${read ? '' : ' locked'}" data-ep="${id}"><span class="si-title">${esc(ep.title)}</span>` +
         `<span class="si-sub">${read ? '▶ 再生' : '🔒 ' + storyUnlockHint(id)}</span></button>`;
     }
-    html += `<div class="story-next">― 物語は完結しました ―</div>`;
+    html += `<div class="story-next">第二部 第2章は近日公開予定です</div>`;
     list.innerHTML = html;
     list.querySelectorAll('[data-ep]').forEach(b => b.onclick = () => {
       const id = b.dataset.ep;
@@ -316,7 +316,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const list = $('#stage-list'), node = qstack[qstack.length - 1] || { v: 'top' };
     list.innerHTML = '';
     const titles = { top: 'クエスト', proto: '試作', chapters: 'ストーリー', daily: 'デイリー', events: 'イベント', evshop: '交換所' };
-    $('#quest-title').textContent = node.v === 'chapter' ? node.ch.split(/[\s　]/)[0]
+    $('#quest-title').textContent = node.v === 'chapter' ? node.ch.split(/[\s　]/).slice(0, node.ch.startsWith('第二部') ? 2 : 1).join(' ')
       : node.ev ? (node.v === 'evshop' ? '交換所' : evById(node.ev).short || evById(node.ev).name) : titles[node.v];
     $('#quest-back').textContent = qstack.length ? '‹ 戻る' : '‹ ホーム';
     const add = el => list.appendChild(el);
@@ -346,14 +346,16 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     } else if (node.v === 'chapters') {
       const chs = chapters();
       const cur = chs.find(ch => { const i = chapterInfo(ch); return i.open && i.cleared < i.sts.length; });
+      let part = 0;
       for (const ch of chs) {
-        const i = chapterInfo(ch);
+        const i = chapterInfo(ch), p = i.sts[0].part || 1;
+        if (p !== part) { part = p; list.insertAdjacentHTML('beforeend', `<div class="part-title">${p === 2 ? '第二部' : '第一部'}</div>`); }
         const unread = i.open && i.sts.some(st => [storyFor(st, 'pre'), storyFor(st, 'post')].some(id => id && !save.story[id]) && (st === i.sts[0] || save.cleared[i.sts[i.sts.indexOf(st) - 1].id]));
-        add(qcard('chapter', esc(ch), i.open ? `クリア ${i.cleared}/${i.sts.length}・★${i.stars}/${i.sts.length * 3}` : `${TD.STAGES[TD.STAGES.indexOf(i.sts[0]) - 1].id}クリアで解放`,
+        add(qcard('chapter', esc(ch.replace(/^第二部\s*/, '')), i.open ? `クリア ${i.cleared}/${i.sts.length}・★${i.stars}/${i.sts.length * 3}` : `${TD.STAGES[TD.STAGES.indexOf(i.sts[0]) - 1].id}クリアで解放`,
           ch === cur ? '進行中' : i.stars === i.sts.length * 3 ? 'COMPLETE' : '', () => qpush({ v: 'chapter', ch }), !i.open));
         if (unread) list.lastChild.insertAdjacentHTML('beforeend', '<span class="st-story">STORY</span>');
       }
-      list.insertAdjacentHTML('beforeend', `<div class="story-next">― 物語は完結しました ―</div>`);
+      list.insertAdjacentHTML('beforeend', `<div class="story-next">第二部 第2章は近日公開予定です</div>`);
     } else if (node.v === 'chapter') {
       list.insertAdjacentHTML('beforeend', `<div class="chapter-title">${esc(node.ch)}</div>`);
       TD.STAGES.forEach((st, i) => {
