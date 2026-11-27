@@ -315,7 +315,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     if (qstack.some(n => n.ev && !TD.Live.eventActive(evById(n.ev)))) qstack = [];
     const list = $('#stage-list'), node = qstack[qstack.length - 1] || { v: 'top' };
     list.innerHTML = '';
-    const titles = { top: 'クエスト', chapters: 'ストーリー', daily: 'デイリー', events: 'イベント', evshop: '交換所' };
+    const titles = { top: 'クエスト', proto: '試作', chapters: 'ストーリー', daily: 'デイリー', events: 'イベント', evshop: '交換所' };
     $('#quest-title').textContent = node.v === 'chapter' ? node.ch.split(/[\s　]/)[0]
       : node.ev ? (node.v === 'evshop' ? '交換所' : evById(node.ev).short || evById(node.ev).name) : titles[node.v];
     $('#quest-back').textContent = qstack.length ? '‹ 戻る' : '‹ ホーム';
@@ -331,8 +331,18 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       add(qcard('daily', 'デイリー', dOpen ? `${esc(d.name)}・本日あと${left}/${d.dailyLimit}回` : `${d.unlockAfter}クリアで解放`, dOpen && left ? '' : '', () => qpush({ v: 'daily' }), !dOpen));
       // イベント
       const actives = TD.EVENTS.filter(e => TD.Live.eventActive(e));
+      add(qcard('proto', '試作：攻守反転', '魔物を召喚して、英雄の拠点を攻め落とす', 'NEW', () => qpush({ v: 'proto' })));
       add(qcard('event', 'イベント', actives.length ? `開催中 ${actives.length}` : '開催予定なし',
         actives.some(evShopReady) ? '交換可' : '', () => qpush({ v: 'events' }), !actives.length));
+    } else if (node.v === 'proto') {
+      list.insertAdjacentHTML('beforeend', `<div class="chapter-title event">試作：攻守反転<small>第二部 第4章の遊びの試作です</small></div>`);
+      for (const st of TD.REVERSE_STAGES) {
+        const el = document.createElement('button');
+        el.className = 'stage-item event';
+        el.innerHTML = `<span class="st-id">${st.id}</span><span class="st-name">${esc(st.name)}<small>魔物を召喚して攻め込む</small></span><span class="st-stars">⚔</span>`;
+        el.onclick = () => openReverseBrief(st);
+        add(el);
+      }
     } else if (node.v === 'chapters') {
       const chs = chapters();
       const cur = chs.find(ch => { const i = chapterInfo(ch); return i.open && i.cleared < i.sts.length; });
@@ -458,6 +468,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     show('screen-battle');
     $('#hud-stage').textContent = `${st.id} ${st.name}`;
     $('#btn-speed').textContent = '▶ x1';
+    if (st.type === 'reverse') { startReverse(st); return; }
     const party = save.party.map((id, i) => {
       const def = TD.charStats(id, save.chars[id]);
       if (i === 0) { // 副官補正
@@ -753,6 +764,40 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       renderParty();
       renderHome();
     };
+  }
+
+  // ---------- 攻守反転（試作） ----------
+  function startReverse(st) {
+    const heroes = st.reverse.heroes.map(h => ({ id: h.id, def: TD.charStats(h.id, { lv: h.lv, lb: h.lb }), at: h.at, t: h.t }));
+    battle = new TD.ReverseBattle(st, heroes, bEls, onReverseEnd);
+    TD.currentBattle = battle;
+    const banner = $('#battle-banner');
+    banner.innerHTML = `<div class="bn-sub">${esc(st.chapter)}</div><div class="bn-main">${st.id} ${esc(st.name)}</div><div class="bn-start">INVASION START</div>`;
+    banner.classList.remove('show'); void banner.offsetWidth; banner.classList.add('show');
+  }
+  function onReverseEnd(r) {
+    const st = currentStage;
+    const body = modal(
+      `<div class="result ${r.win ? 'win' : 'lose'}">` +
+      `<div class="res-title">${r.win ? '制圧' : '撤退'}</div>` +
+      `<div class="res-msg">${r.win ? '英雄たちの拠点を打ち破った。' : '時間切れ……英雄たちに阻まれた。'}</div>` +
+      `<div class="res-stats">拠点への突破 ${r.broke}/${r.goal}・召喚 ${r.summoned}体（討たれた ${r.slain}体）${r.win ? `・残り${Math.ceil(r.timeLeft)}秒` : ''}</div></div>` +
+      `<div class="btn-col"><button class="btn primary" data-act="retry">もう一度</button><button class="btn ghost" data-act="stages">クエストへ</button></div>`, 'locked');
+    const leave = () => { closeModal(); if (battle) { battle.destroy(); battle = null; } };
+    body.querySelector('[data-act=retry]').onclick = () => { leave(); startBattle(st); };
+    body.querySelector('[data-act=stages]').onclick = () => { leave(); show('screen-stages'); };
+  }
+  function openReverseBrief(st) {
+    const R = st.reverse;
+    const body = modal(
+      `<div class="brief-head"><span class="st-id">${st.id}</span>${esc(st.name)}</div>` +
+      `<div class="brief-navi"><span class="mini-navi"></span><p>${esc(st.brief)}</p></div>` +
+      `<div class="brief-sec">守る英雄たち（AI）</div><div class="brief-party">${R.heroes.map(h => `<span class="bp">${TD.portraitHTML(h.id)}<small>${h.t ? `${h.t}秒後` : 'Lv' + h.lv}</small></span>`).join('')}</div>` +
+      `<div class="brief-sec">召喚できる魔物</div><ul class="enemy-list">${R.hand.map(h => `<li>${TD.elemChip(TD.ENEMIES[h.e].element)}${esc(TD.ENEMIES[h.e].name)}<small>　魔力${h.cost}${h.limit ? `・${h.limit}回まで` : ''}</small></li>`).join('')}</ul>` +
+      `<div class="brief-sub">拠点の耐久 ${R.goal}・制限時間 ${R.time}秒・魔力 毎秒+${R.manaRate}<br>権能：${R.powers.map(p => `${p.name}（魔力${p.cost}）`).join('・')}</div>` +
+      `<div class="btn-row"><button class="btn ghost" data-act="close">やめる</button><button class="btn primary" data-act="go">侵攻開始</button></div>`);
+    body.querySelector('[data-act=close]').onclick = closeModal;
+    body.querySelector('[data-act=go]').onclick = () => { closeModal(); startBattle(st); };
   }
 
   // ---------- 古代の英雄（英雄王リン） ----------

@@ -682,7 +682,7 @@ window.TD = window.TD || {};
       let r = u.buff && u.buff.rate ? u.buff.rate : 1;
       if (u.hasteT > 0) r *= u.hasteMult;
       // 常時効果（オーラ）：近くの味方の攻撃速度アップ（重複はしない・最大のもの）
-      return r * (1 + (u.ramp || 0));
+      return r * (1 + (u.ramp || 0)) * (this.curseT > 0 ? this.curseMult : 1);   // curse：攻守反転の権能「闇の帳」
     }
 
     hit(src, e, power, burst) {
@@ -811,6 +811,11 @@ window.TD = window.TD || {};
       this.pops = this.pops.filter(p => p.t < p.dur);
       this.enemies = this.enemies.filter(e => !e.dead && !e.leaked);
 
+      this.checkEnd();
+    }
+
+    // 勝敗の判定（攻守反転モードでは上書きする）
+    checkEnd() {
       if (this.lives <= 0) this.finish(false);
       else if (this.evIdx >= this.events.length && !this.enemies.length) this.finish(true);
     }
@@ -916,7 +921,7 @@ window.TD = window.TD || {};
         let slowAura = 1;
         for (const u of this.units) { const p = this.pas(u, 'slowAura'); if (p && dist(e, u) <= this.rangeOf(u) * T) slowAura = Math.min(slowAura, p.mult); }
         let move = e.def.speed * T * dt * (e.slowT > 0 ? 0.5 : 1) * slowAura * (e.slowShotT > 0 ? e.slowShotMult : 1)
-          * (e.poisonT > 0 ? this.poisonSlow : 1) * this.enemySlowAll;
+          * (e.poisonT > 0 ? this.poisonSlow : 1) * this.enemySlowAll * (this.rushT > 0 ? this.rushMult : 1);   // rush：攻守反転の権能「狂奔」
         // 回復役は前に出ず、キャラの射程に入ったら下がる
         if (e.def.healer) move = this.healerMove(e, move);
         if (move < 0) {
@@ -1711,5 +1716,6 @@ window.TD = window.TD || {};
   }
 
   TD.Battle = Battle;
+  TD.BATTLE_DIM = { T, COLS, ROWS, W, H };
   TD.BATTLE_SIZE = { W, H, T, COLS, ROWS };
 })();
