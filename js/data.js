@@ -446,6 +446,10 @@ TD.ENEMIES = {
   echoKnight: { name: '残響の骸騎士', element: 'dark', hp: 1800, atk: 170, def: 120, speed: 0.4,  interval: 1.8, size: 14, shape: 'skeleton', echo: true },
   echoMage:   { name: '残響の魔導兵', element: 'dark', hp: 620,  atk: 105, def: 20,  speed: 0.45, interval: 2.5, size: 12, shape: 'mage', ranged: 2.6, echo: true },
   echoShade:  { name: '残響の亡霊',   element: 'dark', hp: 560,  atk: 75,  def: 10,  speed: 0.95, interval: 1.5, size: 11, shape: 'ghost', flying: true, ranged: 1.5, echo: true },
+  // ガーゴイル：空を飛び、道を外れてゆっくり拠点へまっすぐ向かう。硬い
+  gargoyle:   { name: 'ガーゴイル', element: 'dark', hp: 1500, atk: 110, def: 90, speed: 0.3, interval: 1.8, size: 13, shape: 'gargoyle', flying: true, offPath: true, ranged: 1.3 },
+  // 毒を持つ敵：遠くから毒の魔弾を撃ち、当たった味方を毒にする（毎秒最大HPの2%・6秒）
+  echoPlague: { name: '残響の毒術師', element: 'dark', hp: 640, atk: 90, def: 20, speed: 0.45, interval: 2.4, size: 12, shape: 'mage', ranged: 2.8, echo: true, poisonOnHit: { ratio: 0.02, dur: 6 } },
   vargEcho:    { name: '災厄の残響 ヴァルグ', element: 'dark', hp: 6000, atk: 220, def: 100, speed: 0.45, interval: 1.6, size: 22, shape: 'boss', life: 5, boss: true, echo: true, soul: true },
   glaciesEcho: { name: '凍嵐の残響 グラキエス', element: 'wind', hp: 5200, atk: 190, def: 110, speed: 0.28, interval: 2.0, size: 22, shape: 'boss', life: 5, boss: true, echo: true, soul: true,
                  aoe: { every: 11, radius: 1.5, mult: 0.25, warn: 2.0 }, blizzard: { first: 6, every: 14, dur: 6, mult: 0.7 } },
@@ -1266,6 +1270,7 @@ TD.STAGES = [
         { t: 46, e: 'echoWolf', n: 8, gap: 0.8 },
         { t: 58, e: 'vargEcho', n: 1, gap: 0 },
         { t: 62, e: 'echoWolf', n: 6, gap: 1 },
+        { t: 40, e: 'gargoyle', n: 1, gap: 0 },
       ],
     },
     {
@@ -1280,6 +1285,8 @@ TD.STAGES = [
         { t: 42, e: 'abyssEye', n: 2, gap: 2 },
         { t: 48, e: 'echoWolf', n: 8, gap: 0.8 },
         { t: 58, e: 'echoKnight', n: 3, gap: 2 },
+        { t: 18, e: 'echoPlague', n: 3, gap: 2 },
+        { t: 52, e: 'gargoyle', n: 2, gap: 4 },
       ],
     },
     {
@@ -1295,6 +1302,8 @@ TD.STAGES = [
         { t: 46, e: 'glaciesEcho', n: 1, gap: 0, s: 0, g: 0 },
         { t: 50, e: 'echoShade', n: 4, gap: 1.4, s: 1, g: 1 },
         { t: 62, e: 'echoWolf', n: 5, gap: 1.1, s: 1, g: 0 },
+        { t: 28, e: 'gargoyle', n: 1, gap: 0, s: 1 },
+        { t: 40, e: 'echoPlague', n: 2, gap: 2, s: 'alt' },
       ],
     },
     {
@@ -1310,6 +1319,8 @@ TD.STAGES = [
         { t: 44, e: 'echoWolf', n: 8, gap: 1, s: 'alt' },
         { t: 56, e: 'echoKnight', n: 2, gap: 2, s: 'alt' },
         { t: 60, e: 'echoGoblin', n: 6, gap: 1, s: 'alt' },
+        { t: 26, e: 'echoPlague', n: 2, gap: 2, s: 'alt' },
+        { t: 50, e: 'gargoyle', n: 2, gap: 3, s: 'alt' },
       ],
     },
     {
@@ -1327,6 +1338,8 @@ TD.STAGES = [
         { t: 54, e: 'abyssPriest', n: 1, gap: 0 },
         { t: 56, e: 'echoWolf', n: 10, gap: 0.6 },
         { t: 64, e: 'echoKnight', n: 4, gap: 1.5 },
+        { t: 26, e: 'gargoyle', n: 3, gap: 3 },
+        { t: 36, e: 'echoPlague', n: 4, gap: 1.5 },
       ],
     },
   );
@@ -1692,7 +1705,6 @@ TD.partyValid = party => party.length > 0 && TD.partyStars(party) <= TD.ADJUTANT
 TD.ANCIENT = {
   hero: 'rin',
   need: [30, 50, 70, 90, 100],     // [加入, 突破1, 突破2, 突破3, 突破4]
-  overflowStones: 5,              // 100個を超えた分は1個につき魔晶石5
   // 章ごとの基本の落ちる数 [最小, 最大]。第1・2章は50%の確率で1個
   byChapter: { 1: [0, 1], 2: [0, 1], 3: [1, 2], 4: [1, 2], 5: [2, 3], 6: [2, 3] },   // 6＝第二部
 };

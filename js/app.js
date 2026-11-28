@@ -207,6 +207,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       save.story[id] = true;
       persist();
       renderHome();
+      // 4-5 のその後を見終えた時点でリンがいなければ、強制召喚イベント
+      if (id === '4-5-post' && !owns(TD.ANCIENT.hero)) { checkForcedRin(cb); return; }
       cb && cb();
     }, name => {
       // 名前を決めた時点でプロローグは「見た」ことにする（途中で閉じても再度聞かれない）
@@ -803,13 +805,13 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   }
 
   // ---------- 古代の英雄（英雄王リン） ----------
-  // 欠片を加える（本来の力を取り戻すのは召喚の儀で選んだ時）。100個を超えた分は魔晶石に変える
+  // 欠片を加える（本来の力を取り戻すのは召喚の儀で選んだ時）。100個集め終えたら、それ以上は手に入らない
   function gainAncient(n) {
     const A = TD.ANCIENT, a = save.ancient, before = a.frags, max = A.need[A.need.length - 1];
+    // 集め終わったら、それ以上は手に入らない
+    n = Math.max(0, Math.min(n, max - before));
     a.frags += n;
     let note = '';
-    if (before < max && a.frags > max) { const over = a.frags - max; save.stones += over * A.overflowStones; note = `余った欠片は魔晶石 +${over * A.overflowStones}`; }
-    else if (before >= max) { save.stones += n * A.overflowStones; note = `魔晶石 +${n * A.overflowStones} に変換`; }
     if (owns(A.hero)) {
       const c = save.chars[A.hero];
       if (c.lb < TD.ancientLb(a.frags) && TD.ancientLb(before) <= c.lb) note = `${TD.CHARS[A.hero].name}が本来の力を取り戻せます（召喚画面へ）`;
@@ -830,6 +832,22 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     if (b) b.onclick = summonAncient;
     const w = $('#ancient-panel [data-awaken]');
     if (w) w.onclick = awakenAncient;
+  }
+  // 第一部 第4章を終えてもリンがいなければ、物語の流れで強制的に召喚される（欠片の数に関係なく）
+  function checkForcedRin(next) {
+    const id = TD.ANCIENT.hero;
+    if (owns(id) || !(save.cleared['4-5'] > 0)) { next && next(); return; }
+    playStory('rin-join', () => {
+      save.owned.push(id);
+      save.chars[id] = { lv: 1, lb: 0 };
+      persist(); renderHome();
+      const d = TD.CHARS[id];
+      const body = modal(`<div class="ancient-reveal"><div class="ar-art">${TD.fullArtHTML(id)}</div><div class="ar-stars">${'★'.repeat(d.rarity)}</div>` +
+        `<div class="ar-name"><small>${esc(d.title)}</small>${esc(d.name)}</div><p>「${esc(d.lines.deploy)}」</p>` +
+        `<div class="ar-lb">古代の英雄の欠片を集めると、召喚の儀から本来の力を取り戻せます</div>` +
+        `<div class="btn-row"><button class="btn primary">閉じる</button></div></div>`, 'locked');
+      body.querySelector('button').onclick = () => { closeModal(); next && next(); };
+    });
   }
   function summonAncient() {
     const A = TD.ANCIENT, id = A.hero;
@@ -1092,7 +1110,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     $('#title-screen').classList.add('hide');
     naviSay(TD.NAVI_LINES[0]);
     // 起動時の流れ：プロローグ → 初回プレゼント（ログイン報酬はデイリーミッションで受け取る）
-    const after = () => { TD.Live.ensureDaily(save); persist(); renderHome(); checkGift(); };
+    const after = () => { TD.Live.ensureDaily(save); persist(); renderHome(); checkForcedRin(checkGift); };
     if (!save.story.prologue) setTimeout(() => playStory('prologue', after), 500);
     else setTimeout(after, 400);
   });

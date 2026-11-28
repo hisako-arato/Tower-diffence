@@ -953,6 +953,14 @@ window.TD = window.TD || {};
           e.passed.clear();
           continue;
         }
+        // ガーゴイル：道を外れ、拠点へまっすぐ飛んでくる
+        if (e.def.offPath) {
+          const gl = e.route[e.route.length - 1], dx = gl.x - e.x, dy = gl.y - e.y, d = Math.hypot(dx, dy);
+          if (e.d0 == null) e.d0 = d || 1;
+          if (d <= move) { e.x = gl.x; e.y = gl.y; e.idx = e.route.length; }
+          else { e.x += dx / d * move; e.y += dy / d * move; e.idx = 1 + Math.floor((1 - d / e.d0) * (e.route.length - 2)); }
+          move = 0;
+        }
         while (move > 0 && e.idx < e.route.length) {
           const tgt = e.route[e.idx], dx = tgt.x - e.x, dy = tgt.y - e.y, d = Math.hypot(dx, dy);
           if (d <= move) { e.x = tgt.x; e.y = tgt.y; e.idx++; move -= d; }
@@ -1476,6 +1484,19 @@ window.TD = window.TD || {};
           g.fillStyle = '#ffd36b';
           for (let i = -1; i <= 1; i++) { g.beginPath(); g.moveTo(x + i * 5 - 3, y - s * 0.7); g.lineTo(x + i * 5, y - s * 1.3); g.lineTo(x + i * 5 + 3, y - s * 0.7); g.fill(); }
           break;
+        case 'gargoyle': { // 石の翼を持つ魔像：ゆっくり羽ばたき、角と牙がある
+          const flap = Math.sin(e.walk * 0.9) * 0.35;
+          g.save(); g.translate(x, y);
+          for (const sd of [-1, 1]) {
+            g.save(); g.scale(sd, 1); g.rotate(-0.2 + flap);
+            g.beginPath(); g.moveTo(s * 0.5, -s * 0.2); g.lineTo(s * 2.1, -s * 1.0); g.lineTo(s * 1.7, -s * 0.2); g.lineTo(s * 2.0, s * 0.3); g.lineTo(s * 1.3, s * 0.1); g.lineTo(s * 0.5, s * 0.5); g.closePath(); g.fill(); g.stroke();
+            g.restore();
+          }
+          g.beginPath(); g.ellipse(0, 0, s * 0.8, s * 0.95, 0, 0, Math.PI * 2); g.fill(); g.stroke();
+          g.beginPath(); g.moveTo(-s * 0.5, -s * 0.7); g.lineTo(-s * 0.7, -s * 1.3); g.lineTo(-s * 0.2, -s * 0.85); g.moveTo(s * 0.5, -s * 0.7); g.lineTo(s * 0.7, -s * 1.3); g.lineTo(s * 0.2, -s * 0.85); g.fill(); g.stroke();
+          g.restore();
+          break;
+        }
         case 'harpy': { // 翼を羽ばたかせる鳥人
           const flap = Math.sin(e.walk * 1.6) * 0.5;
           g.save(); g.translate(x, y);
