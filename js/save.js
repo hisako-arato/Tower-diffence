@@ -36,6 +36,7 @@ TD.Save = {
     out.owned = (out.owned || []).filter(id => TD.CHARS[id]);
     out.party = (out.party || []).filter(id => out.owned.includes(id)).slice(0, 6);
     if (!out.party.length) out.party = d.party.filter(id => out.owned.includes(id));
+    out.party2 = (out.party2 || []).filter(id => out.owned.includes(id)).slice(0, 6);   // 第二部用の編成
     out.stats = Object.assign({ wins: 0, kills: 0, skills: 0, pulls: 0 }, s.stats);
     out.login = Object.assign({ last: '', day: 0, total: 0 }, s.login);
     out.achieved = out.achieved || {};

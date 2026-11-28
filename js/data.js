@@ -1552,6 +1552,9 @@ TD.HERO_DEFEAT = {
 TD.ENEMIES.h_lydia_last = Object.assign({}, TD.ENEMIES.h_lydia, {
   name: '騎士姫 リディア', hp: TD.ENEMIES.h_lydia.hp * 3, size: 19, life: 5, boss: true, aoe: { every: 9, radius: 1.4, mult: 0.3, warn: 1.8 },
 });
+TD.ENEMIES.h_kagura_boss = Object.assign({}, TD.ENEMIES.h_kagura, {
+  name: '星詠みの巫女 カグラ', hp: TD.ENEMIES.h_kagura.hp * 2.5, size: 18, life: 5, boss: true, aoe: { every: 10, radius: 1.5, mult: 0.3, warn: 1.8 },
+});
 TD.ENEMIES.luminaGod = {
   name: '生命の循環の神 ルミナ', element: 'light', heroId: 'lumina_god', shape: 'hero', hp: 30000, atk: 380, def: 220, speed: 0.1, interval: 2.0, size: 27,
   life: 99, boss: true, ranged: 2.6, aoe: { every: 9, radius: 1.8, mult: 0.35, warn: 2.0 }, seal: { first: 6, every: 11, warn: 2.2, dur: 5 },
@@ -1603,8 +1606,8 @@ TD.ENEMIES.luminaGod = {
       ],
     },
     {
-      id: 'Ⅱ3-4', chapter: C, name: '追う者たち', part: 2, lock: 4, theme: 'snow',
-      brief: 'かつての仲間たちが追ってきます。英雄たちは本来の技で戦い、弓や魔法の使い手は遠くから撃ってきます。',
+      id: 'Ⅱ3-4', chapter: C, name: '追う者たち', part: 2, lock: 5, keep: ['lydia'], theme: 'snow',
+      brief: 'リディア以外の★5の英雄も去り、カグラを先頭にかつての仲間たちが追ってきます。弓や魔法の使い手は遠くから撃ってきます。戦えるのはリディアと闇の配下だけです。',
       lives: 10, mana: 26, hpScale: 3.2, reward: 150, recLv: 60, map: mapOf('3-3'),
       waves: [
         { t: 3, e: 'royalKnight', n: 3, gap: 1.6, s: 'alt' },
@@ -1614,6 +1617,7 @@ TD.ENEMIES.luminaGod = {
         { t: 30, e: 'h_xeno', n: 1, gap: 0, s: 0 },
         { t: 32, e: 'h_shizuku', n: 1, gap: 0, s: 1 },
         { t: 40, e: 'royalArcher', n: 4, gap: 1.2, s: 'alt' },
+        { t: 44, e: 'h_kagura_boss', n: 1, gap: 0, s: 0 },
         { t: 48, e: 'h_aster', n: 1, gap: 0, s: 1 },
         { t: 50, e: 'h_celes', n: 1, gap: 0, s: 0 },
         { t: 58, e: 'royalKnight', n: 5, gap: 1.2, s: 'alt' },

@@ -21,6 +21,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   let save = TD.Save.load();
   TD.prefs = save.opts;
   let battle = null, currentStage = null;
+  let partyCtx = null;   // 編成画面を第二部のステージから開いた時、そのステージ
   let saveWarned = false;
   const persist = () => {
     TD.prefs = save.opts;
@@ -39,6 +40,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     if (id === 'screen-home') renderHome();
     if (id === 'screen-stages') renderStages();
     if (id !== 'screen-party') $('#char-sheet').classList.remove('show');
+    if (id !== 'screen-party' && partyCtx) { const st = partyCtx; partyCtx = null; if (id === 'screen-stages') setTimeout(() => openBrief(st), 0); }
     if (id === 'screen-party') renderParty();
     if (id === 'screen-summon') { summonFeat = null; renderSummon(); }
     if (id === 'screen-story') renderStoryList();
@@ -434,8 +436,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       return `<li>${TD.elemChip(e.element)}${esc(e.name)}${e.boss ? ' <b class="boss-tag">BOSS</b>' : ''}</li>`;
     }).join('');
     const P = effParty(st);
-    const party = save.party.map(id => lockedIn(st, id) ? `<span class="bp gone">${TD.portraitHTML(id, false, true)}<small>離脱</small></span>` : '').join('') +
-      P.map((id, i) => `<span class="bp${i === 0 ? ' adj' : ''}${save.party.includes(id) ? '' : ' joined'}">${TD.portraitHTML(id)}<small>${i === 0 ? '副官' : save.party.includes(id) ? 'Lv' + save.chars[id].lv : '同行'}</small></span>`).join('');
+    const goneN = P.filter(id => lockedIn(st, id)).length;
+    const party = P.map((id, i) => lockedIn(st, id) ? `<span class="bp gone">${TD.portraitHTML(id, false, true)}<small>離脱</small></span>`
+      : `<span class="bp${i === 0 ? ' adj' : ''}">${TD.portraitHTML(id)}<small>${i === 0 ? '副官' : 'Lv' + save.chars[id].lv}</small></span>`).join('');
     const first = !save.cleared[st.id];
     const rewardText = st.type === 'daily' ? `経験の書 ×${TD.stageExp(st)}（本日あと${TD.Live.runsLeft(save, st)}回）`
       : st.type === 'event' ? `${TD.eventOf(st).currency} ×${st.eventPoints}・経験の書 ×${TD.stageExp(st)}${first ? `・魔晶石 ×${st.reward}（初回）` : ''}`
@@ -446,13 +449,14 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       (st.map.join('').split('G').length - 1 >= 2 ? `<div class="brief-goals">⚠ 守る拠点が2つあります（どちらに届いてもライフが減ります）</div>` : '') +
       `<div class="brief-sec">出現する敵</div><ul class="enemy-list">${enemies}</ul>` +
       `<div class="brief-sec">出撃メンバー${st.lock >= 5 ? '' : `<small class="brief-stars${TD.partyValid(P) ? '' : ' over'}">副官以外の★ ${TD.partyStars(P)} / ${TD.ADJUTANT.starCap}</small>`}</div><div class="brief-party">${party}</div>` +
-      (st.lock ? `<div class="brief-goals">⚠ 主人公のもとを去った英雄は出撃できません（第二部のステージのみ）</div>` : '') +
+      (st.lock ? `<div class="brief-goals">${goneN ? '⚠ 編成に、主人公のもとを去った英雄がいます。「編成する」から外すまで出撃できません' : '第二部用の編成で出撃します（第一部・イベントの編成とは別です）'}</div>` : '') +
       (TD.partyEffectsText(P) ? `<div class="brief-fx">ユニークスキル：${TD.partyEffectsText(P)}</div>` : '') +
       (st.recLv && P.length ? (() => { const avg = Math.round(P.reduce((a, id) => a + save.chars[id].lv, 0) / P.length);
         return `<div class="brief-rec${avg < st.recLv ? ' low' : ''}">推奨Lv ${st.recLv}<small>（編成の平均 Lv${avg}${avg < st.recLv ? '・育成すると楽になります' : ''}）</small></div>`; })() : '') +
       `<div class="brief-sub">ライフ ${st.lives}・初期マナ ${st.mana}<br>報酬：${rewardText}</div>` +
       `<div class="btn-row"><button class="btn ghost" data-act="party">編成する</button><button class="btn primary" data-act="go">出撃！</button></div>`);
-    body.querySelector('[data-act=party]').onclick = () => { closeModal(); show('screen-party'); };
+    body.querySelector('[data-act=party]').onclick = () => { closeModal(); openParty(st); };
+    if (goneN) body.querySelector('[data-act=go]').classList.add('disabled');
     body.querySelector('[data-act=go]').onclick = () => {
       if (!partyOk(st)) return;
       closeModal();
@@ -468,22 +472,28 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     lives: $('#hud-lives'), enemies: $('#hud-enemies'), menu: $('#unit-menu'), cutin: $('#cutin'), toast: $('#battle-toast'),
   };
 
-  // 第二部 第3章以降：主人公のもとを去った英雄は出撃できない（stage.lock 以下の★）。闇の配下は空いた枠に自動で同行する
-  const lockedIn = (st, id) => !!(st && st.lock && TD.CHARS[id].rarity <= st.lock);
+  // 第二部 第3章以降：主人公のもとを去った英雄は出撃できない（stage.lock 以下の★。keep に名前があれば残る）
+  const lockedIn = (st, id) => !!(st && st.lock && TD.CHARS[id].rarity <= st.lock && !(st.keep || []).includes(id));
+  // 英雄が去るステージでは第二部用の編成を使う。はじめて使う時は、闇の配下とリン、残っている英雄から作る
   function effParty(st) {
     if (!st || !st.lock) return save.party;
-    const p = save.party.filter(id => !lockedIn(st, id));
-    // 同行させても★の上限を超えない時だけ加える
-    // 英雄が全員去った後（lock 5）は闇の配下だけなので、★の上限は気にしない
-    const add = id => { if (p.length < 6 && !p.includes(id) && (st.lock >= 5 || TD.partyValid([...p, id]))) p.push(id); };
-    save.owned.filter(id => TD.CHARS[id].dark).forEach(add);
-    if (owns(TD.ANCIENT.hero)) add(TD.ANCIENT.hero);
-    return p;
+    if (!save.party2 || !save.party2.length) {
+      const p = [];
+      const add = id => { if (p.length < 6 && owns(id) && !p.includes(id) && !lockedIn(st, id)) p.push(id); };
+      save.owned.filter(id => TD.CHARS[id].dark).forEach(add);
+      add(TD.ANCIENT.hero);
+      save.party.forEach(add);
+      while (p.length > 1 && !(st.lock >= 5 || TD.partyValid(p))) p.pop();
+      save.party2 = p; persist();
+    }
+    return save.party2;
   }
   function partyOk(st) {
     const P = effParty(st);
     if (!P.length) { alertBox('出撃できる仲間がいません。編成を見直してください'); return false; }
-    if (TD.partyValid(P) || st.lock >= 5) return true;
+    const gone = P.filter(id => lockedIn(st, id));
+    if (gone.length) { alertBox(`${gone.map(id => TD.CHARS[id].name).join('・')}は主人公のもとを去ったため、出撃できません。「編成する」から外してください`); return false; }
+    if ((st && st.lock >= 5) || TD.partyValid(P)) return true;
     alertBox(`副官以外の★の合計が${TD.partyStars(P)}で、上限${TD.ADJUTANT.starCap}を超えています。編成を見直してください`);
     return false;
   }
@@ -493,6 +503,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const rin = save.chars[TD.ANCIENT.hero];
     save.owned.push(id);
     save.chars[id] = { lv: Math.max(1, Math.min(TD.maxLv(4), rin ? rin.lv : 1)), lb: 4 };
+    if (save.party2 && save.party2.length && save.party2.length < 6) save.party2.push(id);   // 第二部用の編成に空きがあれば加える
     persist(); renderHome();
     if (!reveal) { next && next(); return; }
     const d = TD.CHARS[id];
@@ -616,7 +627,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       if (b) b.onclick = () => (pendingPost ? () => { leave(); show('screen-stages'); playStory(post, fn); } : fn)();
     };
     on('next', () => { leave(); if (next.chapter !== st.chapter) qstack = [{ v: 'chapters' }, { v: 'chapter', ch: next.chapter }]; show('screen-stages'); openBrief(next); });
-    on('party', () => { leave(); show('screen-party'); });
+    on('party', () => { leave(); openParty(st); });
     on('retry', () => {
       leave();
       if (st.type === 'daily' && TD.Live.runsLeft(save, st) <= 0) { show('screen-stages'); alertBox('本日の挑戦回数は終了しました'); }
@@ -626,6 +637,11 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   }
 
   // ---------- 編成・育成 ----------
+  // 第二部（英雄が去った後）のステージの出撃画面から開いた時は、第二部用の編成（save.party2）を編集する（partyCtx は先頭で宣言）
+  const PT = () => partyCtx ? save.party2 : save.party;
+  const setPT = v => { if (partyCtx) save.party2 = v; else save.party = v; };
+  const validCtx = next => (partyCtx && partyCtx.lock >= 5 && next.length > 0) || TD.partyValid(next);
+  function openParty(st) { partyCtx = st && st.lock ? st : null; if (partyCtx) effParty(st); show('screen-party'); }
   let partySel = null, listIds = [];
   const filter = { rarity: 'all', element: 'all', role: 'all' };
   const sheetOpen = () => $('#char-sheet').classList.contains('show');
@@ -665,15 +681,16 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const slots = $('#party-slots');
     slots.innerHTML = '';
     for (let i = 0; i < 6; i++) {
-      const id = save.party[i], el = document.createElement('button');
+      const id = PT()[i], el = document.createElement('button');
       el.className = 'slot' + (id ? '' : ' empty') + (i === 0 ? ' adj' : '') + (id && id === partySel && sheetOpen() ? ' sel' : '');
       el.innerHTML = (i === 0 ? '<em class="slot-tag">副官</em>' : '') + (id ? `${TD.portraitHTML(id)}<span>${i === 0 ? '👑 ' : ''}Lv${save.chars[id].lv}</span>` : '<span>空き</span>');
       if (id) el.addEventListener('click', () => openSheet(id));
       slots.appendChild(el);
     }
-    const stars = TD.partyStars(save.party), cap = TD.ADJUTANT.starCap;
-    const fxText = TD.partyEffectsText(save.party);
-    $('#party-stars').innerHTML = `副官以外の★ <b>${stars}</b> / ${cap}` + (fxText ? `<span class="ps-fx">ユニークスキル：${fxText}</span>` : '') + (stars > cap ? '<em>上限を超えています。誰かを外すまで出撃できません</em>' : '');
+    const stars = TD.partyStars(PT()), cap = partyCtx && partyCtx.lock >= 5 ? Infinity : TD.ADJUTANT.starCap;
+    $('#screen-party .sub-title').textContent = partyCtx ? `第二部の編成（${partyCtx.id}）` : '編成・育成';
+    const fxText = TD.partyEffectsText(PT());
+    $('#party-stars').innerHTML = (partyCtx ? '<span class="ps-p2">第二部用の編成です。主人公のもとを去った英雄は表示されません</span>' : '') + (cap === Infinity ? '' : `副官以外の★ <b>${stars}</b> / ${cap}`) + (fxText ? `<span class="ps-fx">ユニークスキル：${fxText}</span>` : '') + (stars > cap ? '<em>上限を超えています。誰かを外すまで出撃できません</em>' : '');
     $('#party-stars').classList.toggle('over', stars > cap);
     renderFilter();
     const roster = $('#roster'), scroller = $('.roster-scroll'), keepTop = scroller.scrollTop;
@@ -681,14 +698,14 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     roster.innerHTML = '';
     // 一覧には所持している英雄だけを並べる
     listIds = Object.keys(TD.CHARS)
-      .filter(id => owns(id) && (filter.rarity === 'all' || TD.CHARS[id].rarity === filter.rarity) && (filter.element === 'all' || TD.CHARS[id].element === filter.element)
+      .filter(id => owns(id) && !lockedIn(partyCtx, id) && (filter.rarity === 'all' || TD.CHARS[id].rarity === filter.rarity) && (filter.element === 'all' || TD.CHARS[id].element === filter.element)
         && (filter.role === 'all' || TD.CHARS[id].role === filter.role))
       .sort((a, b) => (TD.CHARS[b].rarity - TD.CHARS[a].rarity));
     $('#roster-count').textContent = `表示中 ${listIds.length}人（所持 ${save.owned.length}人）`;
     if (!listIds.length) roster.innerHTML = '<div class="roster-empty">条件に合う英雄はいません</div>';
     for (const id of listIds) {
       const d = TD.CHARS[id], el = document.createElement('button'), have = owns(id);
-      el.className = `char-card r${d.rarity}` + (have ? '' : ' unowned') + (save.party.includes(id) ? ' in-party' : '') + (partySel === id && sheetOpen() ? ' sel' : '');
+      el.className = `char-card r${d.rarity}` + (have ? '' : ' unowned') + (PT().includes(id) ? ' in-party' : '') + (partySel === id && sheetOpen() ? ' sel' : '');
       el.innerHTML = `${TD.portraitHTML(id, false, !have)}<span class="cc-name">${have ? d.name : '？？？'}</span>${TD.starsHTML(d.rarity, 0)}` +
         (have ? `<span class="cc-lv">Lv${save.chars[id].lv}</span>${TD.lbHTML(save.chars[id].lb)}` : '<span class="cc-lv">未所持</span>') +
         (d.passive && !d.skill ? '<span class="cc-pas">常時</span>' : '') +
@@ -724,14 +741,14 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       box.querySelector('[data-go-summon]').onclick = () => { $('#char-sheet').classList.remove('show'); if (base.eventOnly) { const ev = TD.eventCharSource(id); openQuest(ev && TD.Live.eventActive(ev) ? [{ v: 'events' }, { v: 'event', ev: ev.id }, { v: 'evshop', ev: ev.id }] : [{ v: 'events' }]); } else show('screen-summon'); };
       return;
     }
-    const prog = save.chars[id], d = TD.charStats(id, prog), maxLv = TD.maxLv(prog.lb), inParty = save.party.includes(id);
+    const prog = save.chars[id], d = TD.charStats(id, prog), maxLv = TD.maxLv(prog.lb), inParty = PT().includes(id);
     const pv = base.passive;
     const next = prog.lv < maxLv ? TD.charStats(id, { lv: prog.lv + 1, lb: prog.lb }) : null;
     const up = (k) => next ? `<em>→${next[k]}</em>` : '';
     // 出撃時の数値（副官の補正とユニークスキルを反映）
     const sortieHTML = () => {
       if (!inParty) return '';
-      const f = TD.partyEffects(save.party, d), am = save.party[0] === id ? TD.ADJUTANT.statMult : 1;
+      const f = TD.partyEffects(PT(), d), am = PT()[0] === id ? TD.ADJUTANT.statMult : 1;
       const v = { hp: Math.round(d.hp * am * (1 + f.hp)), atk: Math.round(d.atk * am * (1 + f.atk)), def: Math.round(d.def * am * (1 + f.def)) };
       if (v.hp === d.hp && v.atk === d.atk && v.def === d.def) return '';
       const pct = (a, b) => b === a ? '' : `<small>+${Math.round((b / a - 1) * 100)}%</small>`;
@@ -756,9 +773,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       (base.profile ? `<div class="cd-profile">${base.profile}</div>` : '') +
       `<div class="cd-role">${r.desc}</div>` +
       `<div class="cd-stats"><span>HP<b>${d.hp}${up('hp')}</b></span><span>${base.role === 'priest' ? '回復' : '攻撃'}<b>${dps(d.atk)}${next ? `<em>→${dps(next.atk)}</em>` : ''}</b></span><span>防御<b>${d.def}${up('def')}</b></span>` +
-      `<span>コスト<b>${save.party[0] === id ? `${Math.max(1, d.cost - TD.ADJUTANT.costDown)}<small>(${d.cost}-${TD.ADJUTANT.costDown})</small>` : d.cost}</b></span><span>射程<b>${pv && pv.type === 'range' ? `${+(d.range * pv.mult).toFixed(1)}<small>(${d.range}×${pv.mult})</small>` : d.range}</b></span>` +
+      `<span>コスト<b>${PT()[0] === id ? `${Math.max(1, d.cost - TD.ADJUTANT.costDown)}<small>(${d.cost}-${TD.ADJUTANT.costDown})</small>` : d.cost}</b></span><span>射程<b>${pv && pv.type === 'range' ? `${+(d.range * pv.mult).toFixed(1)}<small>(${d.range}×${pv.mult})</small>` : d.range}</b></span>` +
       (d.splash ? `<span>範囲<b>${pv && pv.type === 'splash' ? `${+(d.splash * pv.mult).toFixed(2)}マス<small>(${d.splash}×${pv.mult})</small>` : d.splash + 'マス'}</b></span>` : '') +
-      (r.melee ? `<span>ブロック<b>${(b => b ? `${d.block + b}<small>(${d.block}+${b})</small>` : d.block)(TD.blockBonus(d, save.party))}</b></span>` : '') +
+      (r.melee ? `<span>ブロック<b>${(b => b ? `${d.block + b}<small>(${d.block}+${b})</small>` : d.block)(TD.blockBonus(d, PT()))}</b></span>` : '') +
       `<span class="${r.melee || d.splash ? 'wide' : 'wide2'}">再配置<b>${Math.round(TD.redeployTime(d))}秒<small>（撤退時 ${TD.RETREAT.minCooldown}〜${Math.round(TD.redeployTime(d))}秒）</small></b></span></div>` +
       sortieHTML() +
       `<div class="cd-levelup"><div class="cd-own"><i class="expbook"></i> 経験の書 <b>${save.crystals}</b></div>` +
@@ -772,7 +789,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       '';
     // 副官・編成ボタンは画面下に固定（キャラを切り替えても位置が変わらない）
     $('#sheet-foot').innerHTML = `<div class="btn-row party-btns">` +
-      (save.party[0] === id ? `<div class="adj-now">👑 副官に任命中<small>HP・攻撃・防御 +${Math.round((TD.ADJUTANT.statMult - 1) * 100)}%・コスト-${TD.ADJUTANT.costDown}</small></div>` : `<button class="btn ghost" id="btn-adjutant">👑 副官に任命</button>`) +
+      (PT()[0] === id ? `<div class="adj-now">👑 副官に任命中<small>HP・攻撃・防御 +${Math.round((TD.ADJUTANT.statMult - 1) * 100)}%・コスト-${TD.ADJUTANT.costDown}</small></div>` : `<button class="btn ghost" id="btn-adjutant">👑 副官に任命</button>`) +
       `<button class="btn ${inParty ? 'ghost' : 'primary'}" id="btn-toggle-party">${inParty ? '編成から外す' : '編成に加える'}</button></div>`;
     box.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => {
       const to = +b.dataset.lv, cost = lvUpCost(prog.lv, to);
@@ -787,13 +804,13 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     });
     $('#btn-toggle-party').onclick = () => {
       if (inParty) {
-        if (save.party.length <= 1) { alertBox('最低1人は編成してください'); return; }
-        save.party = save.party.filter(x => x !== id);
+        if (PT().length <= 1) { alertBox('最低1人は編成してください'); return; }
+        setPT(PT().filter(x => x !== id));
       } else {
-        if (save.party.length >= 6) { alertBox('編成は最大6人（副官＋5人）までです。誰かを外してください'); return; }
-        const next = [...save.party, id];
-        if (!TD.partyValid(next)) { alertBox(`副官以外の★の合計が${TD.ADJUTANT.starCap}を超えるため編成できません（編成すると${TD.partyStars(next)}）`); return; }
-        save.party = next;
+        if (PT().length >= 6) { alertBox('編成は最大6人（副官＋5人）までです。誰かを外してください'); return; }
+        const next = [...PT(), id];
+        if (!validCtx(next)) { alertBox(`副官以外の★の合計が${TD.ADJUTANT.starCap}を超えるため編成できません（編成すると${TD.partyStars(next)}）`); return; }
+        setPT(next);
       }
       persist();
       renderParty();
@@ -801,13 +818,13 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const adjBtn = $('#btn-adjutant');
     if (adjBtn) adjBtn.onclick = () => {
       let next;
-      if (inParty) next = [id, ...save.party.filter(x => x !== id)];
+      if (inParty) next = [id, ...PT().filter(x => x !== id)];
       else {
-        if (save.party.length >= 6) { alertBox('編成は最大6人（副官＋5人）までです。誰かを外してください'); return; }
-        next = [id, ...save.party];
+        if (PT().length >= 6) { alertBox('編成は最大6人（副官＋5人）までです。誰かを外してください'); return; }
+        next = [id, ...PT()];
       }
-      if (!TD.partyValid(next)) { alertBox(`副官を交代すると、副官以外の★の合計が${TD.partyStars(next)}になり、上限${TD.ADJUTANT.starCap}を超えます。先に誰かを外してください`); return; }
-      save.party = next;
+      if (!validCtx(next)) { alertBox(`副官を交代すると、副官以外の★の合計が${TD.partyStars(next)}になり、上限${TD.ADJUTANT.starCap}を超えます。先に誰かを外してください`); return; }
+      setPT(next);
       persist();
       renderParty();
       renderHome();

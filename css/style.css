@@ -963,3 +963,5 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 #endroll .er-last p { font-size: 18px; margin: 18px 0 8px; }
 #endroll .er-end { font-size: 14px; letter-spacing: 6px; color: #b8a8e0; }
 #endroll .er-skip { position: absolute; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 12px); background: rgba(255,255,255,.08); color: #ddd; border: 1px solid rgba(255,255,255,.2); border-radius: 16px; padding: 6px 14px; font-size: 12px; }
+.btn.disabled { filter: grayscale(1); opacity: .5; }
+#party-stars .ps-p2 { display: block; color: #c8a8ff; font-size: 11px; margin-bottom: 2px; }
