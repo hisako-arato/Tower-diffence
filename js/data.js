@@ -1495,7 +1495,38 @@ TD.STAGES = [
 // ===================== 敵として立ちはだかる英雄たち（第二部 第3章〜） =====================
 // キャラの定義から敵を作る（TD.ENEMIES['h_<id>']）。剣・盾は道で足止めされ、弓・魔導は歩きながら撃ち、僧侶は仲間を癒やす
 TD.HERO_DEFEAT = {
+  // ★3
+  gald: '王都は……俺たちの家なんだ……',
+  mia: '回復、まだ……届く……！ 届いて……',
+  kai: '燃え尽きた……かな。へへ……',
+  thomas: '盾が……重い。こんなに、重かったか……',
+  lily: 'お祈り、まだ途中だったのに……',
+  glen: '墓守が……墓に入るのか……',
+  luna: '月が……見えない……',
+  viola: '呪いは……解けないままね……',
+  kagerou: '影は……光の前では……',
+  // ★4
   akane: 'ここまで、か……。風が、止んだ',
+  fin: 'くっ……あなたに、矢を向けたくなんてなかった',
+  shizuku: 'どうして……どうして、あなたが……',
+  xeno: '……覚えておけ。俺たちは、まだ終わっていない',
+  aster: '光よ……まだ……届かない……',
+  celes: '凍らせてでも、止めたかったのに……',
+  nox: '闇の中でも……あなたの背中は、見えていたのに',
+  zephyr: '風よ……あの人に、届け……',
+  blaire: '……やっぱり、斬れないねえ。あたしは',
+  rune: '星の文字が……読めない……',
+  karin: 'あなたの匂い……やっぱり、嫌いになれない……',
+  shigure: '雨が……やまない……',
+  // ★5
+  meltia: '癒やせない傷も、あるのですね……',
+  kagura: '星が……初めて、外れました……',
+  nereia: 'だから言ったでしょう……死ねる世界のほうが、好きなの……',
+  sylphina: '風が……止まる……',
+  seira: '湖の光……守れなかった……',
+  minamo: '今度は……気のせいに、しなかったのに……',
+  lydia: '遠くを見る目……最後まで、変わらなかったわね……',
+  lumina_god: '……{name}さま。それでも、わたしは……',
   fin: 'くっ……あなたに、矢を向けたくなんてなかった',
   shizuku: 'どうして……どうして、あなたが……',
   xeno: '……覚えておけ。俺たちは、まだ終わっていない',
@@ -1516,6 +1547,15 @@ TD.HERO_DEFEAT = {
     };
   }
 })();
+
+// 第5章のための特別な敵：最後に立ちはだかるリディアと、神ルミナ
+TD.ENEMIES.h_lydia_last = Object.assign({}, TD.ENEMIES.h_lydia, {
+  name: '騎士姫 リディア', hp: TD.ENEMIES.h_lydia.hp * 3, size: 19, life: 5, boss: true, aoe: { every: 9, radius: 1.4, mult: 0.3, warn: 1.8 },
+});
+TD.ENEMIES.luminaGod = {
+  name: '生命の循環の神 ルミナ', element: 'light', heroId: 'lumina_god', shape: 'hero', hp: 30000, atk: 380, def: 220, speed: 0.1, interval: 2.0, size: 27,
+  life: 99, boss: true, ranged: 2.6, aoe: { every: 9, radius: 1.8, mult: 0.35, warn: 2.0 }, seal: { first: 6, every: 11, warn: 2.2, dur: 5 },
+};
 
 // ===================== 第二部 第3章 裏切りの夜（英雄たちが去っていく。stage.lock 以下の★は出撃できない） =====================
 (function () {
@@ -1594,6 +1634,38 @@ TD.HERO_DEFEAT = {
       ],
     },
   );
+})();
+
+// ===================== 第二部 第5章 神の座（3段階の最終決戦。英雄がすべて去ったので闇の配下だけで戦う） =====================
+(function () {
+  const C = '第二部 第5章 神の座', mapOf = id => TD.STAGES.find(s => s.id === id).map.slice();
+  const one = (e, t, s) => ({ t, e, n: 1, gap: 0, s });
+  const phases = [
+    { name: '英雄たちの壁', waves: [
+      one('h_gald', 2, 0), one('h_thomas', 3, 1), one('h_mia', 8, 0), one('h_lily', 9, 1), one('h_kai', 13, 0),
+      one('h_glen', 18, 1), one('h_luna', 20, 0), one('h_viola', 22, 1), one('h_kagerou', 24, 0),
+      one('h_blaire', 32, 0), one('h_xeno', 33, 1), one('h_aster', 36, 0), one('h_karin', 38, 1),
+      one('h_akane', 44, 0), one('h_nox', 45, 1), one('h_fin', 48, 0), one('h_zephyr', 49, 1),
+      one('h_celes', 54, 0), one('h_rune', 55, 1), one('h_shizuku', 58, 0), one('h_shigure', 59, 1),
+    ] },
+    { name: '七つの星', waves: [
+      one('h_kagura', 2, 0), one('h_meltia', 5, 1), one('h_seira', 14, 1), one('h_minamo', 16, 0),
+      one('h_nereia', 26, 0), one('h_sylphina', 28, 1), one('h_lydia_last', 40, 0),
+    ] },
+    { name: '神ルミナ', waves: [
+      one('luminaGod', 2, 0),
+      { t: 14, e: 'lightApostle', n: 4, gap: 1.2, s: 1 },
+      { t: 34, e: 'lightSeraph', n: 4, gap: 1.2, s: 'alt' },
+      { t: 54, e: 'lightApostle', n: 5, gap: 1.0, s: 'alt' },
+      { t: 74, e: 'lightSeraph', n: 5, gap: 1.0, s: 'alt' },
+    ] },
+  ];
+  TD.STAGES.push({
+    id: 'Ⅱ5-1', chapter: C, name: '神の座', part: 2, lock: 5, theme: 'abyss', phases,
+    brief: '最後の戦いです。英雄たちの壁、七つの星、そして神ルミナ――3つの段階を通しで戦います。段階が変わっても配置・HP・魔力・ライフはそのまま引き継がれ、負けたら最初からです。神ルミナは「封印の光」で、配下を1人ずつ封じてきます。',
+    lives: 20, mana: 30, hpScale: 3.0, reward: 500, exp: 3000, recLv: 60, map: mapOf('5-4'),
+    waves: phases.flatMap(p => p.waves),
+  });
 })();
 
 // ホーム画面の精霊ルミナのセリフ

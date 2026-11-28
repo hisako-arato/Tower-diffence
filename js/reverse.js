@@ -247,7 +247,9 @@ window.TD = window.TD || {};
     ...extra,
   ];
   const basePowers = [{ type: 'rush', name: '狂奔', icon: '»', cost: 12, cd: 20, dur: 6, mult: 1.6, desc: '6秒間、魔物たちの足が1.6倍速くなる' }];
-  TD.STAGES.push(...[
+  // 第5章（data.js で先に追加済み）より前に入れる
+  const at5 = TD.STAGES.findIndex(st => String(st.id).startsWith('Ⅱ5'));
+  TD.STAGES.splice(at5 < 0 ? TD.STAGES.length : at5, 0, ...[
     {
       id: 'Ⅱ4-1', type: 'reverse', part: 2, chapter: C, name: '王都外壁', hpScale: 3.6, lives: 0, reward: 150, exp: 1100, recLv: 60,
       brief: '魔物を召喚して道を進ませ、英雄たちが守る拠点まで届かせましょう。拠点の耐久を0にすれば勝ち、時間切れで負けです。早く落とすほど★が増えます。',

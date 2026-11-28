@@ -45,14 +45,18 @@ window.TD = window.TD || {};
         return { t: c.t, tile, idx: this.spawns.length - 1, open: false };
       });
 
-      this.events = [];
       // s: 'alt' … 出現地点を交互に使う（広い道の左右の車線に振り分ける）／ 'c0' … 結界の亀裂0
       const sIdx = (ws, i) => ws === 'alt' ? i % Math.min(2, baseSpawns) : typeof ws === 'string' && ws[0] === 'c' ? baseSpawns + +ws.slice(1) : (ws || 0);
-      for (const w of stage.waves)
-        for (let i = 0; i < w.n; i++) this.events.push({ t: w.t + i * w.gap, e: w.e, s: sIdx(w.s, i), g: w.g });
-      this.events.sort((a, b) => a.t - b.t);
+      this.buildEvents = (waves, t0) => {
+        const ev = [];
+        for (const w of waves) for (let i = 0; i < w.n; i++) ev.push({ t: t0 + w.t + i * w.gap, e: w.e, s: sIdx(w.s, i), g: w.g });
+        return ev.sort((a, b) => a.t - b.t);
+      };
+      // 段階のあるステージ（第二部 第5章）：段階ごとの敵をすべて倒すと次の段階へ。盤面はすべて引き継ぐ
+      this.phase = 0;
+      this.events = this.buildEvents(stage.phases ? stage.phases[0].waves : stage.waves, 0);
       this.evIdx = 0;
-      this.totalEnemies = this.events.length;
+      this.totalEnemies = stage.phases ? stage.phases.reduce((a, ph) => a + this.buildEvents(ph.waves, 0).length, 0) : this.events.length;
       this.killed = 0;
 
       this.time = 0;
@@ -403,6 +407,7 @@ window.TD = window.TD || {};
     activateSkill(u) {
       const d = u.def, s = d.skill;
       if (!s || u.removed || u.sp < s.sp || this.over) return;
+      if (u.sealedT > 0) { this.toast('封印されていて、スキルが使えない'); return; }
       u.sp = 0;
       this.skillCount = (this.skillCount || 0) + 1;
       const alive = this.enemies.filter(e => !e.dead);
@@ -774,7 +779,7 @@ window.TD = window.TD || {};
         // 災厄の残響：魂が光となって空へ還る（輪廻へ）
         if (e.def.soul) this.fx.push({ type: 'soulRise', x: e.x, y: e.y, t: 0, dur: 3, seed: Math.random() * 100 });
         // かつての仲間：倒れる時のひとこと
-        if (e.def.heroId) this.pop(e.x, e.y - e.size - 14, (TD.HERO_DEFEAT && TD.HERO_DEFEAT[e.def.heroId]) || '……っ', '#fff', { size: 11, dur: 2.4, bubble: true });
+        if (e.def.heroId) this.pop(e.x, e.y - e.size - 14, ((TD.HERO_DEFEAT && TD.HERO_DEFEAT[e.def.heroId]) || '……っ').replace('{name}', (TD.app && TD.app.save.playerName) || 'あなた'), '#fff', { size: 11, dur: 2.4, bubble: true });
       }
     }
 
@@ -871,7 +876,19 @@ window.TD = window.TD || {};
     // 勝敗の判定（攻守反転モードでは上書きする）
     checkEnd() {
       if (this.lives <= 0) this.finish(false);
-      else if (this.evIdx >= this.events.length && !this.enemies.length) this.finish(true);
+      else if (this.evIdx >= this.events.length && !this.enemies.length) {
+        const P = this.stage.phases;
+        if (P && this.phase < P.length - 1) this.nextPhase();
+        else this.finish(true);
+      }
+    }
+    nextPhase() {
+      const ph = this.stage.phases[++this.phase];
+      this.events = this.buildEvents(ph.waves, this.time + 3);
+      this.evIdx = 0;
+      this.fx.push({ type: 'flash', t: 0, dur: 0.8, color: 'rgba(255,250,220,' });
+      this.toast(`第${this.phase + 1}段階：${ph.name}`);
+      if (this.onPhase) this.onPhase(this.phase, ph);   // 段階の合間のストーリー（app.js）
     }
 
     spawn(type, s, g) {
@@ -935,6 +952,16 @@ window.TD = window.TD || {};
         }
         // 光の障壁（結界の守護像）：一定時間ごとに数秒間、攻撃が効かなくなる
         if (!e.def.barrier && e.barrierOn > 0) e.barrierOn -= dt;   // 攻守反転の権能「原初の咆哮」
+        // 神ルミナ「封印の光」：一定時間ごとに配下を1人選んで封じる（攻撃力の一番高い者を狙う）
+        if (e.def.seal && this.units.length) {
+          const sl = e.def.seal;
+          if ((e.sealCd = (e.sealCd == null ? sl.first : e.sealCd) - dt) <= 0) {
+            e.sealCd = sl.every;
+            const free = this.units.filter(u => !(u.sealedT > 0) && !(u.sealWarn > 0));
+            const tgt = free.sort((a, b) => this.atkOf(b) - this.atkOf(a))[0];
+            if (tgt) { tgt.sealWarn = sl.warn; tgt.sealDur = sl.dur; this.toast(`封印の光が${tgt.def.name}を狙っている……！`); }
+          }
+        }
         if (e.def.barrier) {
           const br = e.def.barrier;
           if (e.barrierOn > 0) e.barrierOn -= dt;
@@ -1051,6 +1078,13 @@ window.TD = window.TD || {};
         if (u.hp < u.maxHp && this.regenIds && this.regenIds.has(u.card.id)) u.hp = Math.min(u.maxHp, u.hp + u.maxHp * this.regenRate * dt);
         if (u.hasteT > 0) u.hasteT -= dt;
         if (u.shieldT > 0) u.shieldT -= dt;
+        // 神ルミナ「封印の光」：予兆のあと、しばらく攻撃もスキルも止まる（足止めは続ける）
+        if (u.sealWarn > 0 && (u.sealWarn -= dt) <= 0) {
+          u.sealedT = u.sealDur;
+          this.pop(u.x, u.y - 30, '封印', '#fff3b0', { size: 13, dur: 1.2 });
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 40, r1: 14, t: 0, dur: 0.5, color: '#fff3b0', width: 6 });
+        }
+        if (u.sealedT > 0) { u.sealedT -= dt; continue; }
         if (u.buff) { u.buffT -= dt; if (u.buffT <= 0) { u.buff = null; } }
         else if (u.def.skill) u.sp = Math.min(u.def.skill.sp, u.sp + dt);
 
@@ -1511,6 +1545,18 @@ window.TD = window.TD || {};
       g.fillStyle = u.buff ? '#ffd23f' : '#5fd0ff';
       const sp = u.buff ? u.buffT / u.buff.dur : u.def.skill ? u.sp / u.def.skill.sp : 0;
       g.fillRect(u.x - 14, u.y + 20, 28 * sp, 1.5);
+      if (u.sealWarn > 0) {   // 封印の予兆：金の光が集まる
+        const k = 0.5 + 0.5 * Math.sin(t * 14);
+        g.strokeStyle = `rgba(255,240,170,${0.5 + 0.5 * k})`; g.lineWidth = 2.5;
+        g.beginPath(); g.arc(u.x, u.y, 18 + u.sealWarn * 8, 0, Math.PI * 2); g.stroke();
+      }
+      if (u.sealedT > 0) {   // 封印中：光の鎖
+        g.fillStyle = 'rgba(255,245,200,.35)'; g.beginPath(); g.arc(u.x, u.y, 16, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = '#ffe9a0'; g.lineWidth = 2.5;
+        g.beginPath(); g.moveTo(u.x - 15, u.y - 15); g.lineTo(u.x + 15, u.y + 15); g.moveTo(u.x + 15, u.y - 15); g.lineTo(u.x - 15, u.y + 15); g.stroke();
+        g.fillStyle = '#5a3a00'; g.font = 'bold 11px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.fillText('封', u.x, u.y - 24);
+      }
     }
 
     drawEnemy(g, e) {

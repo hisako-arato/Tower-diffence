@@ -209,6 +209,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       renderHome();
       // 4-5 のその後を見終えた時点でリンがいなければ、強制召喚イベント
       if (id === '4-5-post' && !owns(TD.ANCIENT.hero)) { checkForcedRin(cb); return; }
+      if (TD.STORY[id].endroll) { endRoll(cb); return; }
       const j = TD.STORY[id].join;
       if (j && !owns(j)) { joinDark(j, true, cb); return; }
       cb && cb();
@@ -227,6 +228,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     if (id.startsWith('rin-awaken-')) return `リンが本来の力を取り戻すと解放（顕現${id.slice(-1)}）`;
     if (id.startsWith('event-')) return 'クエスト＞イベントから見られます（開催期間中）';
     const [a, b, kind] = id.split('-');
+    if (kind && kind[0] === 'p' && kind !== 'pre' && kind !== 'post') return `ステージ${a}-${b}の戦いの途中で解放`;
     return kind === 'pre' ? `ステージ${a}-${b}に挑戦すると解放` : `ステージ${a}-${b}クリアで解放`;
   }
   function renderStoryList() {
@@ -238,7 +240,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       html += `<button class="story-item${read ? '' : ' locked'}" data-ep="${id}"><span class="si-title">${esc(ep.title)}</span>` +
         `<span class="si-sub">${read ? '▶ 再生' : '🔒 ' + storyUnlockHint(id)}</span></button>`;
     }
-    html += `<div class="story-next">第二部 第5章は近日公開予定です</div>`;
+    html += `<div class="story-next">――「結界の守り手」第二部 完結――</div>`;
     list.innerHTML = html;
     list.querySelectorAll('[data-ep]').forEach(b => b.onclick = () => {
       const id = b.dataset.ep;
@@ -358,7 +360,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
           ch === cur ? '進行中' : i.stars === i.sts.length * 3 ? 'COMPLETE' : '', () => qpush({ v: 'chapter', ch }), !i.open));
         if (unread) list.lastChild.insertAdjacentHTML('beforeend', '<span class="st-story">STORY</span>');
       }
-      list.insertAdjacentHTML('beforeend', `<div class="story-next">第二部 第5章は近日公開予定です</div>`);
+      list.insertAdjacentHTML('beforeend', `<div class="story-next">――「結界の守り手」第二部 完結――</div>`);
     } else if (node.v === 'chapter') {
       list.insertAdjacentHTML('beforeend', `<div class="chapter-title">${esc(node.ch)}</div>`);
       TD.STAGES.forEach((st, i) => {
@@ -525,6 +527,13 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       p.def.def = Math.round(p.def.def * (1 + f.def));
     }
     battle = new TD.Battle(st, party, bEls, onBattleEnd);
+    // 段階の合間のストーリー（初めての時だけ。戦いは止めて、見終えたら再開）
+    battle.onPhase = (i) => {
+      const id = `${st.id}-p${i + 1}`, b = battle;
+      if (!TD.STORY[id] || save.story[id]) return;
+      b.paused = true;
+      setTimeout(() => playStory(id, () => { if (battle === b) b.paused = false; }), 900);
+    };
     if (fx.mana) battle.mana = Math.min(99, battle.mana + fx.mana);
     TD.currentBattle = battle;
     const banner = $('#battle-banner');
@@ -803,6 +812,30 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       renderParty();
       renderHome();
     };
+  }
+
+  // ---------- エンドロール（第二部 完） ----------
+  function endRoll(next) {
+    const group = (title, ids) => `<div class="er-sec">${title}</div><div class="er-faces">${ids.map(id => `<span class="er-face">${TD.portraitHTML(id)}<small>${esc(TD.CHARS[id].name)}</small></span>`).join('')}</div>`;
+    const ids = r => Object.keys(TD.CHARS).filter(id => TD.CHARS[id].rarity === r);
+    const el = document.createElement('div');
+    el.id = 'endroll';
+    el.innerHTML = `<div class="er-scroll">` +
+      `<div class="er-title">結界の守り手<small>第二部</small></div>` +
+      group('王と六柱', ['rin', ...ids(6).filter(id => id !== 'rin')]) +
+      group('七つの星', ids(5)) + group('英雄たち', ids(4)) + group('王都の仲間たち', ids(3)) +
+      `<div class="er-sec">そして</div><div class="er-god"><img src="${TD.CUSTOM_ART.lumina_god.src}" alt=""><small>生命の循環の神 ルミナ</small></div>` +
+      `<div class="er-sec">召喚士</div><div class="er-me">${esc(save.playerName || '召喚士')}</div>` +
+      `<div class="er-thanks">Thank you for playing</div></div>` +
+      `<div class="er-last"><div class="er-rin">${TD.fullArtHTML('rin')}</div><p>「お帰りなさいませ、我が主」</p><div class="er-end">―― 完 ――</div></div>` +
+      `<button class="er-skip">スキップ ›</button>`;
+    document.body.appendChild(el);
+    let done = false;
+    const last = () => { if (el.classList.contains('last')) return; el.classList.add('last'); setTimeout(() => { done = true; }, 1500); };
+    const close = () => { el.remove(); next && next(); };
+    el.querySelector('.er-scroll').addEventListener('animationend', last);
+    el.querySelector('.er-skip').onclick = e => { e.stopPropagation(); if (el.classList.contains('last')) close(); else last(); };
+    el.addEventListener('click', () => { if (done) close(); });
   }
 
   // ---------- 攻守反転（試作） ----------
