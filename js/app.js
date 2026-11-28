@@ -209,6 +209,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       renderHome();
       // 4-5 のその後を見終えた時点でリンがいなければ、強制召喚イベント
       if (id === '4-5-post' && !owns(TD.ANCIENT.hero)) { checkForcedRin(cb); return; }
+      const j = TD.STORY[id].join;
+      if (j && !owns(j)) { joinDark(j, true, cb); return; }
       cb && cb();
     }, name => {
       // 名前を決めた時点でプロローグは「見た」ことにする（途中で閉じても再度聞かれない）
@@ -236,7 +238,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       html += `<button class="story-item${read ? '' : ' locked'}" data-ep="${id}"><span class="si-title">${esc(ep.title)}</span>` +
         `<span class="si-sub">${read ? '▶ 再生' : '🔒 ' + storyUnlockHint(id)}</span></button>`;
     }
-    html += `<div class="story-next">第二部 第3章は近日公開予定です</div>`;
+    html += `<div class="story-next">第二部 第4章は近日公開予定です</div>`;
     list.innerHTML = html;
     list.querySelectorAll('[data-ep]').forEach(b => b.onclick = () => {
       const id = b.dataset.ep;
@@ -357,7 +359,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
           ch === cur ? '進行中' : i.stars === i.sts.length * 3 ? 'COMPLETE' : '', () => qpush({ v: 'chapter', ch }), !i.open));
         if (unread) list.lastChild.insertAdjacentHTML('beforeend', '<span class="st-story">STORY</span>');
       }
-      list.insertAdjacentHTML('beforeend', `<div class="story-next">第二部 第3章は近日公開予定です</div>`);
+      list.insertAdjacentHTML('beforeend', `<div class="story-next">第二部 第4章は近日公開予定です</div>`);
     } else if (node.v === 'chapter') {
       list.insertAdjacentHTML('beforeend', `<div class="chapter-title">${esc(node.ch)}</div>`);
       TD.STAGES.forEach((st, i) => {
@@ -429,7 +431,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       const e = TD.ENEMIES[t];
       return `<li>${TD.elemChip(e.element)}${esc(e.name)}${e.boss ? ' <b class="boss-tag">BOSS</b>' : ''}</li>`;
     }).join('');
-    const party = save.party.map((id, i) => `<span class="bp${i === 0 ? ' adj' : ''}">${TD.portraitHTML(id)}<small>${i === 0 ? '副官' : 'Lv' + save.chars[id].lv}</small></span>`).join('');
+    const P = effParty(st);
+    const party = save.party.map(id => lockedIn(st, id) ? `<span class="bp gone">${TD.portraitHTML(id, false, true)}<small>離脱</small></span>` : '').join('') +
+      P.map((id, i) => `<span class="bp${i === 0 ? ' adj' : ''}${save.party.includes(id) ? '' : ' joined'}">${TD.portraitHTML(id)}<small>${i === 0 ? '副官' : save.party.includes(id) ? 'Lv' + save.chars[id].lv : '同行'}</small></span>`).join('');
     const first = !save.cleared[st.id];
     const rewardText = st.type === 'daily' ? `経験の書 ×${TD.stageExp(st)}（本日あと${TD.Live.runsLeft(save, st)}回）`
       : st.type === 'event' ? `${TD.eventOf(st).currency} ×${st.eventPoints}・経験の書 ×${TD.stageExp(st)}${first ? `・魔晶石 ×${st.reward}（初回）` : ''}`
@@ -439,15 +443,16 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="brief-navi"><span class="mini-navi"></span><p>${esc(st.brief)}</p></div>` +
       (st.map.join('').split('G').length - 1 >= 2 ? `<div class="brief-goals">⚠ 守る拠点が2つあります（どちらに届いてもライフが減ります）</div>` : '') +
       `<div class="brief-sec">出現する敵</div><ul class="enemy-list">${enemies}</ul>` +
-      `<div class="brief-sec">出撃メンバー<small class="brief-stars${TD.partyValid(save.party) ? '' : ' over'}">副官以外の★ ${TD.partyStars(save.party)} / ${TD.ADJUTANT.starCap}</small></div><div class="brief-party">${party}</div>` +
-      (TD.partyEffectsText(save.party) ? `<div class="brief-fx">ユニークスキル：${TD.partyEffectsText(save.party)}</div>` : '') +
-      (st.recLv ? (() => { const avg = Math.round(save.party.reduce((a, id) => a + save.chars[id].lv, 0) / save.party.length);
+      `<div class="brief-sec">出撃メンバー<small class="brief-stars${TD.partyValid(P) ? '' : ' over'}">副官以外の★ ${TD.partyStars(P)} / ${TD.ADJUTANT.starCap}</small></div><div class="brief-party">${party}</div>` +
+      (st.lock ? `<div class="brief-goals">⚠ 主人公のもとを去った英雄は出撃できません（第二部のステージのみ）</div>` : '') +
+      (TD.partyEffectsText(P) ? `<div class="brief-fx">ユニークスキル：${TD.partyEffectsText(P)}</div>` : '') +
+      (st.recLv && P.length ? (() => { const avg = Math.round(P.reduce((a, id) => a + save.chars[id].lv, 0) / P.length);
         return `<div class="brief-rec${avg < st.recLv ? ' low' : ''}">推奨Lv ${st.recLv}<small>（編成の平均 Lv${avg}${avg < st.recLv ? '・育成すると楽になります' : ''}）</small></div>`; })() : '') +
       `<div class="brief-sub">ライフ ${st.lives}・初期マナ ${st.mana}<br>報酬：${rewardText}</div>` +
       `<div class="btn-row"><button class="btn ghost" data-act="party">編成する</button><button class="btn primary" data-act="go">出撃！</button></div>`);
     body.querySelector('[data-act=party]').onclick = () => { closeModal(); show('screen-party'); };
     body.querySelector('[data-act=go]').onclick = () => {
-      if (!partyOk()) return;
+      if (!partyOk(st)) return;
       closeModal();
       const pre = st.type === 'event' && !save.story[TD.eventOf(st).story] ? TD.eventOf(st).story : storyFor(st, 'pre');
       if (pre && !save.story[pre]) playStory(pre, () => startBattle(st));
@@ -461,10 +466,38 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     lives: $('#hud-lives'), enemies: $('#hud-enemies'), menu: $('#unit-menu'), cutin: $('#cutin'), toast: $('#battle-toast'),
   };
 
-  function partyOk() {
-    if (TD.partyValid(save.party)) return true;
-    alertBox(`副官以外の★の合計が${TD.partyStars(save.party)}で、上限${TD.ADJUTANT.starCap}を超えています。編成を見直してください`);
+  // 第二部 第3章以降：主人公のもとを去った英雄は出撃できない（stage.lock 以下の★）。闇の配下は空いた枠に自動で同行する
+  const lockedIn = (st, id) => !!(st && st.lock && TD.CHARS[id].rarity <= st.lock);
+  function effParty(st) {
+    if (!st || !st.lock) return save.party;
+    const p = save.party.filter(id => !lockedIn(st, id));
+    // 同行させても★の上限を超えない時だけ加える
+    const add = id => { if (p.length < 6 && !p.includes(id) && TD.partyValid([...p, id])) p.push(id); };
+    save.owned.filter(id => TD.CHARS[id].dark).forEach(add);
+    if (owns(TD.ANCIENT.hero)) add(TD.ANCIENT.hero);
+    return p;
+  }
+  function partyOk(st) {
+    const P = effParty(st);
+    if (!P.length) { alertBox('出撃できる仲間がいません。編成を見直してください'); return false; }
+    if (TD.partyValid(P)) return true;
+    alertBox(`副官以外の★の合計が${TD.partyStars(P)}で、上限${TD.ADJUTANT.starCap}を超えています。編成を見直してください`);
     return false;
+  }
+  // 闇の配下が仲間になる（ストーリーの流れで加入。力は千年前のまま）
+  function joinDark(id, reveal, next) {
+    if (owns(id)) { next && next(); return; }
+    const rin = save.chars[TD.ANCIENT.hero];
+    save.owned.push(id);
+    save.chars[id] = { lv: Math.max(1, Math.min(TD.maxLv(4), rin ? rin.lv : 1)), lb: 4 };
+    persist(); renderHome();
+    if (!reveal) { next && next(); return; }
+    const d = TD.CHARS[id];
+    const body = modal(`<div class="ancient-reveal"><div class="ar-art">${TD.fullArtHTML(id)}</div><div class="ar-stars">${'★'.repeat(d.rarity)}</div>` +
+      `<div class="ar-name"><small>${esc(d.title)}</small>${esc(d.name)}</div><p>「${esc(d.lines.deploy)}」</p>` +
+      `<div class="ar-lb">${esc(d.name)}が仲間になりました。第二部では、去った英雄の代わりに出撃メンバーへ自動で加わります</div>` +
+      `<div class="btn-row"><button class="btn primary">閉じる</button></div></div>`, 'locked');
+    body.querySelector('button').onclick = () => { closeModal(); next && next(); };
   }
   function startBattle(st) {
     if (battle) battle.destroy();
@@ -473,7 +506,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     $('#hud-stage').textContent = `${st.id} ${st.name}`;
     $('#btn-speed').textContent = '▶ x1';
     if (st.type === 'reverse') { startReverse(st); return; }
-    const party = save.party.map((id, i) => {
+    const P = effParty(st);
+    const party = P.map((id, i) => {
       const def = TD.charStats(id, save.chars[id]);
       if (i === 0) { // 副官補正
         const m = TD.ADJUTANT.statMult;
@@ -482,9 +516,9 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       return { id, def };
     });
     // 編成効果（出撃メンバーにいるだけで有効・重ねがけ可）
-    const fx = TD.partyEffects(save.party);
+    const fx = TD.partyEffects(P);
     for (const p of party) {
-      const f = TD.partyEffects(save.party, p.def); // 属性・職業でしぼった効果も含めて計算
+      const f = TD.partyEffects(P, p.def); // 属性・職業でしぼった効果も含めて計算
       p.def.hp = Math.round(p.def.hp * (1 + f.hp));
       p.def.atk = Math.round(p.def.atk * (1 + f.atk));
       p.def.def = Math.round(p.def.def * (1 + f.def));
@@ -520,7 +554,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     let stones = 0, notes = [];
     let exp = r.win ? TD.stageExp(st) : Math.round(TD.stageExp(st) * 0.2);
     // 常時スキル「宝探し」：出撃メンバーにいれば経験の書が増える（重複しない・最大のもの）
-    const expBonus = 1 + TD.partyEffects(save.party).exp;
+    const expBonus = 1 + TD.partyEffects(effParty(st)).exp;
     exp = Math.round(exp * expBonus);
     let evPts = 0, ancientGot = null;
     TD.Live.track(save, 'kills', r.killed);
@@ -540,7 +574,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       ancientGot = gainAncient(TD.ancientDrop(st, r.stars));
     }
     // ユニークスキル：クリア時の魔晶石が増える（重ねがけ可）
-    const stoneFx = TD.partyEffects(save.party).stones;
+    const stoneFx = TD.partyEffects(effParty(st)).stones;
     if (stones && stoneFx) { const add = Math.round(stones * stoneFx); stones += add; notes.push(`ユニークスキル +${add}`); }
     save.stones += stones;
     save.crystals += exp;
@@ -576,7 +610,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     on('retry', () => {
       leave();
       if (st.type === 'daily' && TD.Live.runsLeft(save, st) <= 0) { show('screen-stages'); alertBox('本日の挑戦回数は終了しました'); }
-      else if (partyOk()) startBattle(st);
+      else if (partyOk(st)) startBattle(st);
     });
     on('stages', () => { leave(); show('screen-stages'); });
   }
@@ -1110,7 +1144,10 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     $('#title-screen').classList.add('hide');
     naviSay(TD.NAVI_LINES[0]);
     // 起動時の流れ：プロローグ → 初回プレゼント（ログイン報酬はデイリーミッションで受け取る）
-    const after = () => { TD.Live.ensureDaily(save); persist(); renderHome(); checkForcedRin(checkGift); };
+    const after = () => {
+      for (const sid in TD.STORY) if (TD.STORY[sid].join && save.story[sid] && !owns(TD.STORY[sid].join)) joinDark(TD.STORY[sid].join, false);
+      TD.Live.ensureDaily(save); persist(); renderHome(); checkForcedRin(checkGift);
+    };
     if (!save.story.prologue) setTimeout(() => playStory('prologue', after), 500);
     else setTimeout(after, 400);
   });

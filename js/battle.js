@@ -750,6 +750,8 @@ window.TD = window.TD || {};
         if (e.def.boss) this.fx.push({ type: 'flash', t: 0, dur: 0.8, color: 'rgba(255,255,255,' });
         // 災厄の残響：魂が光となって空へ還る（輪廻へ）
         if (e.def.soul) this.fx.push({ type: 'soulRise', x: e.x, y: e.y, t: 0, dur: 3, seed: Math.random() * 100 });
+        // かつての仲間：倒れる時のひとこと
+        if (e.def.heroId) this.pop(e.x, e.y - e.size - 14, (TD.HERO_DEFEAT && TD.HERO_DEFEAT[e.def.heroId]) || '……っ', '#fff', { size: 11, dur: 2.4, bubble: true });
       }
     }
 
@@ -1583,6 +1585,43 @@ window.TD = window.TD || {};
           g.beginPath(); g.arc(x, y, s, 0, Math.PI * 2); g.fill();
           g.strokeStyle = el.color; g.lineWidth = 3; g.stroke();
           g.fillStyle = '#6c7380'; g.fillRect(x + s * 0.6, y - s * 1.2, 3, s * 2); break;
+        case 'hero': { // かつての仲間：キャラの顔を丸く切り抜き、敵の印として赤い外枠
+          const grd = g.createRadialGradient(x - 3, y - 4, 2, x, y, s);
+          grd.addColorStop(0, '#ffffff'); grd.addColorStop(0.35, el.color); grd.addColorStop(1, el.dark);
+          g.save(); g.beginPath(); g.arc(x, y, s, 0, Math.PI * 2); g.clip();
+          g.fillStyle = grd; g.fillRect(x - s, y - s, s * 2, s * 2);
+          TD.drawCharBust(g, e.def.heroId, x - s, y - s, s * 2);
+          if (e.flash > 0) { g.fillStyle = 'rgba(255,255,255,.6)'; g.fillRect(x - s, y - s, s * 2, s * 2); }
+          else if (e.frozen > 0) { g.fillStyle = 'rgba(160,220,255,.45)'; g.fillRect(x - s, y - s, s * 2, s * 2); }
+          g.restore();
+          g.strokeStyle = '#1b1410'; g.lineWidth = 3.5; g.beginPath(); g.arc(x, y, s, 0, Math.PI * 2); g.stroke();
+          g.strokeStyle = '#ff4a5a'; g.lineWidth = 2; g.stroke();
+          break;
+        }
+        case 'angel': { // 光の使徒：白い翼と金の光輪
+          const flap = Math.sin(e.walk * 0.9) * 0.35;
+          g.fillStyle = e.flash > 0 ? '#fff' : 'rgba(255,255,245,.92)';
+          for (const sd of [-1, 1]) {
+            g.save(); g.translate(x + sd * s * 0.6, y - s * 0.2); g.rotate(sd * (0.5 + flap));
+            g.beginPath(); g.ellipse(sd * s * 0.7, 0, s * 0.9, s * 0.38, 0, 0, Math.PI * 2); g.fill(); g.restore();
+          }
+          g.fillStyle = body; g.beginPath(); g.arc(x, y, s * 0.8, 0, Math.PI * 2); g.fill(); g.stroke();
+          g.strokeStyle = '#ffd86a'; g.lineWidth = 2;
+          g.beginPath(); g.ellipse(x, y - s * 1.05, s * 0.55, s * 0.18, 0, 0, Math.PI * 2); g.stroke();
+          break;
+        }
+        case 'knight': { // 王都騎士：兜と赤い羽根飾り、盾
+          g.beginPath(); g.arc(x, y, s, 0, Math.PI * 2); g.fill(); g.stroke();
+          g.fillStyle = e.flash > 0 ? '#fff' : '#8a93a6';
+          g.beginPath(); g.arc(x, y - s * 0.2, s * 0.78, Math.PI, 0); g.fill();
+          g.fillStyle = '#20242e'; g.fillRect(x - s * 0.6, y - s * 0.3, s * 1.2, s * 0.22);
+          g.fillStyle = '#d83a3a'; g.beginPath(); g.ellipse(x, y - s * 1.05, s * 0.22, s * 0.45, 0, 0, Math.PI * 2); g.fill();
+          if (!e.def.ranged) {
+            g.fillStyle = '#e8d48a'; g.strokeStyle = '#6a5420'; g.lineWidth = 1.2;
+            g.beginPath(); g.moveTo(x + s * 0.7, y - s * 0.1); g.lineTo(x + s * 1.3, y - s * 0.1); g.lineTo(x + s * 1.3, y + s * 0.5); g.lineTo(x + s, y + s * 0.85); g.lineTo(x + s * 0.7, y + s * 0.5); g.closePath(); g.fill(); g.stroke();
+          }
+          break;
+        }
         case 'boss': {
           g.beginPath(); g.arc(x, y, s, 0, Math.PI * 2); g.fill(); g.stroke();
           g.fillStyle = '#2a1a3a';
@@ -1610,7 +1649,7 @@ window.TD = window.TD || {};
         g.strokeStyle = '#ffe066'; g.lineWidth = 1.5; g.setLineDash([3, 3]);
         g.beginPath(); g.arc(x, y, s + 4, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
       }
-      if (e.def.ranged && e.def.shape === 'goblin') { // 弓兵の目印
+      if (e.def.ranged && (e.def.shape === 'goblin' || e.def.shape === 'knight')) { // 弓兵の目印
         g.strokeStyle = '#8a5a2a'; g.lineWidth = 2;
         g.beginPath(); g.arc(x - s * 1.1, y, s * 0.9, -1.2, 1.2); g.stroke();
         g.strokeStyle = '#eee'; g.lineWidth = 0.8;
@@ -1618,7 +1657,8 @@ window.TD = window.TD || {};
       }
       // 目
       const eyeY = e.def.shape === 'slime' ? y - s * 0.2 : y - s * 0.15, eyeColor = e.def.boss ? '#ff3030' : '#1b1410';
-      if (e.def.shape === 'eye') {   // 一つ目：狙っているキャラのほうを見る
+      if (e.def.shape === 'hero' || e.def.shape === 'knight') { /* 顔・兜があるので目は描かない */ }
+      else if (e.def.shape === 'eye') {   // 一つ目：狙っているキャラのほうを見る
         const at = e.aimAt, ang = at ? Math.atan2(at.y - y, at.x - x) : Math.PI / 2;
         g.fillStyle = '#fff6e8'; g.beginPath(); g.ellipse(x, y, s * 0.62, s * 0.5, 0, 0, Math.PI * 2); g.fill();
         g.fillStyle = e.charging > 0 ? '#ff2a1a' : '#2a0a10';

@@ -938,3 +938,6 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .q-card.proto { border-left-color: #c060ff; background: linear-gradient(90deg, rgba(150, 60, 220, .18), var(--panel)); }
 .part-title { margin: 14px 2px 8px; font-size: 13px; font-weight: 900; letter-spacing: .2em; color: #c8a8ff; border-bottom: 1px solid rgba(200, 168, 255, .3); padding-bottom: 4px; }
 .part-title:first-child { margin-top: 2px; }
+.bp.gone { opacity: .45; }
+.bp.gone small { color: #ff8a8a; font-weight: 900; }
+.bp.joined small { color: #c070ff; font-weight: 900; }

@@ -249,6 +249,23 @@ TD.CHARS = {
              desc: 'フィールド上の全ての敵に攻撃力300〜700%の闇ダメージを与え、味方全員のHPを20〜50%回復（本来の力を取り戻すほど強くなる）' },
     lines: { deploy: '……下がっていろ。ここから先は、王の戦場だ', skill: '天よ、地よ、ひれ伏せ――黒天・終焉斬' },
   },
+  // ---------- 闇の配下（★6・第二部のストーリーで加入。召喚には出ない／力は千年前のまま） ----------
+  leviath: {
+    name: 'リヴァイア', title: '氷鱗の災厄', rarity: 6, dark: true, element: 'water', role: 'mage',
+    cost: 20, hp: 2600, atk: 250, def: 70, interval: 1.9, range: 2.8, splash: 1.0, redeploy: 35,
+    profile: '千年前、王に仕えた七柱のひとり。凍てつく湖の底で、主の帰還を待ち続けた。',
+    skill: { name: '絶海・氷鱗の檻', type: 'freeze', sp: 30, mult: 3, radius: 3.2, dur: 4,
+             desc: '周囲の敵を4秒間凍らせ、攻撃力300%のダメージ' },
+    lines: { deploy: '我が主の御前だ。……凍てつけ', skill: '深き海よ、檻となれ――絶海・氷鱗の檻' },
+  },
+  ordra: {
+    name: 'オルドラ', title: '原初の災厄', rarity: 6, dark: true, element: 'dark', role: 'shield',
+    cost: 22, hp: 7200, atk: 200, def: 260, interval: 1.4, range: 1.3, block: 3, redeploy: 40,
+    profile: '七柱を束ねる原初の災厄。王が約束した「永遠」を、千年のあいだ一度も疑わなかった。',
+    skill: { name: '原初の咆哮', type: 'rally', sp: 30, dur: 12, atkMult: 1.4, ratio: 0.3,
+             desc: '12秒間、味方全員の攻撃力1.4倍。味方全員のHPを30%回復' },
+    lines: { deploy: '我が主の道を阻むものは、すべて無に還す', skill: '聞け、原初の咆哮を――！' },
+  },
   ciel: {
     name: 'シエル', title: '王城の星詠みメイド', rarity: 4, kind: 'tech', eventOnly: true, element: 'light', role: 'mage',
     cost: 13, hp: 820, atk: 120, def: 15, interval: 1.9, range: 2.6, splash: 0.9, redeploy: 30,
@@ -451,6 +468,15 @@ TD.ENEMIES = {
   // 毒を持つ敵：遠くから毒の魔弾を撃ち、当たった味方を毒にする（毎秒最大HPの2%・6秒）
   echoPlague: { name: '残響の毒術師', element: 'dark', hp: 640, atk: 90, def: 20, speed: 0.45, interval: 2.4, size: 12, shape: 'mage', ranged: 2.8, echo: true, poisonOnHit: { ratio: 0.02, dur: 6 } },
   // 結界の守護像：結界石が持ち主の帰還を拒んで目覚めた光の巨像。一定時間ごとに光の障壁で攻撃が効かなくなる
+  // 第二部 第3章：ルミナの呼ぶ光の軍勢と、王都騎士団
+  lightApostle:  { name: '光の使徒',     element: 'light', hp: 1400, atk: 150, def: 90,  speed: 0.5,  interval: 1.6, size: 13, shape: 'angel' },
+  lightSeraph:   { name: '光の熾天使',   element: 'light', hp: 900,  atk: 110, def: 30,  speed: 0.7,  interval: 2.0, size: 13, shape: 'angel', flying: true, ranged: 2.4 },
+  archApostle:   { name: '光の大使徒',   element: 'light', hp: 7000, atk: 230, def: 140, speed: 0.26, interval: 1.8, size: 21, shape: 'angel', life: 5, boss: true,
+                   healer: { every: 2.5, radius: 3.0, ratio: 0.08, keep: 0.05 }, aoe: { every: 11, radius: 1.5, mult: 0.3, warn: 2.0 } },
+  royalKnight:   { name: '王都騎士',     element: 'light', hp: 2000, atk: 180, def: 150, speed: 0.38, interval: 1.7, size: 14, shape: 'knight' },
+  royalArcher:   { name: '王都弓兵',     element: 'light', hp: 800,  atk: 120, def: 40,  speed: 0.45, interval: 2.0, size: 12, shape: 'knight', ranged: 2.8 },
+  knightCaptain: { name: '王都騎士団長', element: 'light', hp: 9000, atk: 300, def: 200, speed: 0.25, interval: 1.8, size: 22, shape: 'knight', life: 5, boss: true,
+                   aoe: { every: 9, radius: 1.6, mult: 0.35, warn: 1.8 } },
   barrierGuardian: { name: '結界の守護像', element: 'light', hp: 9000, atk: 240, def: 160, speed: 0.24, interval: 2.0, size: 24, shape: 'golem', life: 5, boss: true,
                      aoe: { every: 10, radius: 1.6, mult: 0.3, warn: 2.0 }, barrier: { first: 8, every: 12, dur: 3 } },
   vargEcho:    { name: '災厄の残響 ヴァルグ', element: 'dark', hp: 6000, atk: 220, def: 100, speed: 0.45, interval: 1.6, size: 22, shape: 'boss', life: 5, boss: true, echo: true, soul: true },
@@ -1430,6 +1456,110 @@ TD.STAGES = [
         { t: 44, e: 'gargoyle', n: 2, gap: 3, s: 1, g: 1 },
         { t: 54, e: 'echoKnight', n: 3, gap: 1.6, s: 'c0' },
         { t: 62, e: 'echoWolf', n: 6, gap: 0.8, s: 1, g: 1 },
+      ],
+    },
+  );
+})();
+
+// ===================== 敵として立ちはだかる英雄たち（第二部 第3章〜） =====================
+// キャラの定義から敵を作る（TD.ENEMIES['h_<id>']）。剣・盾は道で足止めされ、弓・魔導は歩きながら撃ち、僧侶は仲間を癒やす
+TD.HERO_DEFEAT = {
+  akane: 'ここまで、か……。風が、止んだ',
+  fin: 'くっ……あなたに、矢を向けたくなんてなかった',
+  shizuku: 'どうして……どうして、あなたが……',
+  xeno: '……覚えておけ。俺たちは、まだ終わっていない',
+  aster: '光よ……まだ……届かない……',
+  celes: '凍らせてでも、止めたかったのに……',
+};
+(function () {
+  for (const id in TD.CHARS) {
+    const c = TD.CHARS[id];
+    if (c.rarity >= 6) continue;
+    const melee = c.role === 'sword' || c.role === 'shield';
+    TD.ENEMIES['h_' + id] = {
+      name: c.name, title: c.title, element: c.element, heroId: id, shape: 'hero', size: c.rarity >= 5 ? 16 : 14,
+      hp: Math.round(c.hp * 1.6), atk: Math.round(c.atk * 1.1), def: c.def,
+      speed: c.role === 'shield' ? 0.32 : melee ? 0.45 : 0.4, interval: Math.max(1.2, c.interval * 1.3),
+      ranged: melee ? 0 : Math.min(2.8, c.range),
+      healer: c.role === 'priest' ? { every: 2.4, radius: 2.6, ratio: 0.1, keep: 0.12 } : undefined,
+    };
+  }
+})();
+
+// ===================== 第二部 第3章 裏切りの夜（英雄たちが去っていく。stage.lock 以下の★は出撃できない） =====================
+(function () {
+  const C = '第二部 第3章 裏切りの夜', mapOf = id => TD.STAGES.find(s => s.id === id).map.slice();
+  TD.STAGES.push(
+    {
+      id: 'Ⅱ3-1', chapter: C, name: '王の帰還', part: 2, theme: 'abyss',
+      brief: 'ルミナの呼んだ「光の使徒」が押し寄せます。空を舞う熾天使は、歩きながら遠くから撃ってきます。',
+      lives: 10, mana: 25, hpScale: 4.0, reward: 150, recLv: 60, map: mapOf('5-4'),
+      waves: [
+        { t: 3, e: 'lightApostle', n: 4, gap: 1.4, s: 'alt' },
+        { t: 12, e: 'lightSeraph', n: 3, gap: 1.6, s: 'alt' },
+        { t: 22, e: 'lightApostle', n: 6, gap: 1.0, s: 'alt' },
+        { t: 34, e: 'lightSeraph', n: 4, gap: 1.2, s: 'alt' },
+        { t: 44, e: 'lightApostle', n: 6, gap: 0.9, s: 'alt' },
+        { t: 54, e: 'lightSeraph', n: 5, gap: 1.0, s: 'alt' },
+      ],
+    },
+    {
+      id: 'Ⅱ3-2', chapter: C, name: '真実の光', part: 2, lock: 3,
+      brief: '★3の英雄たちは主人公のもとを去りました。王都の騎士団と光の使徒が、二つの門から攻めてきます。',
+      lives: 10, mana: 25, hpScale: 4.0, reward: 150, recLv: 60, map: mapOf('1-3'),
+      waves: [
+        { t: 3, e: 'royalKnight', n: 3, gap: 1.8, s: 0 },
+        { t: 6, e: 'royalArcher', n: 3, gap: 1.6, s: 1 },
+        { t: 18, e: 'lightApostle', n: 5, gap: 1.1, s: 'alt' },
+        { t: 30, e: 'royalKnight', n: 4, gap: 1.5, s: 'alt' },
+        { t: 38, e: 'lightSeraph', n: 4, gap: 1.3, s: 'alt' },
+        { t: 48, e: 'royalArcher', n: 4, gap: 1.2, s: 'alt' },
+        { t: 56, e: 'royalKnight', n: 5, gap: 1.2, s: 'alt' },
+      ],
+    },
+    {
+      id: 'Ⅱ3-3', chapter: C, name: '裏切りの夜', part: 2, lock: 4,
+      brief: '★4の英雄たちも去りました。夜陰にまぎれて「光の大使徒」が現れます。大使徒は周りの使徒を癒やし続けます。',
+      lives: 10, mana: 26, hpScale: 4.0, reward: 150, recLv: 60, map: mapOf('2-3'),
+      waves: [
+        { t: 3, e: 'lightApostle', n: 5, gap: 1.2, s: 'alt' },
+        { t: 14, e: 'lightSeraph', n: 4, gap: 1.4, s: 'alt' },
+        { t: 26, e: 'royalKnight', n: 4, gap: 1.5, s: 'alt' },
+        { t: 36, e: 'archApostle', n: 1, gap: 0, s: 0 },
+        { t: 38, e: 'lightApostle', n: 6, gap: 1.0, s: 1 },
+        { t: 50, e: 'lightSeraph', n: 5, gap: 1.1, s: 'alt' },
+        { t: 60, e: 'royalArcher', n: 4, gap: 1.2, s: 'alt' },
+      ],
+    },
+    {
+      id: 'Ⅱ3-4', chapter: C, name: '追う者たち', part: 2, lock: 4, theme: 'snow',
+      brief: 'かつての仲間たちが追ってきます。英雄たちは本来の技で戦い、弓や魔法の使い手は遠くから撃ってきます。',
+      lives: 10, mana: 26, hpScale: 3.2, reward: 150, recLv: 60, map: mapOf('3-3'),
+      waves: [
+        { t: 3, e: 'royalKnight', n: 3, gap: 1.6, s: 'alt' },
+        { t: 10, e: 'h_akane', n: 1, gap: 0, s: 0 },
+        { t: 14, e: 'h_fin', n: 1, gap: 0, s: 1 },
+        { t: 22, e: 'lightSeraph', n: 4, gap: 1.3, s: 'alt' },
+        { t: 30, e: 'h_xeno', n: 1, gap: 0, s: 0 },
+        { t: 32, e: 'h_shizuku', n: 1, gap: 0, s: 1 },
+        { t: 40, e: 'royalArcher', n: 4, gap: 1.2, s: 'alt' },
+        { t: 48, e: 'h_aster', n: 1, gap: 0, s: 1 },
+        { t: 50, e: 'h_celes', n: 1, gap: 0, s: 0 },
+        { t: 58, e: 'royalKnight', n: 5, gap: 1.2, s: 'alt' },
+      ],
+    },
+    {
+      id: 'Ⅱ3-5', chapter: C, name: '騎士姫', part: 2, lock: 5, theme: 'abyss',
+      brief: 'すべての英雄が去りました。戦えるのは闇の配下だけです。リディアの命を受けた「王都騎士団長」が騎士団を率いて攻めてきます。',
+      lives: 10, mana: 30, hpScale: 3.0, reward: 200, recLv: 60, map: mapOf('5-5'),
+      waves: [
+        { t: 3, e: 'royalKnight', n: 4, gap: 1.6 },
+        { t: 14, e: 'royalArcher', n: 4, gap: 1.3 },
+        { t: 24, e: 'lightApostle', n: 5, gap: 1.1 },
+        { t: 34, e: 'knightCaptain', n: 1, gap: 0 },
+        { t: 38, e: 'royalKnight', n: 4, gap: 1.4 },
+        { t: 48, e: 'lightSeraph', n: 5, gap: 1.0 },
+        { t: 58, e: 'royalArcher', n: 5, gap: 1.0 },
       ],
     },
   );
