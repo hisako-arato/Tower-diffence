@@ -22,6 +22,7 @@ window.TD = window.TD || {};
       this.rushT = 0; this.rushMult = 1; this.curseT = 0; this.curseMult = 1;
       this.aiT = 0;
       this.effects = [];   // 効いている権能・スキル（画面上部に顔と残り秒数で出す）
+      if (this.spawns.length > 1) setTimeout(() => { if (!this.over) this.toast('盤面をタップすると、召喚する出現口を左右で切り替えられます'); }, 2200);
     }
 
     // ---------- 手札（魔物と権能） ----------
@@ -175,11 +176,16 @@ window.TD = window.TD || {};
     }
 
     // 出現口をタップして、召喚する場所を選ぶ
+    // 出現口が2つ以上ある時は、盤面のどこをタップしても一番近い出現口に切り替わる
     onTap(x, y) {
-      if (this.over || this.paused) return;
-      const cx = Math.floor(x / T), cy = Math.floor(y / T);
-      const i = this.spawns.findIndex(([sx, sy]) => sx === cx && sy === cy);
-      if (i >= 0) { this.spawnIdx = i; this.toast('召喚する出現口を選びました'); }
+      if (this.over || this.paused || this.spawns.length < 2) return;
+      let best = 0, bd = Infinity;
+      this.spawns.forEach(([sx, sy], i) => { const d = Math.hypot(sx * T + T / 2 - x, sy * T + T / 2 - y); if (d < bd) { bd = d; best = i; } });
+      if (best !== this.spawnIdx) { this.spawnIdx = best; this.toast(this.spawnName(best) + 'の出現口から召喚します'); }
+    }
+    spawnName(i) {
+      const xs = this.spawns.map(s => s[0]), x = this.spawns[i][0];
+      return x === Math.min(...xs) ? '左' : x === Math.max(...xs) ? '右' : '中央';
     }
 
     // ---------- 英雄側（AI） ----------
@@ -297,9 +303,17 @@ window.TD = window.TD || {};
         gx.fillText(f.name, x + 24, y + 11.5);
         gx.fillStyle = '#ffd86a'; gx.textAlign = 'right'; gx.fillText(Math.ceil(f.t) + '秒', x + 112, y + 11.5);
       });
-      // 選んでいる出現口を示す
+      // 選んでいる出現口を示す（ほかの出現口には「タップで切替」）
       const g = this.ctx, s = this.spawns[this.spawnIdx];
       if (!s) return;
+      if (this.spawns.length > 1) this.spawns.forEach(([sx, sy], i) => {
+        const x = sx * T + T / 2, y = sy * T + T / 2, on = i === this.spawnIdx;
+        g.font = 'bold 10px "Hiragino Sans","Noto Sans JP",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        const label = on ? 'ここから召喚' : 'タップで切替', w = g.measureText(label).width + 10;
+        const ly = y - 28 < 8 ? y + 28 : y - 28, lx = Math.max(w / 2 + 2, Math.min(W - w / 2 - 2, x));
+        g.fillStyle = on ? 'rgba(150,60,220,.92)' : 'rgba(20,10,30,.75)'; g.fillRect(lx - w / 2, ly - 8, w, 16);
+        g.fillStyle = on ? '#fff' : '#c8b8e8'; g.fillText(label, lx, ly + 0.5);
+      });
       const x = s[0] * T + T / 2, y = s[1] * T + T / 2, p = 0.5 + Math.sin(performance.now() / 250) * 0.5;
       g.strokeStyle = `rgba(220,120,255,${0.5 + 0.5 * p})`; g.lineWidth = 3;
       g.beginPath(); g.arc(x, y, 17 + p * 3, 0, Math.PI * 2); g.stroke();
