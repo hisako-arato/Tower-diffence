@@ -734,6 +734,7 @@ window.TD = window.TD || {};
         if ((e.barrierPopT = (e.barrierPopT || 0) - 1) <= 0) { this.pop(e.x, e.y - e.size - 10, '無効', '#fff6c0', { size: 11 }); e.barrierPopT = 6; }
         return;
       }
+      if (e.dmgCut) power *= 1 - e.dmgCut;   // 攻守反転：将オルドラの守り
       const bb = burst || (this._burst && this._burst.src === src ? this._burst : null);
       const m = TD.elemMult(src.def.element, e.def.element);
       let crit = false;
@@ -779,7 +780,7 @@ window.TD = window.TD || {};
         // 災厄の残響：魂が光となって空へ還る（輪廻へ）
         if (e.def.soul) this.fx.push({ type: 'soulRise', x: e.x, y: e.y, t: 0, dur: 3, seed: Math.random() * 100 });
         // かつての仲間：倒れる時のひとこと
-        if (e.def.heroId) this.pop(e.x, e.y - e.size - 14, ((TD.HERO_DEFEAT && TD.HERO_DEFEAT[e.def.heroId]) || '……っ').replace('{name}', (TD.app && TD.app.save.playerName) || 'あなた'), '#fff', { size: 11, dur: 2.4, bubble: true });
+        if (e.def.heroId && !e.def.general) this.pop(e.x, e.y - e.size - 14, ((TD.HERO_DEFEAT && TD.HERO_DEFEAT[e.def.heroId]) || '……っ').replace('{name}', (TD.app && TD.app.save.playerName) || 'あなた'), '#fff', { size: 11, dur: 2.4, bubble: true });
       }
     }
 
@@ -796,7 +797,7 @@ window.TD = window.TD || {};
       const ev = this.pas(u, 'evade');
       if (ev && Math.random() < ev.chance) { this.pop(u.x, u.y - 20, 'MISS', '#c8f0ff', { size: 11 }); return; }
       const m = TD.elemMult(e.def.element, u.def.element);
-      const raw = (power != null ? power : e.atk) * m;
+      const raw = (power != null ? power : e.atk) * (e.atkMult || 1) * m;   // atkMult：攻守反転の将リンの鼓舞
       let d = Math.max(raw - this.defOf(u), raw * 0.15);
       if (u.shieldT > 0) d *= 1 - u.shieldRed;
       d = Math.round(d);
@@ -1023,7 +1024,7 @@ window.TD = window.TD || {};
         let slowAura = 1;
         for (const u of this.units) { const p = this.pas(u, 'slowAura'); if (p && dist(e, u) <= this.rangeOf(u) * T) slowAura = Math.min(slowAura, p.mult); }
         let move = e.def.speed * T * dt * (e.slowT > 0 ? 0.5 : 1) * slowAura * (e.slowShotT > 0 ? e.slowShotMult : 1)
-          * (e.poisonT > 0 ? this.poisonSlow : 1) * this.enemySlowAll * (this.rushT > 0 ? this.rushMult : 1);   // rush：攻守反転の権能「狂奔」
+          * (e.poisonT > 0 ? this.poisonSlow : 1) * this.enemySlowAll * (this.rushT > 0 ? this.rushMult : 1) * (e.spdMult || 1);   // rush：攻守反転の権能「狂奔」
         // 回復役は前に出ず、キャラの射程に入ったら下がる
         if (e.def.healer) move = this.healerMove(e, move);
         if (move < 0) {
@@ -1667,7 +1668,11 @@ window.TD = window.TD || {};
           else if (e.frozen > 0) { g.fillStyle = 'rgba(160,220,255,.45)'; g.fillRect(x - s, y - s, s * 2, s * 2); }
           g.restore();
           g.strokeStyle = '#1b1410'; g.lineWidth = 3.5; g.beginPath(); g.arc(x, y, s, 0, Math.PI * 2); g.stroke();
-          g.strokeStyle = '#ff4a5a'; g.lineWidth = 2; g.stroke();
+          g.strokeStyle = e.def.general ? '#c070ff' : '#ff4a5a'; g.lineWidth = 2; g.stroke();
+          if (e.def.general) {   // 将の印：王冠
+            g.fillStyle = '#c070ff'; g.beginPath(); g.moveTo(x - 6, y - s - 1); g.lineTo(x - 6, y - s - 7); g.lineTo(x - 3, y - s - 4); g.lineTo(x, y - s - 8);
+            g.lineTo(x + 3, y - s - 4); g.lineTo(x + 6, y - s - 7); g.lineTo(x + 6, y - s - 1); g.closePath(); g.fill();
+          }
           break;
         }
         case 'angel': { // 光の使徒：白い翼と金の光輪

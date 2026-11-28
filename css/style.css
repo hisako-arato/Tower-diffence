@@ -965,3 +965,34 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 #endroll .er-skip { position: absolute; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 12px); background: rgba(255,255,255,.08); color: #ddd; border: 1px solid rgba(255,255,255,.2); border-radius: 16px; padding: 6px 14px; font-size: 12px; }
 .btn.disabled { filter: grayscale(1); opacity: .5; }
 #party-stars .ps-p2 { display: block; color: #c8a8ff; font-size: 11px; margin-bottom: 2px; }
+/* 攻守反転：将のカード・魔物の特徴・説明 */
+.card.gcard { background: linear-gradient(180deg, #4a1a6a, #1e0a2e); border-color: #c070ff; -webkit-touch-callout: none; user-select: none; }
+.card.mcard, .card.power { -webkit-touch-callout: none; user-select: none; }
+.card.gcard .c-face { display: block; }
+.card.gcard .g-gauge { width: 80%; height: 4px; border-radius: 2px; background: rgba(255,255,255,.12); overflow: hidden; }
+.card.gcard .g-gauge i { display: block; height: 100%; width: 0; background: #c070ff; }
+.card.gcard .g-state { position: absolute; top: -7px; right: -3px; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 6px; background: #2a1040; color: #e0c0ff; }
+.card.gcard .g-state:empty { display: none; }
+.card.gcard.on-field { box-shadow: 0 0 8px rgba(192,112,255,.6); }
+.card.gcard.skill-ready { border-color: var(--gold); box-shadow: 0 0 14px rgba(255,210,63,.8); }
+.card.gcard.skill-ready .g-gauge i { background: var(--gold); }
+.card.gcard.skill-ready .g-state { background: var(--gold); color: #3a2400; }
+.m-traits { position: absolute; top: 2px; right: 2px; display: flex; flex-direction: column; gap: 1px; }
+.m-traits i { font-style: normal; font-size: 8px; font-weight: 900; line-height: 11px; width: 12px; text-align: center; border-radius: 3px; background: rgba(0,0,0,.55); color: #ffd86a; }
+.rev-info { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 30; background: rgba(18,8,30,.95); border: 1.5px solid #c070ff; border-radius: 12px; padding: 10px 12px; color: #f2ecff; font-size: 12px; line-height: 1.6; pointer-events: none; }
+.ri-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.ri-head .pt { width: 32px; height: 32px; flex: none; }
+.ri-head .pt i { display: none; }
+.ri-head b { display: block; font-size: 13px; }
+.ri-head small { display: block; font-size: 10px; color: #c8b8e8; }
+.ri-ico { width: 32px; text-align: center; font-size: 20px; color: #e0b0ff; flex: none; }
+.rev-info p, .rc-item p { margin: 0; }
+.rev-catalog { max-height: 55vh; overflow-y: auto; text-align: left; font-size: 12px; line-height: 1.6; }
+.rc-item { padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.gen-pick { display: flex; flex-direction: column; gap: 6px; }
+.gen-pick .gp { display: flex; align-items: center; gap: 8px; text-align: left; padding: 6px 8px; border-radius: 10px; border: 1.5px solid rgba(255,255,255,.15); background: rgba(255,255,255,.04); color: inherit; opacity: .55; }
+.gen-pick .gp.on { opacity: 1; border-color: #c070ff; background: rgba(192,112,255,.15); }
+.gen-pick .gp .pt { width: 36px; height: 36px; flex: none; }
+.gen-pick .gp b { display: block; font-size: 12px; }
+.gen-pick .gp small { display: block; font-size: 10px; color: #c8b8e8; line-height: 1.45; }
+.brief-tip { font-size: 11px; color: #c8b8e8; text-align: center; margin-top: 6px; }

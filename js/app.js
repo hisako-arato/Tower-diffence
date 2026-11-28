@@ -563,9 +563,17 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     const body = modal(
       `<div class="pause-title">一時停止中</div>` +
       `<div class="btn-col"><button class="btn primary" data-act="resume">再開する</button>` +
+      (battle.catalog ? `<button class="btn ghost" data-act="catalog">魔物と将の一覧</button>` : '') +
       `<button class="btn ghost" data-act="retry">最初からやり直す</button>` +
       `<button class="btn danger" data-act="quit">撤退してステージ選択へ</button></div>`, 'locked');
     body.querySelector('[data-act=resume]').onclick = () => { closeModal(); battle.paused = false; battle.last = performance.now(); };
+    const cat = body.querySelector('[data-act=catalog]');
+    if (cat) cat.onclick = () => {
+      const b2 = modal(`<div class="pause-title">魔物と将の一覧</div><div class="rev-catalog">${battle.catalog().map(d =>
+        `<div class="rc-item"><div class="ri-head">${d.face ? TD.portraitHTML(d.face) : `<span class="ri-ico">${d.icon || ''}</span>`}<div><b>${esc(d.name)}</b><small>${esc(d.sub)}</small></div></div><p>${esc(d.text).split('\n').join('<br>')}</p></div>`).join('')}</div>` +
+        `<div class="btn-col"><button class="btn primary" data-act="back">戻る</button></div>`, 'locked');
+      b2.querySelector('[data-act=back]').onclick = () => { closeModal(); battle.paused = false; $('#btn-pause').click(); };
+    };
     body.querySelector('[data-act=retry]').onclick = () => { closeModal(); startBattle(currentStage); };
     body.querySelector('[data-act=quit]').onclick = () => { closeModal(); battle.destroy(); battle = null; show('screen-stages'); };
   });
@@ -856,14 +864,17 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   }
 
   // ---------- 攻守反転（試作） ----------
-  // 仲間になった闇の配下（とリン）の数だけ、権能が増える
-  function revPowers(st) {
-    const extra = save.owned.filter(id => TD.CHARS[id].revPower && (TD.CHARS[id].dark || st.part === 2)).map(id => Object.assign({ from: id }, TD.CHARS[id].revPower));
-    return [...st.reverse.powers, ...extra];
+  // 将：仲間になった闇の配下とリン。出陣させるのは3人まで（出撃画面で選ぶ）
+  const GENERAL_MAX = 3;
+  const ownedGenerals = st => st.part === 2 ? Object.keys(TD.GENERALS).filter(owns) : [];
+  function chosenGenerals(st) {
+    const own = ownedGenerals(st);
+    const g = (save.revGenerals || []).filter(id => own.includes(id));
+    return (g.length ? g : own).slice(0, GENERAL_MAX);   // まだ選んだことがなければ、仲間になった順に3人
   }
   function startReverse(st) {
     const heroes = st.reverse.heroes.map(h => ({ id: h.id, def: TD.charStats(h.id, { lv: h.lv, lb: h.lb }), at: h.at, t: h.t }));
-    const run = Object.assign({}, st, { reverse: Object.assign({}, st.reverse, { powers: revPowers(st) }) });
+    const run = Object.assign({}, st, { reverse: Object.assign({}, st.reverse, { generals: chosenGenerals(st) }) });
     battle = new TD.ReverseBattle(run, heroes, bEls, onReverseEnd);
     TD.currentBattle = battle;
     const banner = $('#battle-banner');
@@ -917,9 +928,25 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="brief-navi"><span class="mini-navi"></span><p>${esc(st.brief)}</p></div>` +
       `<div class="brief-sec">守る英雄たち（AI）</div><div class="brief-party">${R.heroes.map(h => `<span class="bp">${TD.portraitHTML(h.id)}<small>${h.t ? `${h.t}秒後` : 'Lv' + h.lv}</small></span>`).join('')}</div>` +
       `<div class="brief-sec">召喚できる魔物</div><ul class="enemy-list">${R.hand.map(h => `<li>${TD.elemChip(TD.ENEMIES[h.e].element)}${esc(TD.ENEMIES[h.e].name)}<small>　魔力${h.cost}${h.limit ? `・${h.limit}回まで` : ''}</small></li>`).join('')}</ul>` +
-      `<div class="brief-sec">権能</div><ul class="enemy-list">${revPowers(st).map(p => `<li>${p.from ? TD.portraitHTML(p.from) : '<span class="pw-ico">' + p.icon + '</span>'}<span>${esc(p.name)}<small>　魔力${p.cost}${p.desc ? '・' + esc(p.desc) : ''}</small></span></li>`).join('')}</ul>` +
+      (ownedGenerals(st).length ? `<div class="brief-sec">出陣する将<small class="brief-stars">${GENERAL_MAX}人まで・タップで選ぶ</small></div><div class="gen-pick"></div>` : '') +
+      `<div class="brief-sec">権能</div><ul class="enemy-list">${R.powers.map(p => `<li><span class="pw-ico">${p.icon}</span><span>${esc(p.name)}<small>　魔力${p.cost}${p.desc ? '・' + esc(p.desc) : ''}</small></span></li>`).join('')}</ul>` +
+      `<div class="brief-tip">カードを長押しすると、魔物や将の説明が見られます</div>` +
       `<div class="brief-sub">拠点の耐久 ${R.goal}・制限時間 ${R.time}秒・魔力 毎秒+${R.manaRate}</div>` +
       `<div class="btn-row"><button class="btn ghost" data-act="close">やめる</button><button class="btn primary" data-act="go">侵攻開始</button></div>`);
+    const pick = body.querySelector('.gen-pick');
+    const drawPick = () => {
+      if (!pick) return;
+      const sel = chosenGenerals(st);
+      pick.innerHTML = ownedGenerals(st).map(id => { const G = TD.GENERALS[id], d = TD.CHARS[id], p = d.revPower;
+        return `<button class="gp${sel.includes(id) ? ' on' : ''}" data-g="${id}">${TD.portraitHTML(id)}<span><b>${esc(d.name)}</b><small>出陣 魔力${G.cost}・常時：${esc(G.auraDesc)}<br>スキル「${esc(p.name)}」${esc(p.desc)}</small></span></button>`; }).join('');
+      pick.querySelectorAll('[data-g]').forEach(b => b.onclick = () => {
+        const id = b.dataset.g; let cur = chosenGenerals(st);
+        if (cur.includes(id)) { if (cur.length <= 1) return; cur = cur.filter(x => x !== id); }
+        else { if (cur.length >= GENERAL_MAX) { toast(`出陣できる将は${GENERAL_MAX}人までです。先に誰かを外してください`); return; } cur = [...cur, id]; }
+        save.revGenerals = cur; persist(); drawPick();
+      });
+    };
+    drawPick();
     body.querySelector('[data-act=close]').onclick = closeModal;
     body.querySelector('[data-act=go]').onclick = () => {
       closeModal();
