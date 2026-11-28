@@ -73,8 +73,28 @@ window.TD = window.TD || {};
       this.mana -= c.cost; c.cdLeft = c.cd;
       if (c.type === 'rush') { this.rushT = c.dur; this.rushMult = c.mult; this.toast('狂奔！ 魔物たちが加速する'); }
       if (c.type === 'curse') { this.curseT = c.dur; this.curseMult = c.mult; this.toast('闇の帳！ 英雄たちの攻撃が鈍る'); }
+      // 闇の配下の権能（仲間になった配下の数だけ増える）
+      const heroes = this.units, mons = this.enemies.filter(e => !e.dead);
+      if (c.type === 'tide') { for (const u of heroes) { u.hasteT = c.dur; u.hasteMult = c.mult; } this.toast('大海嘯！ 英雄たちの攻撃が遅くなる'); }
+      if (c.type === 'roar') { for (const e of mons) e.barrierOn = c.dur; this.toast('原初の咆哮！ 魔物たちに攻撃が効かない'); }
+      if (c.type === 'gaze') { this.blizzardT = c.dur; this.blizzardMult = c.mult; this.toast('千眼の幻惑！ 英雄たちの射程が縮む'); }
+      if (c.type === 'rot') { for (const u of heroes) { u.poisonT = c.dur; u.poisonRatio = c.ratio; } this.toast('腐蝕の霧！ 英雄たちが毒に侵される'); }
+      if (c.type === 'scale') {
+        for (const e of mons) e.hp = e.maxHp;
+        for (const u of heroes) this.powerHurt(u, c.ratio);
+        this.toast('天秤の傾き！ 魔物は癒え、英雄は傷つく');
+      }
+      if (c.type === 'king') { for (const u of heroes) this.powerHurt(u, c.ratio); this.toast('王の剣圧！'); this.fx.push({ type: 'flash', t: 0, dur: 0.6, color: 'rgba(40,0,60,' }); }
       this.fx.push({ type: 'flash', t: 0, dur: 0.5, color: 'rgba(120,20,200,' });
       this.refreshCards(true);
+    }
+
+    // 権能のダメージ（これだけで倒れることはない）
+    powerHurt(u, ratio) {
+      const d = Math.min(u.hp - 1, Math.round(u.maxHp * ratio));
+      if (d <= 0) return;
+      u.hp -= d; u.flash = 0.2;
+      this.pop(u.x, u.y - 20, String(d), '#d080ff', { size: 12 });
     }
 
     // 出現口をタップして、召喚する場所を選ぶ
@@ -123,7 +143,8 @@ window.TD = window.TD || {};
     finish(win) {
       if (this.over) return;
       this.over = true;
-      setTimeout(() => this.onEnd({ win, reverse: true, broke: this.maxLives - this.lives, goal: this.maxLives, timeLeft: Math.max(0, this.timeLeft), summoned: this.totalEnemies, slain: this.killed }), 900);
+      const k = this.timeLeft / this.rev.time, stars = !win ? 0 : k >= 0.4 ? 3 : k >= 0.15 ? 2 : 1;   // 早く落とすほど★が増える
+      setTimeout(() => this.onEnd({ win, stars, reverse: true, broke: this.maxLives - this.lives, goal: this.maxLives, timeLeft: Math.max(0, this.timeLeft), summoned: this.totalEnemies, slain: this.killed }), 900);
     }
 
     refreshCards(force) {
@@ -211,4 +232,81 @@ window.TD = window.TD || {};
       waves: [],
     },
   ].map(flipStage);
+
+  // ===================== 第二部 第4章 災厄の行進（攻守反転） =====================
+  // 魔物を率いて、英雄たちが守る各地を攻め落とす。仲間になった闇の配下の数だけ「権能」が増える（app.js が加える）
+  const C = '第二部 第4章 災厄の行進';
+  const hero = (id, x, y, lv, t) => ({ id, at: [x, y], lv, lb: lv >= 60 ? 4 : 3, t });
+  const echoHand = extra => [
+    { e: 'echoGoblin', cost: 4, cd: 1 },
+    { e: 'echoWolf',   cost: 5, cd: 1.5 },
+    { e: 'echoShade',  cost: 6, cd: 3 },
+    { e: 'echoMage',   cost: 7, cd: 4 },
+    { e: 'echoKnight', cost: 9, cd: 5 },
+    { e: 'gargoyle',   cost: 12, cd: 8 },
+    ...extra,
+  ];
+  const basePowers = [{ type: 'rush', name: '狂奔', icon: '»', cost: 12, cd: 20, dur: 6, mult: 1.6, desc: '6秒間、魔物たちの足が1.6倍速くなる' }];
+  TD.STAGES.push(...[
+    {
+      id: 'Ⅱ4-1', type: 'reverse', part: 2, chapter: C, name: '王都外壁', hpScale: 3.6, lives: 0, reward: 150, exp: 1100, recLv: 60,
+      brief: '魔物を召喚して道を進ませ、英雄たちが守る拠点まで届かせましょう。拠点の耐久を0にすれば勝ち、時間切れで負けです。早く落とすほど★が増えます。',
+      reverse: {
+        goal: 8, time: 150, mana: 15, manaRate: 2,
+        heroes: [hero('gald', 2, 9, 55), hero('emil', 5, 7, 55), hero('lux', 6, 4, 55), hero('kai', 3, 6, 55), hero('mia', 4, 9, 55), hero('thomas', 3, 10, 55, 45), hero('popo', 7, 9, 55, 90)],
+        hand: echoHand([{ e: 'lavaGolem', cost: 15, cd: 10 }]),
+        powers: basePowers,
+      },
+      map: ['....S....', '....#....', '.x..#....', '..###....', '..#......', '..####...', '.....#.x.', '.....#...', '..####...', '..#......', '..####...', '.....#...', '.....G...'],
+      waves: [],
+    },
+    {
+      id: 'Ⅱ4-2', type: 'reverse', part: 2, chapter: C, name: '蒼の神殿', hpScale: 3.8, lives: 0, reward: 150, exp: 1150, recLv: 60,
+      brief: '蒼の神殿を守るのは、セイラとミナモたち水の英雄です。水には風が強い――凍嵐の残響グラキエス（風）を一度だけ呼べます。',
+      reverse: {
+        goal: 8, time: 160, mana: 16, manaRate: 2,
+        heroes: [hero('seira', 3, 8, 58), hero('minamo', 4, 7, 58), hero('shigure', 6, 5, 58), hero('celes', 3, 9, 58), hero('lily', 4, 11, 58), hero('shion', 6, 9, 58, 50), hero('thomas', 7, 10, 58, 80)],
+        hand: echoHand([{ e: 'echoPlague', cost: 10, cd: 6 }, { e: 'glaciesEcho', cost: 22, cd: 0, limit: 1 }]),
+        powers: basePowers,
+      },
+      map: ['....S....', '....#....', '.~..#..~.', '.####....', '.#.......', '.#####...', '.....#.~.', '.~...#...', '..####...', '..#....~.', '..######.', '.......#.', '.......G.'],
+      waves: [],
+    },
+    {
+      id: 'Ⅱ4-3', type: 'reverse', part: 2, chapter: C, name: '白銀の古城', theme: 'snow', hpScale: 4.0, lives: 0, reward: 150, exp: 1200, recLv: 60,
+      brief: '星読みのカグラと風の英雄たちが待ち構えています。風には火が強い――溶岩ゴーレムが有効です。二つの出現口を使い分けて、守りの薄い側から攻めましょう（出現口はタップで選べます）。',
+      reverse: {
+        goal: 10, time: 170, mana: 16, manaRate: 2,
+        heroes: [hero('kagura', 4, 7, 60), hero('nox', 2, 8, 60), hero('akane', 6, 4, 60), hero('zephyr', 3, 6, 60), hero('sylphina', 5, 9, 60), hero('soyo', 0, 10, 60), hero('mint', 7, 9, 60, 60)],
+        hand: echoHand([{ e: 'lavaGolem', cost: 15, cd: 10 }]),
+        powers: basePowers,
+      },
+      map: ['S.......S', '#.......#', '#.x...x.#', '###...###', '..#...#..', '..#####..', '....#....', '....#..x.', '.####....', '.#.......', '.#####...', '.....#...', '.....G...'],
+      waves: [],
+    },
+    {
+      id: 'Ⅱ4-4', type: 'reverse', part: 2, chapter: C, name: '紅蓮の火口', theme: 'lava', hpScale: 4.2, lives: 0, reward: 150, exp: 1250, recLv: 60,
+      brief: '紅蓮の火口を守るのは、ブレアとカリンたち炎の英雄です。火には水が強い――氷のゴーレムと潮の魔導士が有効です。',
+      reverse: {
+        goal: 10, time: 170, mana: 17, manaRate: 2,
+        heroes: [hero('blaire', 3, 7, 60), hero('garo', 6, 5, 60), hero('shizuku', 4, 4, 60), hero('kai', 4, 8, 60), hero('karin', 4, 10, 60), hero('xeno', 4, 11, 60, 50), hero('rune', 7, 8, 60, 90)],
+        hand: echoHand([{ e: 'tideMage', cost: 7, cd: 3 }, { e: 'iceGolem', cost: 14, cd: 9 }]),
+        powers: basePowers,
+      },
+      map: ['...S.....', '...#.~~..', '...#.~...', '...####..', '.~....#..', '..#####..', '..#...~..', '..####...', '~....#...', '..####.~.', '..#......', '..######.', '.......G.'],
+      waves: [],
+    },
+    {
+      id: 'Ⅱ4-5', type: 'reverse', part: 2, chapter: C, name: '天への階', theme: 'abyss', hpScale: 4.4, lives: 0, reward: 200, exp: 1400, recLv: 60,
+      brief: '神の座へ続く階を、★5の英雄たちが守ります。最後にはリディアが駆けつけます。すべての権能を使って押し切りましょう。',
+      reverse: {
+        goal: 12, time: 180, mana: 20, manaRate: 2.2,
+        heroes: [hero('kagura', 4, 7, 60), hero('seira', 3, 8, 60), hero('minamo', 5, 8, 60), hero('nereia', 4, 4, 60), hero('sylphina', 1, 9, 60), hero('meltia', 4, 11, 60), hero('lydia', 4, 10, 60, 100)],
+        hand: echoHand([{ e: 'vargEcho', cost: 18, cd: 15 }, { e: 'ignisEcho', cost: 24, cd: 0, limit: 1 }]),
+        powers: basePowers,
+      },
+      map: ['S.......S', '#.......#', '##.....##', '.#.....#.', '.###.###.', '...#.#...', '...###...', '....#....', '..###....', '..#....x.', '..#####..', '......#..', '......G..'],
+      waves: [],
+    },
+  ].map(flipStage));
 })();

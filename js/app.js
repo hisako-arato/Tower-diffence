@@ -238,7 +238,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       html += `<button class="story-item${read ? '' : ' locked'}" data-ep="${id}"><span class="si-title">${esc(ep.title)}</span>` +
         `<span class="si-sub">${read ? '▶ 再生' : '🔒 ' + storyUnlockHint(id)}</span></button>`;
     }
-    html += `<div class="story-next">第二部 第4章は近日公開予定です</div>`;
+    html += `<div class="story-next">第二部 第5章は近日公開予定です</div>`;
     list.innerHTML = html;
     list.querySelectorAll('[data-ep]').forEach(b => b.onclick = () => {
       const id = b.dataset.ep;
@@ -335,7 +335,6 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       add(qcard('daily', 'デイリー', dOpen ? `${esc(d.name)}・本日あと${left}/${d.dailyLimit}回` : `${d.unlockAfter}クリアで解放`, dOpen && left ? '' : '', () => qpush({ v: 'daily' }), !dOpen));
       // イベント
       const actives = TD.EVENTS.filter(e => TD.Live.eventActive(e));
-      add(qcard('proto', '試作：攻守反転', '魔物を召喚して、英雄の拠点を攻め落とす', 'NEW', () => qpush({ v: 'proto' })));
       add(qcard('event', 'イベント', actives.length ? `開催中 ${actives.length}` : '開催予定なし',
         actives.some(evShopReady) ? '交換可' : '', () => qpush({ v: 'events' }), !actives.length));
     } else if (node.v === 'proto') {
@@ -359,7 +358,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
           ch === cur ? '進行中' : i.stars === i.sts.length * 3 ? 'COMPLETE' : '', () => qpush({ v: 'chapter', ch }), !i.open));
         if (unread) list.lastChild.insertAdjacentHTML('beforeend', '<span class="st-story">STORY</span>');
       }
-      list.insertAdjacentHTML('beforeend', `<div class="story-next">第二部 第4章は近日公開予定です</div>`);
+      list.insertAdjacentHTML('beforeend', `<div class="story-next">第二部 第5章は近日公開予定です</div>`);
     } else if (node.v === 'chapter') {
       list.insertAdjacentHTML('beforeend', `<div class="chapter-title">${esc(node.ch)}</div>`);
       TD.STAGES.forEach((st, i) => {
@@ -426,6 +425,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   }
 
   function openBrief(st) {
+    if (st.type === 'reverse') { openReverseBrief(st); return; }
     const types = [...new Set(st.waves.map(w => w.e))];
     const enemies = types.map(t => {
       const e = TD.ENEMIES[t];
@@ -443,7 +443,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="brief-navi"><span class="mini-navi"></span><p>${esc(st.brief)}</p></div>` +
       (st.map.join('').split('G').length - 1 >= 2 ? `<div class="brief-goals">⚠ 守る拠点が2つあります（どちらに届いてもライフが減ります）</div>` : '') +
       `<div class="brief-sec">出現する敵</div><ul class="enemy-list">${enemies}</ul>` +
-      `<div class="brief-sec">出撃メンバー<small class="brief-stars${TD.partyValid(P) ? '' : ' over'}">副官以外の★ ${TD.partyStars(P)} / ${TD.ADJUTANT.starCap}</small></div><div class="brief-party">${party}</div>` +
+      `<div class="brief-sec">出撃メンバー${st.lock >= 5 ? '' : `<small class="brief-stars${TD.partyValid(P) ? '' : ' over'}">副官以外の★ ${TD.partyStars(P)} / ${TD.ADJUTANT.starCap}</small>`}</div><div class="brief-party">${party}</div>` +
       (st.lock ? `<div class="brief-goals">⚠ 主人公のもとを去った英雄は出撃できません（第二部のステージのみ）</div>` : '') +
       (TD.partyEffectsText(P) ? `<div class="brief-fx">ユニークスキル：${TD.partyEffectsText(P)}</div>` : '') +
       (st.recLv && P.length ? (() => { const avg = Math.round(P.reduce((a, id) => a + save.chars[id].lv, 0) / P.length);
@@ -472,7 +472,8 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
     if (!st || !st.lock) return save.party;
     const p = save.party.filter(id => !lockedIn(st, id));
     // 同行させても★の上限を超えない時だけ加える
-    const add = id => { if (p.length < 6 && !p.includes(id) && TD.partyValid([...p, id])) p.push(id); };
+    // 英雄が全員去った後（lock 5）は闇の配下だけなので、★の上限は気にしない
+    const add = id => { if (p.length < 6 && !p.includes(id) && (st.lock >= 5 || TD.partyValid([...p, id]))) p.push(id); };
     save.owned.filter(id => TD.CHARS[id].dark).forEach(add);
     if (owns(TD.ANCIENT.hero)) add(TD.ANCIENT.hero);
     return p;
@@ -480,7 +481,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   function partyOk(st) {
     const P = effParty(st);
     if (!P.length) { alertBox('出撃できる仲間がいません。編成を見直してください'); return false; }
-    if (TD.partyValid(P)) return true;
+    if (TD.partyValid(P) || st.lock >= 5) return true;
     alertBox(`副官以外の★の合計が${TD.partyStars(P)}で、上限${TD.ADJUTANT.starCap}を超えています。編成を見直してください`);
     return false;
   }
@@ -805,25 +806,59 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
   }
 
   // ---------- 攻守反転（試作） ----------
+  // 仲間になった闇の配下（とリン）の数だけ、権能が増える
+  function revPowers(st) {
+    const extra = save.owned.filter(id => TD.CHARS[id].revPower && (TD.CHARS[id].dark || st.part === 2)).map(id => Object.assign({ from: id }, TD.CHARS[id].revPower));
+    return [...st.reverse.powers, ...extra];
+  }
   function startReverse(st) {
     const heroes = st.reverse.heroes.map(h => ({ id: h.id, def: TD.charStats(h.id, { lv: h.lv, lb: h.lb }), at: h.at, t: h.t }));
-    battle = new TD.ReverseBattle(st, heroes, bEls, onReverseEnd);
+    const run = Object.assign({}, st, { reverse: Object.assign({}, st.reverse, { powers: revPowers(st) }) });
+    battle = new TD.ReverseBattle(run, heroes, bEls, onReverseEnd);
     TD.currentBattle = battle;
     const banner = $('#battle-banner');
     banner.innerHTML = `<div class="bn-sub">${esc(st.chapter)}</div><div class="bn-main">${st.id} ${esc(st.name)}</div><div class="bn-start">INVASION START</div>`;
     banner.classList.remove('show'); void banner.offsetWidth; banner.classList.add('show');
   }
   function onReverseEnd(r) {
-    const st = currentStage;
+    const st = currentStage, inStory = TD.STAGES.includes(st);
+    let stones = 0, exp = 0; const notes = [];
+    if (inStory) {
+      exp = r.win ? TD.stageExp(st) : Math.round(TD.stageExp(st) * 0.2);
+      if (r.win) {
+        const prev = save.cleared[st.id] || 0;
+        if (!prev && st.reward) { stones += st.reward; notes.push(`初回クリア ×${st.reward}`); }
+        else { const rr = r.stars === 3 ? TD.REPEAT_REWARD.star3 : TD.REPEAT_REWARD.base; stones += rr; notes.push(`クリア報酬 ×${rr}${r.stars === 3 ? '（★3）' : ''}`); }
+        if (r.stars === 3 && prev < 3) { stones += 20; notes.push('★3達成 ×20'); }
+        save.cleared[st.id] = Math.max(prev, r.stars);
+        TD.Live.track(save, 'wins');
+      }
+      save.stones += stones; save.crystals += exp;
+      persist();
+    }
+    const idx = TD.STAGES.indexOf(st), next = r.win && idx >= 0 ? TD.STAGES[idx + 1] : null;
     const body = modal(
       `<div class="result ${r.win ? 'win' : 'lose'}">` +
       `<div class="res-title">${r.win ? '制圧' : '撤退'}</div>` +
+      (r.win && inStory ? `<div class="res-stars">${[1, 2, 3].map(i => `<span class="${i <= r.stars ? 'on' : ''}" style="animation-delay:${0.2 + i * 0.25}s">★</span>`).join('')}</div>` : '') +
       `<div class="res-msg">${r.win ? '英雄たちの拠点を打ち破った。' : '時間切れ……英雄たちに阻まれた。'}</div>` +
-      `<div class="res-stats">拠点への突破 ${r.broke}/${r.goal}・召喚 ${r.summoned}体（討たれた ${r.slain}体）${r.win ? `・残り${Math.ceil(r.timeLeft)}秒` : ''}</div></div>` +
-      `<div class="btn-col"><button class="btn primary" data-act="retry">もう一度</button><button class="btn ghost" data-act="stages">クエストへ</button></div>`, 'locked');
+      `<div class="res-stats">拠点への突破 ${r.broke}/${r.goal}・召喚 ${r.summoned}体（討たれた ${r.slain}体）${r.win ? `・残り${Math.ceil(r.timeLeft)}秒` : ''}</div>` +
+      (r.win && inStory ? `<div class="res-cond"><div class="ok">★ 拠点を制圧</div><div class="${r.stars >= 2 ? 'ok' : ''}">★ 制限時間を15%以上残す</div><div class="${r.stars >= 3 ? 'ok' : ''}">★ 制限時間を40%以上残す</div></div>` : '') +
+      (inStory ? `<div class="res-reward"><div><i class="expbook"></i> 経験の書 +${exp}</div>${stones ? `<div><i class="gem"></i> 魔晶石 +${stones}</div><small>${notes.join(' / ')}</small>` : ''}</div>` : '') +
+      `</div><div class="btn-col">` +
+      (next ? `<button class="btn primary" data-act="next">次のステージへ</button>` : '') +
+      `<button class="btn ${next ? 'ghost' : 'primary'}" data-act="retry">もう一度</button><button class="btn ghost" data-act="stages">${inStory ? 'ステージ選択へ' : 'クエストへ'}</button></div>`, 'locked');
+    const post = r.win && inStory ? storyFor(st, 'post') : null;
+    const pendingPost = post && !save.story[post];
+    if (pendingPost) body.insertAdjacentHTML('afterbegin', '<div class="res-story">クリア後のストーリーが始まります</div>');
     const leave = () => { closeModal(); if (battle) { battle.destroy(); battle = null; } };
-    body.querySelector('[data-act=retry]').onclick = () => { leave(); startBattle(st); };
-    body.querySelector('[data-act=stages]').onclick = () => { leave(); show('screen-stages'); };
+    const on = (act, fn) => {
+      const b = body.querySelector(`[data-act=${act}]`);
+      if (b) b.onclick = () => (pendingPost ? () => { leave(); show('screen-stages'); playStory(post, fn); } : () => { leave(); fn(); })();
+    };
+    on('next', () => { if (next.chapter !== st.chapter) qstack = [{ v: 'chapters' }, { v: 'chapter', ch: next.chapter }]; show('screen-stages'); openBrief(next); });
+    on('retry', () => startBattle(st));
+    on('stages', () => show('screen-stages'));
   }
   function openReverseBrief(st) {
     const R = st.reverse;
@@ -832,10 +867,15 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       `<div class="brief-navi"><span class="mini-navi"></span><p>${esc(st.brief)}</p></div>` +
       `<div class="brief-sec">守る英雄たち（AI）</div><div class="brief-party">${R.heroes.map(h => `<span class="bp">${TD.portraitHTML(h.id)}<small>${h.t ? `${h.t}秒後` : 'Lv' + h.lv}</small></span>`).join('')}</div>` +
       `<div class="brief-sec">召喚できる魔物</div><ul class="enemy-list">${R.hand.map(h => `<li>${TD.elemChip(TD.ENEMIES[h.e].element)}${esc(TD.ENEMIES[h.e].name)}<small>　魔力${h.cost}${h.limit ? `・${h.limit}回まで` : ''}</small></li>`).join('')}</ul>` +
-      `<div class="brief-sub">拠点の耐久 ${R.goal}・制限時間 ${R.time}秒・魔力 毎秒+${R.manaRate}<br>権能：${R.powers.map(p => `${p.name}（魔力${p.cost}）`).join('・')}</div>` +
+      `<div class="brief-sec">権能</div><ul class="enemy-list">${revPowers(st).map(p => `<li>${p.from ? TD.portraitHTML(p.from) : '<span class="pw-ico">' + p.icon + '</span>'}<span>${esc(p.name)}<small>　魔力${p.cost}${p.desc ? '・' + esc(p.desc) : ''}</small></span></li>`).join('')}</ul>` +
+      `<div class="brief-sub">拠点の耐久 ${R.goal}・制限時間 ${R.time}秒・魔力 毎秒+${R.manaRate}</div>` +
       `<div class="btn-row"><button class="btn ghost" data-act="close">やめる</button><button class="btn primary" data-act="go">侵攻開始</button></div>`);
     body.querySelector('[data-act=close]').onclick = closeModal;
-    body.querySelector('[data-act=go]').onclick = () => { closeModal(); startBattle(st); };
+    body.querySelector('[data-act=go]').onclick = () => {
+      closeModal();
+      const pre = TD.STAGES.includes(st) ? storyFor(st, 'pre') : null;
+      if (pre && !save.story[pre]) playStory(pre, () => startBattle(st)); else startBattle(st);
+    };
   }
 
   // ---------- 古代の英雄（英雄王リン） ----------

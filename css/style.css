@@ -941,3 +941,6 @@ button.currency { color: inherit; font-family: inherit; cursor: pointer; }
 .bp.gone { opacity: .45; }
 .bp.gone small { color: #ff8a8a; font-weight: 900; }
 .bp.joined small { color: #c070ff; font-weight: 900; }
+.enemy-list li .pt { width: 22px; height: 22px; margin-right: 6px; vertical-align: middle; }
+.enemy-list li > .pw-ico { display: inline-block; width: 22px; text-align: center; color: #e0b0ff; font-size: 16px; margin-right: 6px; }
+.enemy-list li .pt i { display: none; }

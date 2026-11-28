@@ -565,6 +565,29 @@ window.TD = window.TD || {};
         case 'meteor':   // 一定時間、フィールドにランダムに隕石を降らせる
           this.showers.push({ src: u, s, t: 0, next: 0.2, burst: star5 ? { src: u, total: 0, n: 0 } : null });
           break;
+        case 'argosBeam':   // アルゴス：千の目が、射程に関係なくフィールドの敵すべてを撃つ
+          for (const e of alive) this.shots.push({ x: u.x, y: u.y - 10, target: e, power: this.atkOf(u) * s.mult, src: u, speed: 760, color: '#fff3b0', kind: 'archer' });
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 6, r1: 40, t: 0, dur: 0.6, color: '#fff3b0', width: 6 });
+          break;
+        case 'rotMax': {   // ヴェルミナ：射程内の敵の毒を一気に最大へ
+          const R = this.rangeOf(u) * T;
+          for (const e of alive) if (dist(e, u) <= R) { this.hit(u, e, this.atkOf(u) * s.mult); if (!e.dead) this.addPoison(e, this.poisonMax || TD.POISON.maxStacks); }
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 8, r1: R, t: 0, dur: 0.7, color: '#7a2aa0', width: 10 });
+          break;
+        }
+        case 'scaleJudge': {   // アストレア：回復した量と同じだけ、射程内の敵を裁く
+          let healed = 0;
+          for (const a of this.units) {
+            const h = Math.min(a.maxHp - a.hp, a.maxHp * s.ratio);
+            a.hp += h; healed += h;
+            if (h > 0) this.pop(a.x, a.y - 18, '+' + Math.round(h), '#7dffa0', { size: 11 });
+          }
+          const R = this.rangeOf(u) * T;
+          for (const e of alive) if (dist(e, u) <= R) this.hit(u, e, healed);
+          this.fx.push({ type: 'ring', x: u.x, y: u.y, r0: 6, r1: R, t: 0, dur: 0.7, color: '#ffe9a0', width: 8 });
+          this.pop(u.x, u.y - 34, '裁き ' + Math.round(healed), '#ffe9a0', { size: 13 });
+          break;
+        }
         case 'tidal':
           for (const e of alive) if (dist(e, u) <= s.radius * T) {
             this.hit(u, e, this.atkOf(u) * s.mult);
@@ -911,6 +934,7 @@ window.TD = window.TD || {};
           }
         }
         // 光の障壁（結界の守護像）：一定時間ごとに数秒間、攻撃が効かなくなる
+        if (!e.def.barrier && e.barrierOn > 0) e.barrierOn -= dt;   // 攻守反転の権能「原初の咆哮」
         if (e.def.barrier) {
           const br = e.def.barrier;
           if (e.barrierOn > 0) e.barrierOn -= dt;

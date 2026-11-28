@@ -248,6 +248,7 @@ TD.CHARS = {
     skill: { name: '黒天・終焉斬', type: 'ancientStrike', sp: 30, multByLb: [3, 4, 5, 6, 7], healByLb: [0.2, 0.275, 0.35, 0.425, 0.5],
              desc: 'フィールド上の全ての敵に攻撃力300〜700%の闇ダメージを与え、味方全員のHPを20〜50%回復（本来の力を取り戻すほど強くなる）' },
     lines: { deploy: '……下がっていろ。ここから先は、王の戦場だ', skill: '天よ、地よ、ひれ伏せ――黒天・終焉斬' },
+    revPower: { type: 'king', name: '王の剣圧', icon: '⚔', cost: 18, cd: 30, ratio: 0.35, desc: '英雄たち全員に最大HPの35%のダメージ' },
   },
   // ---------- 闇の配下（★6・第二部のストーリーで加入。召喚には出ない／力は千年前のまま） ----------
   leviath: {
@@ -257,6 +258,7 @@ TD.CHARS = {
     skill: { name: '絶海・氷鱗の檻', type: 'freeze', sp: 30, mult: 3, radius: 3.2, dur: 4,
              desc: '周囲の敵を4秒間凍らせ、攻撃力300%のダメージ' },
     lines: { deploy: '我が主の御前だ。……凍てつけ', skill: '深き海よ、檻となれ――絶海・氷鱗の檻' },
+    revPower: { type: 'tide', name: '大海嘯', icon: '≋', cost: 14, cd: 25, dur: 7, mult: 0.5, desc: '7秒間、英雄たちの攻撃の速さが半分になる' },
   },
   ordra: {
     name: 'オルドラ', title: '原初の災厄', rarity: 6, dark: true, element: 'dark', role: 'shield',
@@ -265,6 +267,35 @@ TD.CHARS = {
     skill: { name: '原初の咆哮', type: 'rally', sp: 30, dur: 12, atkMult: 1.4, ratio: 0.3,
              desc: '12秒間、味方全員の攻撃力1.4倍。味方全員のHPを30%回復' },
     lines: { deploy: '我が主の道を阻むものは、すべて無に還す', skill: '聞け、原初の咆哮を――！' },
+    revPower: { type: 'roar', name: '原初の咆哮', icon: '◆', cost: 16, cd: 30, dur: 4, desc: '4秒間、場の魔物すべてに攻撃が効かなくなる' },
+  },
+  argos: {
+    name: 'アルゴス', title: '千眼の災厄', rarity: 6, dark: true, element: 'light', role: 'mage',
+    cost: 21, hp: 2400, atk: 230, def: 60, interval: 1.9, range: 2.6, splash: 0.8, redeploy: 35,
+    profile: '千の目で世界のすべてを見てきた災厄。王に仕える理由は、ただ「その行く末を見たい」から。',
+    skill: { name: '千の目の光線', type: 'argosBeam', sp: 32, mult: 1.4,
+             desc: '射程に関係なく、フィールド上の敵すべてに攻撃力140%の光線を放つ' },
+    lines: { deploy: 'さあ、王よ。今度はどんな結末を見せてくれる？', skill: '千の目よ、ひらけ――見えぬものなど、ない' },
+    revPower: { type: 'gaze', name: '千眼の幻惑', icon: '◉', cost: 12, cd: 22, dur: 8, mult: 0.6, desc: '8秒間、英雄たちの射程が0.6倍になる' },
+  },
+  verumina: {
+    name: 'ヴェルミナ', title: '腐蝕の災厄', rarity: 6, dark: true, element: 'dark', role: 'archer',
+    cost: 19, hp: 2200, atk: 210, def: 55, interval: 1.0, range: 3.2, redeploy: 30,
+    profile: 'ふれたものすべてを腐らせる災厄。王の「永遠」とは、腐り続けても終わらない世界のことだと信じている。',
+    unique: { name: '腐蝕の矢', type: 'darkPoison', stacks: 2, sub: 'rot', desc: '攻撃するたびに敵に毒を2つためる' },
+    skill: { name: '腐蝕の極み', type: 'rotMax', sp: 28, mult: 1.5,
+             desc: '射程内の敵すべてに攻撃力150%のダメージを与え、毒を一気に最大（猛毒）までためる' },
+    lines: { deploy: 'ふふ……みんな、ゆっくり腐っていけばいいのに', skill: '朽ちなさい。終わらないまま、ずっと' },
+    revPower: { type: 'rot', name: '腐蝕の霧', icon: '☣', cost: 14, cd: 25, dur: 6, ratio: 0.03, desc: '6秒間、英雄たち全員が毒に侵される（毎秒最大HPの3%）' },
+  },
+  astrea: {
+    name: 'アストレア', title: '天秤の災厄', rarity: 6, dark: true, element: 'light', role: 'priest',
+    cost: 18, hp: 2600, atk: 150, def: 80, interval: 1.6, range: 2.6, redeploy: 30,
+    profile: '目隠しをした裁きの災厄。王のそばにいるのは、王を裁くため。王が道を誤った時、天秤は傾く。',
+    skill: { name: '天秤の裁き', type: 'scaleJudge', sp: 30, ratio: 0.35,
+             desc: '味方全員のHPを最大HPの35%回復し、回復した量の合計と同じダメージを射程内の敵すべてに与える' },
+    lines: { deploy: '……天秤は、まだ傾いていません', skill: '量りましょう。救いと、罰の重さを' },
+    revPower: { type: 'scale', name: '天秤の傾き', icon: '⚖', cost: 15, cd: 28, ratio: 0.2, desc: '場の魔物すべてのHPを全回復し、英雄たち全員に最大HPの20%のダメージ' },
   },
   ciel: {
     name: 'シエル', title: '王城の星詠みメイド', rarity: 4, kind: 'tech', eventOnly: true, element: 'light', role: 'mage',

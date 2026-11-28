@@ -1,6 +1,6 @@
 // オフライン対応用サービスワーカー
 // ファイルを更新したら VERSION を上げると、古いキャッシュが入れ替わる。
-const VERSION = 'v12.7.0';
+const VERSION = 'v12.8.0';
 const CACHE = 'kekkai-' + VERSION;
 const ASSETS = [
   './',
