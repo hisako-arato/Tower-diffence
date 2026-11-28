@@ -892,6 +892,8 @@ window.TD = window.TD || {};
     }
 
     spawn(type, s, g) {
+      // 拠点が2つ以上あるのに行き先の指定がない時は、分かれ道でどちらへ進むかをランダムに決める（届かない拠点なら近い方へ）
+      if (g == null && this.goals.length > 1) g = Math.floor(Math.random() * this.goals.length);
       const def = TD.ENEMIES[type], route = this.routeFor(s || 0, g);
       const hp = Math.round(def.hp * this.stage.hpScale);
       const e = {
