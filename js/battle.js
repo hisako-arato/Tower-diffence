@@ -36,11 +36,20 @@ window.TD = window.TD || {};
       this.goal = goals[0];
       this.routeCache = {};
       this.routes = spawns.map((sp, i) => this.routeFor(i));
+      // 結界の亀裂：途中から開く出現口。最初の出現口からの道の frac の位置にできる（wave の s: 'c0' などで使う）
+      const baseSpawns = spawns.length;
+      this.cracks = (stage.cracks || []).map(c => {
+        const r = this.routeFor(c.from || 0), pt = r[Math.max(1, Math.min(r.length - 2, Math.floor(r.length * c.frac)))];
+        const tile = [Math.floor(pt.x / T), Math.floor(pt.y / T)];
+        this.spawns.push(tile);
+        return { t: c.t, tile, idx: this.spawns.length - 1, open: false };
+      });
 
       this.events = [];
-      // s: 'alt' … 出現地点を交互に使う（広い道の左右の車線に振り分ける）
+      // s: 'alt' … 出現地点を交互に使う（広い道の左右の車線に振り分ける）／ 'c0' … 結界の亀裂0
+      const sIdx = (ws, i) => ws === 'alt' ? i % Math.min(2, baseSpawns) : typeof ws === 'string' && ws[0] === 'c' ? baseSpawns + +ws.slice(1) : (ws || 0);
       for (const w of stage.waves)
-        for (let i = 0; i < w.n; i++) this.events.push({ t: w.t + i * w.gap, e: w.e, s: w.s === 'alt' ? i % Math.min(2, spawns.length) : (w.s || 0), g: w.g });
+        for (let i = 0; i < w.n; i++) this.events.push({ t: w.t + i * w.gap, e: w.e, s: sIdx(w.s, i), g: w.g });
       this.events.sort((a, b) => a.t - b.t);
       this.evIdx = 0;
       this.totalEnemies = this.events.length;
@@ -693,6 +702,10 @@ window.TD = window.TD || {};
 
     hit(src, e, power, burst) {
       if (e.dead) return;
+      if (e.barrierOn > 0) {   // 結界の守護像：光の障壁の間は攻撃が効かない
+        if ((e.barrierPopT = (e.barrierPopT || 0) - 1) <= 0) { this.pop(e.x, e.y - e.size - 10, '無効', '#fff6c0', { size: 11 }); e.barrierPopT = 6; }
+        return;
+      }
       const bb = burst || (this._burst && this._burst.src === src ? this._burst : null);
       const m = TD.elemMult(src.def.element, e.def.element);
       let crit = false;
@@ -800,6 +813,12 @@ window.TD = window.TD || {};
 
       for (const c of this.cards) if (c.state === 'cool' && (c.cd -= dt) <= 0) { c.state = 'ready'; c.cd = 0; }
 
+      for (const c of this.cracks) if (!c.open && this.time >= c.t) {
+        c.open = true;
+        this.toast('結界に亀裂が走った！ 新たな出現口が開く');
+        this.fx.push({ type: 'flash', t: 0, dur: 0.5, color: 'rgba(80,0,120,' });
+        this.shake(5, 0.4);
+      }
       while (this.evIdx < this.events.length && this.events[this.evIdx].t <= this.time) {
         const ev = this.events[this.evIdx++];
         this.spawn(ev.e, ev.s, ev.g);
@@ -887,6 +906,15 @@ window.TD = window.TD || {};
             this.warns.push({ x: e.x, y: e.y, r: (p2 ? dm.radius2 : dm.radius) * T, t: 0, warn: dm.charge, kill: true, follow: e, src: e });
             this.toast(`${e.def.name.split(' ').pop()}が力を溜めている……！`);
             continue;
+          }
+        }
+        // 光の障壁（結界の守護像）：一定時間ごとに数秒間、攻撃が効かなくなる
+        if (e.def.barrier) {
+          const br = e.def.barrier;
+          if (e.barrierOn > 0) e.barrierOn -= dt;
+          else if ((e.barrierCd = (e.barrierCd == null ? br.first : e.barrierCd) - dt) <= 0) {
+            e.barrierCd = br.every; e.barrierOn = br.dur;
+            this.toast('光の障壁！ しばらく攻撃が効かない');
           }
         }
         // 吹雪（グラキエスの残響）：一定時間ごとに、味方全員の射程を縮める
@@ -1359,6 +1387,14 @@ window.TD = window.TD || {};
       for (const e of [...this.enemies].sort((a, b) => a.y - b.y)) this.drawEnemy(g, e);
       for (const w of this.warns) this.drawWarn(g, w);
       for (const s of this.shots) this.drawShot(g, s);
+      for (const c of this.cracks) if (c.open) {   // 結界の亀裂（黒紫の裂け目）
+        const x = c.tile[0] * T + T / 2, y = c.tile[1] * T + T / 2, k = performance.now() / 300;
+        const grd = g.createRadialGradient(x, y, 2, x, y, 19);
+        grd.addColorStop(0, '#f0d0ff'); grd.addColorStop(0.35, '#5a1a8a'); grd.addColorStop(1, 'rgba(20,0,40,0)');
+        g.fillStyle = grd; g.beginPath(); g.arc(x, y, 19, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = '#1a0024'; g.lineWidth = 3; g.beginPath();
+        g.moveTo(x - 14, y - 10); g.lineTo(x - 4, y - 2 + Math.sin(k) * 2); g.lineTo(x - 8, y + 6); g.lineTo(x + 3, y + 2); g.lineTo(x + 14, y + 12); g.stroke();
+      }
       for (const b of this.burnTiles) {   // 燃えているマス
         const k = 0.5 + Math.sin(performance.now() / 120 + b.cx) * 0.2;
         g.fillStyle = `rgba(255,${80 + 40 * k},30,${0.35 + 0.2 * k})`; g.fillRect(b.cx * T + 3, b.cy * T + 3, T - 6, T - 6);
@@ -1592,6 +1628,11 @@ window.TD = window.TD || {};
         g.beginPath(); g.arc(x - s * 0.35, eyeY, s * 0.14 + 0.8, 0, Math.PI * 2); g.arc(x + s * 0.35, eyeY, s * 0.14 + 0.8, 0, Math.PI * 2); g.fill();
       }
       g.globalAlpha = 1;
+      if (e.barrierOn > 0) {   // 光の障壁
+        const k = 0.6 + Math.sin(performance.now() / 120) * 0.2;
+        g.strokeStyle = `rgba(255,240,170,${k})`; g.lineWidth = 3; g.fillStyle = 'rgba(255,240,170,.18)';
+        g.beginPath(); g.arc(x, y, s + 9, 0, Math.PI * 2); g.fill(); g.stroke();
+      }
       // HP
       const bw = Math.max(22, s * 2);
       g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(x - bw / 2 - 1, e.y - s - 9, bw + 2, 5);

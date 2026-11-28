@@ -236,7 +236,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
       html += `<button class="story-item${read ? '' : ' locked'}" data-ep="${id}"><span class="si-title">${esc(ep.title)}</span>` +
         `<span class="si-sub">${read ? '▶ 再生' : '🔒 ' + storyUnlockHint(id)}</span></button>`;
     }
-    html += `<div class="story-next">第二部 第2章は近日公開予定です</div>`;
+    html += `<div class="story-next">第二部 第3章は近日公開予定です</div>`;
     list.innerHTML = html;
     list.querySelectorAll('[data-ep]').forEach(b => b.onclick = () => {
       const id = b.dataset.ep;
@@ -357,7 +357,7 @@ TD.lbHTML = lb => `<span class="lb">${'◆'.repeat(lb)}<span class="off">${'◆'
           ch === cur ? '進行中' : i.stars === i.sts.length * 3 ? 'COMPLETE' : '', () => qpush({ v: 'chapter', ch }), !i.open));
         if (unread) list.lastChild.insertAdjacentHTML('beforeend', '<span class="st-story">STORY</span>');
       }
-      list.insertAdjacentHTML('beforeend', `<div class="story-next">第二部 第2章は近日公開予定です</div>`);
+      list.insertAdjacentHTML('beforeend', `<div class="story-next">第二部 第3章は近日公開予定です</div>`);
     } else if (node.v === 'chapter') {
       list.insertAdjacentHTML('beforeend', `<div class="chapter-title">${esc(node.ch)}</div>`);
       TD.STAGES.forEach((st, i) => {

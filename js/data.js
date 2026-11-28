@@ -450,6 +450,9 @@ TD.ENEMIES = {
   gargoyle:   { name: 'ガーゴイル', element: 'dark', hp: 1500, atk: 110, def: 90, speed: 0.3, interval: 1.8, size: 13, shape: 'gargoyle', flying: true, offPath: true, ranged: 1.3 },
   // 毒を持つ敵：遠くから毒の魔弾を撃ち、当たった味方を毒にする（毎秒最大HPの2%・6秒）
   echoPlague: { name: '残響の毒術師', element: 'dark', hp: 640, atk: 90, def: 20, speed: 0.45, interval: 2.4, size: 12, shape: 'mage', ranged: 2.8, echo: true, poisonOnHit: { ratio: 0.02, dur: 6 } },
+  // 結界の守護像：結界石が持ち主の帰還を拒んで目覚めた光の巨像。一定時間ごとに光の障壁で攻撃が効かなくなる
+  barrierGuardian: { name: '結界の守護像', element: 'light', hp: 9000, atk: 240, def: 160, speed: 0.24, interval: 2.0, size: 24, shape: 'golem', life: 5, boss: true,
+                     aoe: { every: 10, radius: 1.6, mult: 0.3, warn: 2.0 }, barrier: { first: 8, every: 12, dur: 3 } },
   vargEcho:    { name: '災厄の残響 ヴァルグ', element: 'dark', hp: 6000, atk: 220, def: 100, speed: 0.45, interval: 1.6, size: 22, shape: 'boss', life: 5, boss: true, echo: true, soul: true },
   glaciesEcho: { name: '凍嵐の残響 グラキエス', element: 'wind', hp: 5200, atk: 190, def: 110, speed: 0.28, interval: 2.0, size: 22, shape: 'boss', life: 5, boss: true, echo: true, soul: true,
                  aoe: { every: 11, radius: 1.5, mult: 0.25, warn: 2.0 }, blizzard: { first: 6, every: 14, dur: 6, mult: 0.7 } },
@@ -1340,6 +1343,93 @@ TD.STAGES = [
         { t: 64, e: 'echoKnight', n: 4, gap: 1.5 },
         { t: 26, e: 'gargoyle', n: 3, gap: 3 },
         { t: 36, e: 'echoPlague', n: 4, gap: 1.5 },
+      ],
+    },
+  );
+})();
+
+// ===================== 第二部 第2章 仮面の召喚士（結界石の巡礼。鎖を外すたびに「結界の亀裂」が開く） =====================
+(function () {
+  const C = '第二部 第2章 仮面の召喚士', mapOf = id => TD.STAGES.find(s => s.id === id).map.slice();
+  TD.STAGES.push(
+    {
+      id: 'Ⅱ2-1', chapter: C, name: '王都の祝祭', part: 2,
+      brief: '収穫祭の夜の王都に、魔物が現れました。祭りを守り抜きましょう。',
+      lives: 10, mana: 24, hpScale: 4.3, reward: 150, recLv: 58, map: mapOf('1-5'),
+      waves: [
+        { t: 3, e: 'echoGoblin', n: 8, gap: 0.9 },
+        { t: 14, e: 'gargoyle', n: 2, gap: 3 },
+        { t: 22, e: 'echoMage', n: 4, gap: 1.4 },
+        { t: 32, e: 'echoKnight', n: 3, gap: 2 },
+        { t: 42, e: 'echoPlague', n: 3, gap: 1.6 },
+        { t: 50, e: 'echoWolf', n: 10, gap: 0.6 },
+        { t: 60, e: 'abyssKnight', n: 2, gap: 2 },
+      ],
+    },
+    {
+      id: 'Ⅱ2-2', chapter: C, name: '蒼の巡礼', part: 2,
+      brief: '蒼の結界石の神殿。戦いの途中で結界に亀裂が走り、思わぬ場所から敵が現れます。',
+      lives: 10, mana: 24, hpScale: 4.4, reward: 150, recLv: 59, map: mapOf('2-5'),
+      cracks: [{ t: 25, frac: 0.45 }],
+      waves: [
+        { t: 3, e: 'echoGoblin', n: 6, gap: 1 },
+        { t: 12, e: 'echoMage', n: 4, gap: 1.4 },
+        { t: 20, e: 'echoKnight', n: 2, gap: 2 },
+        { t: 26, e: 'echoWolf', n: 6, gap: 0.8, s: 'c0' },
+        { t: 36, e: 'gargoyle', n: 2, gap: 3 },
+        { t: 44, e: 'echoPlague', n: 3, gap: 1.5, s: 'c0' },
+        { t: 52, e: 'abyssEye', n: 2, gap: 2 },
+        { t: 58, e: 'echoKnight', n: 3, gap: 1.5, s: 'c0' },
+      ],
+    },
+    {
+      id: 'Ⅱ2-3', chapter: C, name: '白銀の巡礼', part: 2, theme: 'snow',
+      brief: '白銀の古城。守る拠点は2つ。鎖を外すと、雪原に亀裂が2か所開きます。',
+      lives: 10, mana: 25, hpScale: 4.0, reward: 150, recLv: 60, map: mapOf('3-4'),
+      cracks: [{ t: 22, frac: 0.4 }, { t: 40, frac: 0.6 }],
+      waves: [
+        { t: 3, e: 'echoWolf', n: 6, gap: 1, g: 0 },
+        { t: 10, e: 'echoShade', n: 4, gap: 1.4, g: 1 },
+        { t: 20, e: 'echoKnight', n: 2, gap: 2.5, g: 1 },
+        { t: 23, e: 'echoGoblin', n: 6, gap: 1, s: 'c0' },
+        { t: 32, e: 'frostEye', n: 2, gap: 2 },
+        { t: 41, e: 'echoPlague', n: 3, gap: 1.5, s: 'c1' },
+        { t: 48, e: 'gargoyle', n: 2, gap: 3, g: 0 },
+        { t: 56, e: 'echoKnight', n: 3, gap: 1.6, s: 'c0' },
+        { t: 60, e: 'echoWolf', n: 6, gap: 0.8, s: 'c1' },
+      ],
+    },
+    {
+      id: 'Ⅱ2-4', chapter: C, name: '紅蓮の巡礼', part: 2, theme: 'lava',
+      brief: '紅蓮の火口。広い道の途中に亀裂が開き、左右の拠点へ敵が分かれて押し寄せます。',
+      lives: 10, mana: 25, hpScale: 3.2, reward: 150, recLv: 60, map: mapOf('4-3'),
+      cracks: [{ t: 24, frac: 0.35 }, { t: 38, frac: 0.35, from: 1 }],
+      waves: [
+        { t: 3, e: 'echoGoblin', n: 6, gap: 1.0, s: 'alt' },
+        { t: 12, e: 'echoMage', n: 4, gap: 1.4, s: 'alt' },
+        { t: 20, e: 'lavaGolem', n: 2, gap: 1, s: 'alt' },
+        { t: 25, e: 'echoWolf', n: 6, gap: 0.8, s: 'c0' },
+        { t: 34, e: 'flameEye', n: 2, gap: 2, s: 'alt' },
+        { t: 39, e: 'echoPlague', n: 3, gap: 1.5, s: 'c1' },
+        { t: 48, e: 'gargoyle', n: 2, gap: 3, s: 'alt' },
+        { t: 56, e: 'echoKnight', n: 4, gap: 1.4, s: 'alt' },
+      ],
+    },
+    {
+      id: 'Ⅱ2-5', chapter: C, name: '最後の結界石', part: 2, theme: 'abyss',
+      brief: '最後の結界石が、持ち主を拒むように「結界の守護像」を目覚めさせます。光の障壁が張られている間は攻撃が効きません。障壁が消えた瞬間に攻撃を集めましょう。闇属性が有効です。',
+      lives: 10, mana: 26, hpScale: 3.4, reward: 200, recLv: 60, map: mapOf('5-3'),
+      cracks: [{ t: 30, frac: 0.5 }],
+      waves: [
+        { t: 3, e: 'echoWolf', n: 4, gap: 1.2, s: 0, g: 0 },
+        { t: 5, e: 'echoShade', n: 4, gap: 1.4, s: 1, g: 1 },
+        { t: 14, e: 'echoKnight', n: 2, gap: 2, s: 0, g: 1 },
+        { t: 18, e: 'echoPlague', n: 2, gap: 2, s: 1, g: 0 },
+        { t: 30, e: 'echoGoblin', n: 6, gap: 1, s: 'c0' },
+        { t: 40, e: 'barrierGuardian', n: 1, gap: 0, s: 0, g: 0 },
+        { t: 44, e: 'gargoyle', n: 2, gap: 3, s: 1, g: 1 },
+        { t: 54, e: 'echoKnight', n: 3, gap: 1.6, s: 'c0' },
+        { t: 62, e: 'echoWolf', n: 6, gap: 0.8, s: 1, g: 1 },
       ],
     },
   );
